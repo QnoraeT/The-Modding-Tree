@@ -15,7 +15,7 @@ function getResetGain(layer, useType = null) {
 			return layers[layer].getResetGain()
 	} 
 	if(tmp[layer].type == "none")
-		return new Decimal (0)
+		return new Decimal(0)
 	if (tmp[layer].gainExp.eq(0)) return decimalZero
 	if (type=="static") {
 		if ((!tmp[layer].canBuyMax) || tmp[layer].baseAmount.lt(tmp[layer].requires)) return decimalOne
@@ -35,22 +35,18 @@ function getResetGain(layer, useType = null) {
 	}
 }
 
-function getNextAt(layer, canMax=false, useType = null) {
+function getNextAt(layer, canMax = false, useType = null) {
 	let type = useType
 	if (!useType) {
 		type = tmp[layer].type
-		if (layers[layer].getNextAt !== undefined)
-			return layers[layer].getNextAt(canMax)
+		if (layers[layer].getNextAt !== undefined) return layers[layer].getNextAt(canMax)
+	}
 
-		}
-	if(tmp[layer].type == "none")
-		return new Decimal (Infinity)
-
+	if (tmp[layer].type == "none") return new Decimal(Infinity)
 	if (tmp[layer].gainMult.lte(0)) return new Decimal(Infinity)
 	if (tmp[layer].gainExp.lte(0)) return new Decimal(Infinity)
 
-	if (type=="static") 
-	{
+	if (type=="static") {
 		if (!tmp[layer].canBuyMax) canMax = false
 		let amt = player[layer].points.plus((canMax&&tmp[layer].baseAmount.gte(tmp[layer].nextAt))?tmp[layer].resetGain:0).div(tmp[layer].directMult)
 		let extraCost = Decimal.pow(tmp[layer].base, amt.pow(tmp[layer].exponent).div(tmp[layer].gainExp)).times(tmp[layer].gainMult)
@@ -69,10 +65,9 @@ function getNextAt(layer, canMax=false, useType = null) {
 		return decimalZero
 	}}
 
-function softcap(value, cap, power = 0.5) {
+function softcap(value, cap, power = 0.5) { // this is probably not gonna be used lmao
 	if (value.lte(cap)) return value
-	else
-		return value.pow(power).times(cap.pow(decimalOne.sub(power)))
+	else return value.pow(power).times(cap.pow(decimalOne.sub(power)))
 }
 
 // Return true if the layer should be highlighted. By default checks for upgrades only.
@@ -88,14 +83,12 @@ function shouldNotify(layer){
 		return true
 	}
 
-	if (tmp[layer].shouldNotify)
-		return true
+	if (tmp[layer].shouldNotify) return true
 
 	if (isPlainObject(tmp[layer].tabFormat)) {
 		for (subtab in tmp[layer].tabFormat){
 			if (subtabShouldNotify(layer, 'mainTabs', subtab)) {
 				tmp[layer].trueGlowColor = tmp[layer].tabFormat[subtab].glowColor || defaultGlow
-
 				return true
 			}
 		}
@@ -109,13 +102,11 @@ function shouldNotify(layer){
 			}
 		}
 	}
-	 
-	return false
 	
+	return false
 }
 
-function canReset(layer)
-{	
+function canReset(layer){	
 	if (layers[layer].canReset!== undefined)
 		return run(layers[layer].canReset, layers[layer])
 	else if(tmp[layer].type == "normal")
@@ -131,9 +122,7 @@ function rowReset(row, layer) {
 		if(layers[lr].doReset) {
 			if (!isNaN(row)) Vue.set(player[lr], "activeChallenge", null) // Exit challenges on any row reset on an equal or higher row
 			run(layers[lr].doReset, layers[lr], layer)
-		}
-		else
-			if(tmp[layer].row > tmp[lr].row && !isNaN(row)) layerDataReset(lr)
+		} else if(tmp[layer].row > tmp[lr].row && !isNaN(row)) layerDataReset(lr)
 	}
 }
 
@@ -160,8 +149,6 @@ function layerDataReset(layer, keep = []) {
 	}
 }
 
-
-
 function addPoints(layer, gain) {
 	player[layer].points = player[layer].points.add(gain).max(0)
 	if (player[layer].best) player[layer].best = player[layer].best.max(player[layer].points)
@@ -176,16 +163,13 @@ function doReset(layer, force=false) {
 	if (tmp[layer].type == "none") return
 	let row = tmp[layer].row
 	if (!force) {
-		
 		if (tmp[layer].canReset === false) return;
-		
 		if (tmp[layer].baseAmount.lt(tmp[layer].requires)) return;
 		let gain = tmp[layer].resetGain
 		if (tmp[layer].type=="static") {
 			if (tmp[layer].baseAmount.lt(tmp[layer].nextAt)) return;
-			gain =(tmp[layer].canBuyMax ? gain : 1)
+			gain = (tmp[layer].canBuyMax ? gain : 1)
 		} 
-
 
 		if (layers[layer].onPrestige)
 			run(layers[layer].onPrestige, layers[layer], gain)
@@ -209,7 +193,6 @@ function doReset(layer, force=false) {
 
 	if (run(layers[layer].resetsNothing, layers[layer])) return
 	tmp[layer].baseAmount = decimalZero // quick fix
-
 
 	for (layerResetting in layers) {
 		if (row >= layers[layerResetting].row && (!force || layerResetting != layer)) completeChallenge(layerResetting)
@@ -254,36 +237,30 @@ function startChallenge(layer, x) {
 		enter = true
 	}	
 	doReset(layer, true)
-	if(enter) {
+	if (enter) {
 		Vue.set(player[layer], "activeChallenge", x)
 		run(layers[layer].challenges[x].onEnter, layers[layer].challenges[x])
 	}
 	updateChallengeTemp(layer)
 }
 
-function canCompleteChallenge(layer, x)
-{
+function canCompleteChallenge(layer, x){
 	if (x != player[layer].activeChallenge) return
 	let challenge = tmp[layer].challenges[x]
 	if (challenge.canComplete !== undefined) return challenge.canComplete
-
 	if (challenge.currencyInternalName){
 		let name = challenge.currencyInternalName
 		if (challenge.currencyLocation){
-			return !(challenge.currencyLocation[name].lt(challenge.goal)) 
-		}
-		else if (challenge.currencyLayer){
+			return challenge.currencyLocation[name].gte(challenge.goal)
+		} else if (challenge.currencyLayer){
 			let lr = challenge.currencyLayer
-			return !(player[lr][name].lt(challenge.goal)) 
+			return player[lr][name].gte(challenge.goal)
+		} else {
+			return player[name].gte(challenge.goal)
 		}
-		else {
-			return !(player[name].lt(challenge.goal))
-		}
+	} else {
+		return player.points.gte(challenge.goal)
 	}
-	else {
-		return !(player.points.lt(challenge.goal))
-	}
-
 }
 
 function completeChallenge(layer, x) {
@@ -296,10 +273,11 @@ function completeChallenge(layer, x) {
 		run(layers[layer].challenges[x].onExit, layers[layer].challenges[x])
 		return
 	}
-	if (player[layer].challenges[x] < tmp[layer].challenges[x].completionLimit) {
+	if (completions) completions = new Decimal(1)
+	if (player[layer].challenges[x].lt(tmp[layer].challenges[x].completionLimit)) {
 		needCanvasUpdate = true
-		player[layer].challenges[x] += completions
-		player[layer].challenges[x] = Math.min(player[layer].challenges[x], tmp[layer].challenges[x].completionLimit)
+		player[layer].challenges[x] = player[layer].challenges[x].add(completions)
+		player[layer].challenges[x] = Decimal.min(player[layer].challenges[x], tmp[layer].challenges[x].completionLimit)
 		if (layers[layer].challenges[x].onComplete) run(layers[layer].challenges[x].onComplete, layers[layer].challenges[x])
 	}
 	Vue.set(player[layer], "activeChallenge", null)
@@ -337,7 +315,47 @@ function gameLoop(diff) {
 			diff = limit
 	}
 	addTime(diff)
-	player.points = player.points.add(tmp.pointGen.times(diff)).max(0)
+
+	player.timeSpeed = D(1)
+	player.globalTS = Decimal.mul(player.timeSpeed, player.setTimeSpeed)
+
+	let i = {exp: D(1.2), start1: D(1e10), start2: D(1e33), pow1: D(2), pow2: D(3), result1: D(0), result2: D(0)};
+
+	if (challengeCompletions("p", 14).gte(1) && !(inChallenge('p', 11) || inChallenge('p', 12) || inChallenge('p', 13) || inChallenge('p', 14))) {
+		i.start1 = i.start1.mul(tmp.p.challenges[14].rewardEffect)
+	}
+	
+	if (inChallenge('p', 11)) {
+        i.exp = i.exp.mul(Decimal.pow(25/24, tmp.p.challenges[11].getDepths));
+	}
+
+	if (challengeCompletions("p", 11).gte(1)) {
+		i.pow1 = i.pow1.pow(0.8);
+	}
+
+	if (inChallenge('p', 14)) {
+        i.start1 = i.start1.root(tmp.p.challenges[14].getDepths.add(1).mul(2))
+		i.start2 = i.start2.root(tmp.p.challenges[14].getDepths.add(1).mul(2))
+	}
+
+	i.pow1 = i.pow1.root(tmp.p.buyables[25].effect.pts)
+
+    i.result1 = i.start1.div(10).log10().add(1).pow(i.exp).pow10();
+	i.result2 = i.start2.div(10).log10().add(1).pow(i.exp).pow10().div(i.result1.pow(Decimal.sub(1, Decimal.div(1, i.pow1)))).pow(i.pow1)
+
+	let finalPointGen = tmp.pointGen.mul(player.globalTS).mul(diff)
+	let previous = player.points
+    if (player.points.add(finalPointGen).lt(10)) {
+        player.points = player.points.add(finalPointGen).max(0);
+    } else if (player.points.add(finalPointGen).lt(i.result1)) {
+        player.points = player.points.max(10).log10().pow(i.exp).pow10().add(finalPointGen).log10().root(i.exp).pow10();
+    } else if (player.points.add(finalPointGen).lt(i.result2)) {
+        player.points = player.points.max(10).log10().pow(i.exp).pow10().div(i.result1.pow(Decimal.sub(1, Decimal.div(1, i.pow1)))).pow(i.pow1).add(finalPointGen).root(i.pow1).mul(i.result1.pow(Decimal.sub(1, Decimal.div(1, i.pow1)))).log10().root(i.exp).pow10();
+    } else {
+		player.points = player.points.max(10).log10().pow(i.exp).pow10().div(i.result1.pow(Decimal.sub(1, Decimal.div(1, i.pow1)))).pow(i.pow1).div(i.result2.pow(Decimal.sub(1, Decimal.div(1, i.pow2)))).pow(i.pow2).add(finalPointGen).root(i.pow2).mul(i.result2.pow(Decimal.sub(1, Decimal.div(1, i.pow2)))).root(i.pow1).mul(i.result1.pow(Decimal.sub(1, Decimal.div(1, i.pow1)))).log10().root(i.exp).pow10();
+	}
+	player.calcPointGen = player.points.sub(previous).div(diff)
+	player.bestPoints = Decimal.max(player.bestPoints, player.points)
 
 	for (let x = 0; x <= maxRow; x++){
 		for (item in TREE_LAYERS[x]) {

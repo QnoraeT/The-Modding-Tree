@@ -11,11 +11,11 @@ function hasAchievement(layer, id) {
 }
 
 function hasChallenge(layer, id) {
-	return ((player[layer].challenges[id]) && !tmp[layer].deactivated)
+	return ((player[layer].challenges[id].gte(1)) && !tmp[layer].deactivated)
 }
 
 function maxedChallenge(layer, id) {
-	return ((player[layer].challenges[id] >= tmp[layer].challenges[id].completionLimit) && !tmp[layer].deactivated)
+	return ((player[layer].challenges[id].gte(tmp[layer].challenges[id].completionLimit)) && !tmp[layer].deactivated)
 }
 
 function challengeCompletions(layer, id) {

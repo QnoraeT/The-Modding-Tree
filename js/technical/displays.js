@@ -2,14 +2,11 @@ function prestigeButtonText(layer) {
 	if (layers[layer].prestigeButtonText !== undefined)
 		return run(layers[layer].prestigeButtonText(), layers[layer])
 	if (tmp[layer].type == "normal")
-		return `${player[layer].points.lt(1e3) ? (tmp[layer].resetDescription !== undefined ? tmp[layer].resetDescription : "Reset for ") : ""}+<b>${formatWhole(tmp[layer].resetGain)}</b> ${tmp[layer].resource} ${tmp[layer].resetGain.lt(100) && player[layer].points.lt(1e3) ? `<br><br>Next at ${(tmp[layer].roundUpCost ? formatWhole(tmp[layer].nextAt) : format(tmp[layer].nextAt))} ${tmp[layer].baseResource}` : ""}`
+		return `${player[layer].points.lt(1e3) ? (tmp[layer].resetDescription !== undefined ? tmp[layer].resetDescription : "Reset for ") : ""}+<b>${format(tmp[layer].resetGain, 0)}</b> ${tmp[layer].resource} ${tmp[layer].resetGain.lt(100) && player[layer].points.lt(1e3) ? `<br><br>Next at ${(tmp[layer].roundUpCost ? format(tmp[layer].nextAt, 0) : format(tmp[layer].nextAt))} ${tmp[layer].baseResource}` : ""}`
 	if (tmp[layer].type == "static")
-		return `${tmp[layer].resetDescription !== undefined ? tmp[layer].resetDescription : "Reset for "}+<b>${formatWhole(tmp[layer].resetGain)}</b> ${tmp[layer].resource}<br><br>${player[layer].points.lt(30) ? (tmp[layer].baseAmount.gte(tmp[layer].nextAt) && (tmp[layer].canBuyMax !== undefined) && tmp[layer].canBuyMax ? "Next:" : "Req:") : ""} ${formatWhole(tmp[layer].baseAmount)} / ${(tmp[layer].roundUpCost ? formatWhole(tmp[layer].nextAtDisp) : format(tmp[layer].nextAtDisp))} ${tmp[layer].baseResource}		
-		`
-	if (tmp[layer].type == "none")
-		return ""
-    
-        return "You need prestige button text"
+		return `${tmp[layer].resetDescription !== undefined ? tmp[layer].resetDescription : "Reset for "}+<b>${format(tmp[layer].resetGain, 0)}</b> ${tmp[layer].resource}<br><br>${player[layer].points.lt(30) ? (tmp[layer].baseAmount.gte(tmp[layer].nextAt) && (tmp[layer].canBuyMax !== undefined) && tmp[layer].canBuyMax ? "Next:" : "Req:") : ""} ${format(tmp[layer].baseAmount, 0)} / ${(tmp[layer].roundUpCost ? format(tmp[layer].nextAtDisp, 0) : format(tmp[layer].nextAtDisp))} ${tmp[layer].baseResource}`
+	if (tmp[layer].type == "none") return ""
+    return "You need prestige button text"
 }
 
 function constructNodeStyle(layer){
@@ -27,13 +24,12 @@ function constructNodeStyle(layer){
 
 function challengeStyle(layer, id) {
 	if (player[layer].activeChallenge == id && canCompleteChallenge(layer, id)) return "canComplete"
-	else if (hasChallenge(layer, id)) return "done"
+	else if (maxedChallenge(layer, id)) return "done"
     return "locked"
 }
 
 function challengeButtonText(layer, id) {
-    return (player[layer].activeChallenge==(id)?(canCompleteChallenge(layer, id)?"Finish":"Exit Early"):(hasChallenge(layer, id)?"Completed":"Start"))
-
+    return (player[layer].activeChallenge==(id)?(canCompleteChallenge(layer, id)?"Finish":"Exit Early"):(maxedChallenge(layer, id)?"Completed":"Start"))
 }
 
 function achievementStyle(layer, id){
@@ -47,8 +43,6 @@ function achievementStyle(layer, id){
     return style
 }
 
-
-
 function updateWidth() {
 	let screenWidth = window.innerWidth
 	let splitScreen = screenWidth >= 1024
@@ -61,8 +55,7 @@ function updateWidth() {
 	tmp.other.lastPoints = player.points
 }
 
-function updateOomps(diff)
-{
+function updateOomps(diff){
 	tmp.other.oompsMag = 0
 	if (player.points.lte(new Decimal(1e100)) || diff == 0) return
 
@@ -75,9 +68,9 @@ function updateOomps(diff)
 			tmp.other.oomps = pp.sub(lp).div(diff)
 			tmp.other.oompsMag = -1;
 		} else {
-			while (pp.div(lp).log(10).div(diff).gte("100") && tmp.other.oompsMag <= 5 && lp.gt(0)) {
-				pp = pp.log(10)
-				lp = lp.log(10)
+			while (pp.div(lp).log10().div(diff).gte(100) && tmp.other.oompsMag <= 5 && lp.gt(0)) {
+				pp = pp.log10()
+				lp = lp.log10()
 				tmp.other.oomps = pp.sub(lp).div(diff)
 				tmp.other.oompsMag++;
 			}

@@ -107,7 +107,7 @@ function setupLayer(layer){
                 if (layers[layer].challenges[thing].unlocked === undefined)
                     layers[layer].challenges[thing].unlocked = true
                 if (layers[layer].challenges[thing].completionLimit === undefined)
-                    layers[layer].challenges[thing].completionLimit = 1
+                    layers[layer].challenges[thing].completionLimit = D(1)
                 else if (layers[layer].challenges[thing].marked === undefined) 
                     layers[layer].challenges[thing].marked = function() {return maxedChallenge(this.layer, this.id)}
 
@@ -185,8 +185,8 @@ function setupLayer(layer){
     if(layers[layer].directMult === undefined) layers[layer].directMult = decimalOne
     if(layers[layer].type === undefined) layers[layer].type = "none"
     if(layers[layer].base === undefined || layers[layer].base <= 1) layers[layer].base = 2
-    if(layers[layer].softcap === undefined) layers[layer].softcap = new Decimal("e1e7")
-    if(layers[layer].softcapPower === undefined) layers[layer].softcapPower = new Decimal("0.5")
+    if(layers[layer].softcap === undefined) layers[layer].softcap = new Decimal(Infinity) // pls no
+    if(layers[layer].softcapPower === undefined) layers[layer].softcapPower = new Decimal(1)
     if(layers[layer].displayRow === undefined) layers[layer].displayRow = layers[layer].row
     if(layers[layer].name === undefined) layers[layer].name = layer
     if(layers[layer].layerShown === undefined) layers[layer].layerShown = true
@@ -214,8 +214,7 @@ function setupLayer(layer){
 function addLayer(layerName, layerData, tabLayers = null){ // Call this to add layers from a different file!
     layers[layerName] = layerData
     layers[layerName].isLayer = true
-    if (tabLayers !== null)
-    {
+    if (tabLayers !== null) {
         let format = {}
         for (id in tabLayers) {
             layer = tabLayers[id]

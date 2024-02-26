@@ -1,5 +1,9 @@
 // ************ Big Feature related ************
 
+function D(x) {
+	return new Decimal(x)
+}
+
 function respecBuyables(layer) {
 	if (!layers[layer].buyables) return
 	if (!layers[layer].buyables.respec) return
@@ -24,8 +28,6 @@ function canBuyBuyable(layer, id) {
 	let b = temp[layer].buyables[id]
 	return (b.unlocked && run(b.canAfford, b) && player[layer].buyables[id].lt(b.purchaseLimit) && !tmp[layer].deactivated)
 }
-
-
 
 function canAffordPurchase(layer, thing, cost) {
 	if (thing.currencyInternalName) {
@@ -345,7 +347,7 @@ document.title = modInfo.name
 // Converts a string value to whatever it's supposed to be
 function toValue(value, oldValue) {
 	if (oldValue instanceof Decimal) {
-		value = new Decimal (value)
+		value = new Decimal(value)
 		if (checkDecimalNaN(value)) return decimalZero
 		return value
 	}
@@ -397,16 +399,12 @@ function run(func, target, args = null) {
 	if (isFunction(func)) {
 		let bound = func.bind(target)
 		return bound(args)
-	}
-	else
-		return func;
+	} else return func;
 }
 
 function gridRun(layer, func, data, id) {
 	if (isFunction(layers[layer].grid[func])) {
 		let bound = layers[layer].grid[func].bind(layers[layer].grid)
 		return bound(data, id)
-	}
-	else
-		return layers[layer].grid[func];
+	} else return layers[layer].grid[func];
 }

@@ -111,7 +111,7 @@ function getStartChallenges(layer) {
 	if (layers[layer].challenges) {
 		for (id in layers[layer].challenges)
 			if (isPlainObject(layers[layer].challenges[id]))
-				data[id] = 0;
+				data[id] = D(0);
 	}
 	return data;
 }
