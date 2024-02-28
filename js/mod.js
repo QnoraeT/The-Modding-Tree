@@ -67,8 +67,6 @@ function isEndgame() {
 	return player.points.gte(new Decimal(Infinity))
 }
 
-
-
 // Less important things beyond this point!
 
 // Style for the background, can be a function
@@ -84,40 +82,4 @@ function maxTickLength() {
 // Use this if you need to undo inflation from an older version. If the version is older than the version that fixed the issue,
 // you can cap their current resources with this.
 function fixOldSave(oldVersion){
-}
-
-let controlDown = false
-let shiftDown = false
-
-window.addEventListener('keydown', function(event) {
-	code = event.keyCode
-	if (player.toggleKeys) {
-		if (code == 16) shiftDown = !shiftDown;
-		if (code == 17) controlDown = !controlDown;
-	} else {
-		if (code == 16) shiftDown = true;
-		if (code == 17) controlDown = true;
-	}
-	if ((code >= 65 && code <= 90) || code == 32) {
-		player.lastLettersPressed.push(getLetterFromNum(code))
-		let l = player.lastLettersPressed.length
-		if (l > 25) {
-			player.lastLettersPressed = player.lastLettersPressed.slice(l-25,)
-		}
-	}
-	//65 to 90 are a to z
-}, false);
-
-window.addEventListener('keyup', function(event) {
-	if (player != undefined && player.toggleKeys) return 
-	if (event.keyCode == 16) shiftDown = false;
-	if (event.keyCode == 17) controlDown = false;
-}, false);
-
-function toggleShift(){
-	shiftDown = !shiftDown
-}
-
-function toggleControl(){
-	controlDown = !controlDown
 }

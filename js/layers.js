@@ -24,14 +24,14 @@ addLayer("p", {
         player[this.layer].timeInP = player[this.layer].timeInP.add(player.globalTS.mul(diff))
         if (player.p.total.gte(10)) {
             let i, j = {dilate: D(1.4), exp: D(2)};
-            j.exp = j.exp.div(tmp.p.buyables[27].effect.ess)
+            j.exp = j.exp.div(tmp.p.buyables[41].effect.ess)
 
             i = D(3);
             i = i.add(tmp.p.buyables[22].effect.exp)
             i = player.p.total.add(1).mul(2).pow(i).div(Decimal.pow(2, i));
             i = i.mul(tmp.p.buyables[21].effect.ppe)
-            i = i.mul(tmp.p.buyables[24].effect.ppe)
-            i = i.pow(tmp.p.buyables[26].effect.ppe)
+            i = i.mul(tmp.p.buyables[31].effect.ppe)
+            i = i.pow(tmp.p.buyables[33].effect.ppe)
 
             let pps = i.mul(diff)
             let prev = player.p.essence
@@ -54,10 +54,10 @@ addLayer("p", {
         let i = player.p.total
         let j = [D(3), D(1.5)]
         let sc = [{ start: D(1e40), pow: D(1) }, { start: D(1e60), pow: D(1) }]
-        sc[0].start = sc[0].start.mul(tmp.p.buyables[27].effect.ppss)
+        sc[0].start = sc[0].start.mul(tmp.p.buyables[41].effect.ppss)
         i = i.max(0).mul(Decimal.pow(2, j[0]).sub(1)).add(1).root(j[0]).log10().add(1).root(j[1]).sub(1).pow10().sub(1).pow10();
         if (i.gte(sc[0].start)) { i = scale(i, 0, false, sc[0].start, sc[0].pow, D(0.5)) }
-        if (i.gte(sc[1].start)) { i = scale(i, 1.3, false, sc[1].start, sc[1].pow, D(0.1)) }
+        if (i.gte(sc[1].start)) { i = scale(i, 1.3, false, sc[1].start, sc[1].pow, D(1.1)) }
         return i
     },
     effectDescription(){
@@ -124,7 +124,7 @@ addLayer("p", {
                 ["display-text",
                 function() { return `You have <h2 style="color: #8000FF; font-size: 26px; text-shadow: #8000FF 0px 0px 10px;">${format(player.p.essence, 2)}</h2> Prestige Essence. (${format(player.p.essencePS, 3)}/sec)` }],
                 "blank", 
-                ["buyables", [2]],
+                ["buyables", [2, 3, 4, 5]],
             ],
             unlocked(){
                 return player.p.total.gte(10)
@@ -205,7 +205,7 @@ addLayer("p", {
                                 return i
                             case 3:
                                 j = D(1.01)
-                                j = j.add(tmp.p.buyables[26].effect.up4b)
+                                j = j.add(tmp.p.buyables[33].effect.up4b)
                                 i = Decimal.pow(j, i)
                                 return i
                             default:
@@ -248,7 +248,7 @@ addLayer("p", {
 
                         switch (id) {
                             case 0:
-                                i = i.div(tmp.p.buyables[24].effect.up1c)
+                                i = i.div(tmp.p.buyables[31].effect.up1c)
                                 break;
                             case 1:
                                 break;
@@ -274,7 +274,7 @@ addLayer("p", {
 
                         switch (id) {
                             case 0:
-                                j = j.mul(tmp.p.buyables[24].effect.up1c)
+                                j = j.mul(tmp.p.buyables[31].effect.up1c)
                                 break;
                             case 1:
                                 break;
@@ -387,8 +387,9 @@ addLayer("p", {
         })(),
         ...(()=>{
             let out = {}
+            let list = [21, 22, 23, 31, 32, 33, 41, 42, 43, 51, 52, 53]
             for (let id = 0; id < 9; id++) {
-                out[id+21] = {
+                out[list[id]] = {
                     title: function() { return `PP Upgrade ${id+1}` },
                     get costD() {
                         // new Upgrade('pp1',  0,  c.d10,   {type: 0, main: [c.d10,   D(10 ** 0.5), D(10 ** 0.0025)]}, 1),
@@ -429,7 +430,7 @@ addLayer("p", {
                             case 0:
                                 i = i.mul(tmp.p.buyables[23].effect.peu1)
                                 j = D(2.2)
-                                j = j.add(tmp.p.buyables[25].effect.ppu1)
+                                j = j.add(tmp.p.buyables[32].effect.ppu1)
                                 i = {
                                     ppe: Decimal.pow(j, i.add(1).pow(1.2).log10().add(1).pow(0.9).sub(1).pow10().sub(1)), 
                                     up3s: i.add(1).pow(0.7).sub(1).mul(0.03).add(1)
@@ -516,7 +517,6 @@ addLayer("p", {
                         } else if (this.costD.type === 1) {
                             i = Decimal.pow(k[1], j.pow(k[2])).mul(k[0]);
                         }
-                        i = Decimal.pow(k[1], j.pow(k[2])).mul(k[0]);
 
                         return i
                     },
@@ -622,22 +622,23 @@ addLayer("p", {
                         return `Essence's slowdown exponent is reduced by -${formatPerc(tmp.p.buyables[27].effect.ess, 3)}, x${format(tmp.p.buyables[27].effect.ppss, 2)} PP effect softcap start.` 
 
                         */
-                        let txt = `You have ${format(player.p.buyables[id+21], 0)} PP Upgrade ${id+1}.<br>`
+                        let txt = `You have ${format(player.p.buyables[list[id]], 0)} PP Upgrade ${id+1}.<br>`
 
                         if (shiftDown) {
+                            console.log(`buyable id ${id} detected shift`)
                             txt += `Effect Bases: `
                             switch (id) {
                                 case 0:
-                                    txt += `x${format(this.effect(player.p.buyables[id+21].add(1)).ppe.div(this.effect(player.p.buyables[id+21]).ppe), 2)} Essence, -${formatPerc(this.effect(player.p.buyables[id+21].add(1)).up3s.div(this.effect(player.p.buyables[id+21]).up3s))} Upgrade 3 scaling.` 
+                                    txt += `x${format(this.effect(player.p.buyables[list[id]].add(1)).ppe.div(this.effect(player.p.buyables[list[id]]).ppe), 2)} Essence, -${formatPerc(this.effect(player.p.buyables[list[id]].add(1)).up3s.div(this.effect(player.p.buyables[list[id]]).up3s))} Upgrade 3 scaling.` 
                                     break;
                                 case 1:
-                                    txt += `+${format(this.effect(player.p.buyables[id+21].add(1)).exp.sub(this.effect(player.p.buyables[id+21]).exp), 2)} Essence exponent, Essence boosts points by ${format(this.effect(player.p.buyables[id+21].add(1)).pps.div(this.effect(player.p.buyables[id+21]).pps), 2)}x.` 
+                                    txt += `+${format(this.effect(player.p.buyables[list[id]].add(1)).exp.sub(this.effect(player.p.buyables[list[id]]).exp), 2)} Essence exponent, Essence boosts points by ${format(this.effect(player.p.buyables[list[id]].add(1)).pps.div(this.effect(player.p.buyables[list[id]]).pps), 2)}x.` 
                                     break;
                                 case 2:
-                                    txt += `PP Upgrade 1 is ${format(this.effect(player.p.buyables[id+21].add(1)).peu1.div(this.effect(player.p.buyables[id+21]).peu1).sub(1).mul(100))}% more effective, +${format(this.effect(player.p.buyables[id+21].add(1)).free.sub(this.effect(player.p.buyables[id+21]).free), 2)} Upgrade 3 Free base.` 
+                                    txt += `PP Upgrade 1 is ${format(this.effect(player.p.buyables[list[id]].add(1)).peu1.div(this.effect(player.p.buyables[list[id]]).peu1).sub(1).mul(100))}% more effective, +${format(this.effect(player.p.buyables[list[id]].add(1)).free.sub(this.effect(player.p.buyables[list[id]]).free), 2)} Upgrade 3 Free base.` 
                                     break;
                                 case 3:
-                                    txt += `x${format(this.effect(player.p.buyables[id+21].add(1)).ppe.div(this.effect(player.p.buyables[id+21]).ppe), 2)} Essence from Points, Upgrade 1's cost is divided by ${format(this.effect(player.p.buyables[id+21].add(1)).up1c.div(this.effect(player.p.buyables[id+21]).up1c), 2)}.` 
+                                    txt += `x${format(this.effect(player.p.buyables[list[id]].add(1)).ppe.div(this.effect(player.p.buyables[list[id]]).ppe), 2)} Essence from Points, Upgrade 1's cost is divided by ${format(this.effect(player.p.buyables[list[id]].add(1)).up1c.div(this.effect(player.p.buyables[list[id]]).up1c), 2)}.` 
                                     break;
                                 case 4:
                                     txt += ``
@@ -667,25 +668,25 @@ addLayer("p", {
                             txt += `Effect: `
                             switch (id) {
                                 case 0:
-                                    txt += `x${format(tmp.p.buyables[id+21].effect.ppe, 2)} Essence, -${formatPerc(tmp.p.buyables[id+21].effect.up3s)} Upgrade 3 scaling.` 
+                                    txt += `x${format(tmp.p.buyables[list[id]].effect.ppe, 2)} Essence, -${formatPerc(tmp.p.buyables[list[id]].effect.up3s)} Upgrade 3 scaling.` 
                                     break;
                                 case 1:
-                                    txt += `+${format(tmp.p.buyables[id+21].effect.exp, 2)} Essence exponent, Essence boosts points by ${format(tmp.p.buyables[id+21].effect.pps, 2)}x.` 
+                                    txt += `+${format(tmp.p.buyables[list[id]].effect.exp, 2)} Essence exponent, Essence boosts points by ${format(tmp.p.buyables[list[id]].effect.pps, 2)}x.` 
                                     break;
                                 case 2:
-                                    txt += `PP Upgrade 1 is ${format(tmp.p.buyables[id+21].effect.peu1.sub(1).mul(100))}% more effective, +${format(tmp.p.buyables[id+21].effect.free, 2)} Upgrade 3 Free base.` 
+                                    txt += `PP Upgrade 1 is ${format(tmp.p.buyables[list[id]].effect.peu1.sub(1).mul(100))}% more effective, +${format(tmp.p.buyables[list[id]].effect.free, 2)} Upgrade 3 Free base.` 
                                     break;
                                 case 3:
-                                    txt += `x${format(tmp.p.buyables[id+21].effect.ppe, 2)} Essence from Points, Upgrade 1's cost is divided by ${format(tmp.p.buyables[id+21].effect.up1c, 2)}.` 
+                                    txt += `x${format(tmp.p.buyables[list[id]].effect.ppe, 2)} Essence from Points, Upgrade 1's cost is divided by ${format(tmp.p.buyables[list[id]].effect.up1c, 2)}.` 
                                     break;
                                 case 4:
-                                    txt += `+${format(tmp.p.buyables[id+21].effect.ppu1, 3)} PP Upgrade 1 base for Essence gain, Point slowdown after ${format(1e10)} is ${formatPerc(tmp.p.buyables[id+21].effect.pts, 3)} slower.` 
+                                    txt += `+${format(tmp.p.buyables[list[id]].effect.ppu1, 3)} PP Upgrade 1 base for Essence gain, Point slowdown after ${format(1e10)} is ${formatPerc(tmp.p.buyables[list[id]].effect.pts, 3)} slower.` 
                                     break;
                                 case 5:
-                                    txt += `^${format(tmp.p.buyables[id+21].effect.ppe, 3)} Essence gain, +${format(tmp.p.buyables[id+21].effect.up4b, 4)} Upgrade 4 base.` 
+                                    txt += `^${format(tmp.p.buyables[list[id]].effect.ppe, 3)} Essence gain, +${format(tmp.p.buyables[list[id]].effect.up4b, 4)} Upgrade 4 base.` 
                                     break;
                                 case 6:
-                                    txt += `Essence's slowdown exponent is reduced by -${formatPerc(tmp.p.buyables[id+21].effect.ess, 3)}, x${format(tmp.p.buyables[id+21].effect.ppss, 2)} PP effect softcap start.` 
+                                    txt += `Essence's slowdown exponent is reduced by -${formatPerc(tmp.p.buyables[list[id]].effect.ess, 3)}, x${format(tmp.p.buyables[list[id]].effect.ppss, 2)} PP effect softcap start.` 
                                     break;
                                 case 7:
                                     txt += ``
@@ -708,7 +709,7 @@ addLayer("p", {
                         setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).add(1))
                     },
                     buyMax() {
-                        setBuyableAmount(this.layer, this.id, tmp.p.buyables[id+21].target.add(1).floor())
+                        setBuyableAmount(this.layer, this.id, tmp.p.buyables[list[id]].target.add(1).floor())
                     }
                 }
             }

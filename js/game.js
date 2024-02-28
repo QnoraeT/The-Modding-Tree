@@ -338,7 +338,7 @@ function gameLoop(diff) {
 		i.start2 = i.start2.root(tmp.p.challenges[14].getDepths.add(1).mul(2))
 	}
 
-	i.pow1 = i.pow1.root(tmp.p.buyables[25].effect.pts)
+	i.pow1 = i.pow1.root(tmp.p.buyables[32].effect.pts)
 
     i.result1 = i.start1.div(10).log10().add(1).pow(i.exp).pow10();
 	i.result2 = i.start2.div(10).log10().add(1).pow(i.exp).pow10().div(i.result1.pow(Decimal.sub(1, Decimal.div(1, i.pow1)))).pow(i.pow1)
