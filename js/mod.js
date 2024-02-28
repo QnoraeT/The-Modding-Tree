@@ -45,7 +45,7 @@ function getPointGen() {
     if (!inChallenge('p', 13)) gain = gain.mul(tmp.p.effect)
     gain = gain.mul(tmp.p.buyables[22].effect.pps)
     gain = gain.pow(tmp.p.buyables[14].effect)
-    if (inChallenge('p', 12) && challengeCompletions("p", 12).gte(7)) { gain = gain.root(2) }
+    if (inChallenge('p', 12) && challengeCompletions("p", 12).gte(7)) { gain = gain.root(challengeCompletions("p", 12).sub(7).mul(0.25).pow(2).add(2)) }
     return gain
 }
 

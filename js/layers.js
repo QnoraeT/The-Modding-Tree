@@ -173,16 +173,17 @@ addLayer("p", {
                             case 0:
                                 i = i.add(tmp.p.buyables[13].effect.free)
                                 if (challengeCompletions("p", 12).gte(5)) { i = i.mul(1.05) }
-                                if (inChallenge('p', 12) && challengeCompletions("p", 12).gte(9)) { i = i.sub(1).div(3).add(1) }
 
                                 j = D(2)
                                 j = j.add(tmp.p.buyables[12].effect)
                                 j = j.mul(tmp.p.buyables[13].effect.base)
                                 if (hasUpgrade('p', 14)) { j = j.add(upgradeEffect(this.layer, 14)) }
+                                if (inChallenge('p', 12) && challengeCompletions("p", 12).gte(9)) { j = j.sub(1).div(3).add(1) }
 
                                 i = Decimal.pow(j, i)
 
                                 if (challengeCompletions("p", 12).gte(8)) { i = i.log10().pow([1, 1.01, 1.0201, 1.050703][challengeCompletions("p", 12).sub(7).max(0).toNumber()]).pow10() }
+                                if (i.gte(Number.MAX_VALUE)) { i = scale(i, 2.1, false, Number.MAX_VALUE, 1, D(1/2.2)) }
                                 return i
                             case 1:
                                 if (inChallenge('p', 12)) {
@@ -336,13 +337,13 @@ addLayer("p", {
                                     txt += `: ${format(nextEffect.div(currEffect), 2)}x point gain.` 
                                     break;
                                 case 1:
-                                    txt += `: +${format(nextEffect.sub(currEffect), 2)} Upgrade 1 base.` 
+                                    txt += `: +${format(nextEffect.sub(currEffect), 3)} Upgrade 1 base.` 
                                     break;
                                 case 2:
                                     txt += `s: +${format(nextEffect.free.sub(currEffect.free), 2)} free UPG1, x${format(nextEffect.base.div(currEffect.base), 2)} UPG1 base.` 
                                     break;
                                 case 3:
-                                    txt += `: ^${format(nextEffect.div(currEffect), 2)} point gain.`
+                                    txt += `: ^${format(nextEffect.div(currEffect), 3)} point gain.`
                                     break;
                                 default:
                                     throw new RangeError(`uh oh, display function failed at ${id} id lmao (switch 1)`)
@@ -411,7 +412,7 @@ addLayer("p", {
                             {type: 0, main: [D(1e5),  D(10),  D(1)]},
                             {type: 1, main: [D(1e7),  D(5),   D(1.2)]},
                             {type: 0, main: [D(1e8),  D(1),   D(2)]},
-                            {type: 0, main: [D(1e10), D(100), D(1.1)]},
+                            {type: 0, main: [D(10),   D(1.2), D(1.001)]},
                             {type: 0, main: [D(1e12), D(1e6), D(1)]},
                             {type: 0, main: [D(1e15), D(1e4), D(3)]},
                             {type: 0, main: [D(1e20), D(1e5), D(20)]},
@@ -445,6 +446,7 @@ addLayer("p", {
                                     exp: i.ln().mul(j).add(1).root(j).mul(0.5),
                                     pps: player.p.essence.add(1).pow(i.mul(0.25).add(1).ln()).log10().pow(i.ln().mul(0.01).add(1)).pow10()
                                 };
+                                if (i.exp.gte(4)) { i.exp = scale(i.exp, 0, false, D(4), D(1), D(0.5)) }
                                 return i
                             case 2:
                                 i = {
@@ -464,6 +466,7 @@ addLayer("p", {
                                     ppu1: i.add(1).ln().add(1).pow(0.9).sub(1).exp().sub(1).div(8.34),
                                     pts: i.mul(0.025).add(1).ln().add(1)
                                 }
+                                if (i.pts.gte(1.5)) { i.pts = scale(i.pts, 0.2, false, D(1.5), D(1), D(0.1)) }
                                 return i
                             case 5:
                                 i = {
@@ -473,7 +476,7 @@ addLayer("p", {
                                 return i
                             case 6:
                                 i = {
-                                    ess: i.mul(0.01).add(1).ln().add(1).pow(2),
+                                    ess: i.mul(0.01).add(1).ln().add(1),
                                     ppss: Decimal.pow(20, i)
                                 }
                                 return i
@@ -520,6 +523,7 @@ addLayer("p", {
                             i = Decimal.pow(k[1], j.pow(k[2])).mul(k[0]);
                         }
 
+                        if (id === 5) { i = i.pow10() }
                         return i
                     },
                     target(x = player.p.essence) { 
@@ -550,6 +554,8 @@ addLayer("p", {
                             default:
                                 throw new RangeError(`uh oh, target function failed at ${id} id lmao (switch 2)`)
                         }
+
+                        if (id === 5) { j = j.log10() }
 
                         if (this.costD.type === 0) {
                             k = this.costD.main.map((x) => Decimal.log10(x));
@@ -591,46 +597,12 @@ addLayer("p", {
                         return i
                     },
                     display() { 
-                        /*
-                        
-                        if (shiftDown) {
-                            return `x${format(this.effect(player.p.buyables[21].add(1)).ppe.div(this.effect(player.p.buyables[21]).ppe), 2)} Essence, -${formatPerc(this.effect(player.p.buyables[21].add(1)).up3s.div(this.effect(player.p.buyables[21]).up3s))} Upgrade 3 scaling.` 
-                        }
-                        return `x${format(tmp.p.buyables[21].effect.ppe, 2)} Essence, -${formatPerc(tmp.p.buyables[21].effect.up3s)} Upgrade 3 scaling.` 
-                    },
-
-                        if (shiftDown) {
-                            return `+${format(this.effect(player.p.buyables[22].add(1)).exp.sub(this.effect(player.p.buyables[22]).exp), 2)} Essence exponent, Essence boosts points by ${format(this.effect(player.p.buyables[22].add(1)).pps.div(this.effect(player.p.buyables[22]).pps), 2)}x.` 
-                        }
-                        return `+${format(tmp.p.buyables[22].effect.exp, 2)} Essence exponent, Essence boosts points by ${format(tmp.p.buyables[22].effect.pps, 2)}x.` 
-                    },
-
-                        if (shiftDown) {
-                            return `PP Upgrade 1 is ${format(this.effect(player.p.buyables[23].add(1)).peu1.div(this.effect(player.p.buyables[23]).peu1).sub(1).mul(100))}% more effective, +${format(this.effect(player.p.buyables[23].add(1)).free.sub(this.effect(player.p.buyables[23]).free), 2)} Upgrade 3 Free base.` 
-                        }
-                        return `PP Upgrade 1 is ${format(tmp.p.buyables[23].effect.peu1.sub(1).mul(100))}% more effective, +${format(tmp.p.buyables[23].effect.free, 2)} Upgrade 3 Free base.` 
-                    },
-
-                        if (shiftDown) {
-                            return `x${format(this.effect(player.p.buyables[24].add(1)).ppe.div(this.effect(player.p.buyables[24]).ppe), 2)} Essence from Points, Upgrade 1's cost is divided by ${format(this.effect(player.p.buyables[24].add(1)).up1c.div(this.effect(player.p.buyables[24]).up1c), 2)}.` 
-                        }
-                        return `x${format(tmp.p.buyables[24].effect.ppe, 2)} Essence from Points, Upgrade 1's cost is divided by ${format(tmp.p.buyables[24].effect.up1c, 2)}.` 
-                    },
-
-                        return `+${format(tmp.p.buyables[25].effect.ppu1, 3)} PP Upgrade 1 base for Essence gain, Point slowdown after ${format(1e10)} is ${formatPerc(tmp.p.buyables[25].effect.pts, 3)} slower.` 
-
-                        return `^${format(tmp.p.buyables[26].effect.ppe, 3)} Essence gain, +${format(tmp.p.buyables[26].effect.up4b, 4)} Upgrade 4 base.` 
-
-                        return `Essence's slowdown exponent is reduced by -${formatPerc(tmp.p.buyables[27].effect.ess, 3)}, x${format(tmp.p.buyables[27].effect.ppss, 2)} PP effect softcap start.` 
-
-                        */
                         let txt = `You have ${format(player.p.buyables[list[id]], 0)} PP Upgrade ${id+1}.<br>`
 
                         const currEffect = this.effect(player.p.buyables[list[id]])
                         const nextEffect = this.effect(player.p.buyables[list[id]].add(1))
-                        console.log(`%cbuyable id ${id} detected ${shiftDown?'yes':'no'} shift`, `color: ${shiftDown?'#00FF00':'#FF0000'}`)
+                        // console.log(`%cbuyable id ${id} detected ${shiftDown?'yes':'no'} shift`, `color: ${shiftDown?'#00FF00':'#FF0000'}`)
                         if (shiftDown) {
-
                             txt += `Effect Bases: `
                             switch (id) {
                                 case 0:
@@ -664,11 +636,13 @@ addLayer("p", {
                                     throw new RangeError(`uh oh, display function failed at ${id} id lmao (switch 1)`)
                             }
                             txt += `<br>Cost Formula: ` 
+                            if (id === 5) { txt += `10<sup>` }
                             if (this.costD.type === 0) {
                                 txt += `${format(this.costD.main[0])} × ${format(this.costD.main[1], 2)}<sup>x</sup> × ${format(this.costD.main[2], 3)}<sup>x<sup>2</sup></sup>`
                             } else if (this.costD.type === 1) {
                                 txt += `${format(this.costD.main[0])} × ${format(this.costD.main[1], 2)}<sup>x<sup>${format(this.costD.main[2], 3)}</sup></sup>`
                             }
+                            if (id === 5) { txt += `</sup>` }
                         } else {
                             txt += `Effect: `
                             switch (id) {
@@ -720,399 +694,6 @@ addLayer("p", {
             }
             return out
         })(),
-        // 21: {
-        //     /**
-        //      *     
-        //         new Upgrade('pp1',  0,  c.d10,   {type: 0, main: [c.d10,   D(10 ** 0.5), D(10 ** 0.0025)]}, 1),
-        //         new Upgrade('pp2',  1,  D(80),   {type: 1, main: [c.e2,    c.d2,   D(1.3)]},    1),
-        //         new Upgrade('pp3',  2,  c.e4,    {type: 0, main: [D(1e5),  c.d10,  1]},      1),
-        //         new Upgrade('pp4',  3,  c.e6,    {type: 1, main: [D(1e7),  c.d5,   D(c.d1_2)]}, 1),
-        //         new Upgrade('pp5',  4,  c.e6,    {type: 0, main: [D(1e8),  1,   c.d2]},      1),
-        //         new Upgrade('pp6',  5,  D(1e9),  {type: 0, main: [c.e10,   c.e2,   D(1.1)]},    1),
-        //         new Upgrade('pp7',  6,  c.e10,   {type: 0, main: [D(1e12), c.e6,   1]},      1),
-        //         new Upgrade('pp8',  7,  D(1e14), {type: 0, main: [D(1e15), c.e4,   c.d3]},      1),
-        //         new Upgrade('pp9',  8,  D(1e20), {type: 0, main: [D(1e20), D(1e5), D(20)]},     1),
-        //         new Upgrade('pp10', 9,  D(1e32), {type: 1, main: [D(1e32), c.e3,   D(2.2)]},    1),
-        //         new Upgrade('pp11', 10, D(1e39), {type: 1, main: [D(1e40), c.e2,   c.d4]},      1),
-        //      */
-        //     title: "PP Upgrade 1",
-        //     get costD() {
-        //         let i = [D(10),  D(10 ** 0.5),  D(10 ** 0.0025)]
-        //         return i
-        //     },
-        //     unlocked() {
-        //         let i = false
-        //         if (player.p.bestEssence.gte(10)) { i = true }
-        //         return i
-        //     },
-        //     effect(x) {
-        //         let i = x, j
-        //         i = i.mul(tmp.p.buyables[23].effect.peu1)
-        //         j = D(2.2)
-        //         j = j.add(tmp.p.buyables[25].effect.ppu1)
-        //         i = {
-        //             ppe: Decimal.pow(j, i.add(1).pow(1.2).log10().add(1).pow(0.9).sub(1).pow10().sub(1)), 
-        //             up3s: i.add(1).pow(0.7).sub(1).mul(0.03).add(1)
-        //         };
-        //         return i
-        //     },
-        //     cost(x) { 
-        //         let i, j, k;
-        //         j = x;
-        //         k = this.costD;
-        //         i = k[2].pow(j.pow(2)).mul(k[1].pow(j)).mul(k[0]);
-
-        //         return i
-        //     },
-        //     target(x = player.p.essence) {
-        //         if (x.lte(this.costD[0])) { return D(-1e-12) }
-        //         let i, j, k;
-        //         j = x
-        //         k = this.costD.map((x) => Decimal.log10(x));
-
-        //         if (k[2].eq(0)) { 
-        //             i = j.max(1).log10().sub(k[0]).div(k[1]);
-        //         } else {
-        //             i = j.max(1).log10().sub(k[0]).mul(k[2]).mul(4).add(k[1].pow(2)).sqrt().sub(k[1]).div(k[2]).div(2);
-        //         }
-
-        //         return i
-        //     },
-        //     display() { 
-        //         if (shiftDown) {
-        //             return `You have ${format(player.p.buyables[21], 0)} PP Upgrade 1.<br>Effect Base: x${format(this.effect(player.p.buyables[21].add(1)).ppe.div(this.effect(player.p.buyables[21]).ppe), 2)} Essence, -${formatPerc(this.effect(player.p.buyables[21].add(1)).up3s.div(this.effect(player.p.buyables[21]).up3s))} Upgrade 3 scaling.<br>Cost Formula: ${format(this.costD[0])} × ${format(this.costD[1], 2)}<sup>x</sup> × ${format(this.costD[2], 3)}<sup>x<sup>2</sup></sup>` 
-        //         }
-        //         return `You have ${format(player.p.buyables[21], 0)} PP Upgrade 1.<br>Effect: x${format(tmp.p.buyables[21].effect.ppe, 2)} Essence, -${formatPerc(tmp.p.buyables[21].effect.up3s)} Upgrade 3 scaling.<br>Cost: ${format(this.cost())} Essence` 
-        //     },
-        //     canAfford() { return player.p.essence.gte(this.cost()) },
-        //     buy() {
-        //         player.p.essence = player.p.essence.sub(this.cost())
-        //         setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).add(1))
-        //     },
-        //     buyMax() {
-        //         setBuyableAmount(this.layer, this.id, tmp.p.buyables[21].target.add(1).floor())
-        //     }
-        // },
-        // 22: {
-        //     title: "PP Upgrade 2",
-        //     get costD() {
-        //         let i = [D(100),  D(2),  D(1.3)]
-        //         return i
-        //     },
-        //     unlocked() {
-        //         let i = false
-        //         if (player.p.bestEssence.gte(80)) { i = true }
-        //         return i
-        //     },
-        //     effect(x) {
-        //         let i = x, j
-        //         if (i.lt(1)) { return {exp: D(0), pps: D(1)}; }
-        //         j = D(0.15); // less = it slows down less
-        //         i = {
-        //             exp: i.ln().mul(j).add(1).root(j).mul(0.5),
-        //             pps: player.p.essence.add(1).pow(i.ln().add(1).mul(0.3)).log10().pow(i.ln().mul(0.01).add(1)).pow10()
-        //         };
-        //         return i
-        //     },
-        //     cost(x) { 
-        //         let i, j, k;
-        //         j = x;
-        //         k = this.costD;
-        //         i = Decimal.pow(k[1], j.pow(k[2])).mul(k[0]);
-
-        //         return i
-        //     },
-        //     target(x = player.p.essence) {
-        //         if (x.lte(this.costD[0])) { return D(-1e-12) }
-        //         let i, j, k;
-        //         j = x
-        //         k = this.costD;
-
-        //         i = j.div(k[0]).log(k[1]).root(k[2]);
-        //         return i
-        //     }, 
-        //     display() { 
-        //         if (shiftDown) {
-        //             return `You have ${format(player.p.buyables[22], 0)} PP Upgrade 2.<br>Effect Base: +${format(this.effect(player.p.buyables[22].add(1)).exp.sub(this.effect(player.p.buyables[22]).exp), 2)} Essence exponent, Essence boosts points by ${format(this.effect(player.p.buyables[22].add(1)).pps.div(this.effect(player.p.buyables[22]).pps), 2)}x.<br>Cost Formula: ${format(this.costD[0])} × ${format(this.costD[1], 2)}<sup>x<sup>${format(this.costD[2], 3)}</sup></sup>` 
-        //         }
-        //         return `You have ${format(player.p.buyables[22], 0)} PP Upgrade 2.<br>Effect: +${format(tmp.p.buyables[22].effect.exp, 2)} Essence exponent, Essence boosts points by ${format(tmp.p.buyables[22].effect.pps, 2)}x.<br>Cost: ${format(this.cost())} Essence` 
-        //     },
-        //     canAfford() { return player.p.essence.gte(this.cost()) },
-        //     buy() {
-        //         player.p.essence = player.p.essence.sub(this.cost())
-        //         setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).add(1))
-        //     },
-        //     buyMax() {
-        //         setBuyableAmount(this.layer, this.id, tmp.p.buyables[22].target.add(1).floor())
-        //     }
-        // },
-        // 23: {
-        //     title: "PP Upgrade 3",
-        //     get costD() {
-        //         let i = [D(1e5),  D(10),  D(1)]
-        //         return i
-        //     },
-        //     unlocked() {
-        //         let i = false
-        //         if (player.p.bestEssence.gte(1e4)) { i = true }
-        //         return i
-        //     },
-        //     effect(x) {
-        //         let i = x
-        //         i = {
-        //             peu1: i.add(10).mul(10).sqrt().div(10).sub(1).mul(2).add(1),
-        //             free: i.add(10).mul(100).cbrt().div(20).sub(0.5).mul(3)
-        //         }
-        //         return i
-        //     },
-        //     cost(x) { 
-        //         let i, j, k;
-        //         j = x;
-        //         k = this.costD;
-        //         i = k[2].pow(j.pow(2)).mul(k[1].pow(j)).mul(k[0]);
-
-        //         return i
-        //     },
-        //     target(x = player.p.essence) {
-        //         if (x.lte(this.costD[0])) { return D(-1e-12) }
-        //         let i, j, k;
-        //         j = x
-        //         k = this.costD.map((x) => Decimal.log10(x));
-
-        //         if (k[2].eq(0)) { 
-        //             i = j.max(1).log10().sub(k[0]).div(k[1]);
-        //         } else {
-        //             i = j.max(1).log10().sub(k[0]).mul(k[2]).mul(4).add(k[1].pow(2)).sqrt().sub(k[1]).div(k[2]).div(2);
-        //         }
-
-        //         return i
-        //     },
-        //     display() { 
-        //         if (shiftDown) {
-        //             return `You have ${format(player.p.buyables[23], 0)} PP Upgrade 3.<br>Effect Base: PP Upgrade 1 is ${format(this.effect(player.p.buyables[23].add(1)).peu1.div(this.effect(player.p.buyables[23]).peu1).sub(1).mul(100))}% more effective, +${format(this.effect(player.p.buyables[23].add(1)).free.sub(this.effect(player.p.buyables[23]).free), 2)} Upgrade 3 Free base.<br>Cost Formula: ${format(this.costD[0])} × ${format(this.costD[1], 2)}<sup>x</sup> × ${format(this.costD[2], 3)}<sup>x<sup>2</sup></sup>` 
-        //         }
-        //         return `You have ${format(player.p.buyables[23], 0)} PP Upgrade 3.<br>Effect: PP Upgrade 1 is ${format(tmp.p.buyables[23].effect.peu1.sub(1).mul(100))}% more effective, +${format(tmp.p.buyables[23].effect.free, 2)} Upgrade 3 Free base.<br>Cost: ${format(this.cost())} Essence` 
-        //     },
-        //     canAfford() { return player.p.essence.gte(this.cost()) },
-        //     buy() {
-        //         player.p.essence = player.p.essence.sub(this.cost())
-        //         setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).add(1))
-        //     },
-        //     buyMax() {
-        //         setBuyableAmount(this.layer, this.id, tmp.p.buyables[23].target.add(1).floor())
-        //     }
-        // },
-        // 24: {
-        //     title: "PP Upgrade 4",
-        //     get costD() {
-        //         let i = [D(1e7),  D(5),  D(1.2)]
-        //         return i
-        //     },
-        //     unlocked() {
-        //         let i = false
-        //         if (player.p.bestEssence.gte(1e6)) { i = true }
-        //         return i
-        //     },
-        //     effect(x) {
-        //         let i = x, j
-        //         if (i.lt(1)) { return {ppe: D(1), up1c: D(1)}; }
-        //         i = {
-        //             ppe: player.points.add(1).log10().pow(i.cbrt()),
-        //             up1c: Decimal.pow(20, i.pow(0.7))
-        //         };
-        //         return i
-        //     },
-        //     cost(x) { 
-        //         let i, j, k;
-        //         j = x;
-        //         k = this.costD;
-        //         i = Decimal.pow(k[1], j.pow(k[2])).mul(k[0]);
-
-        //         return i
-        //     },
-        //     target(x = player.p.essence) {
-        //         if (x.lte(this.costD[0])) { return D(-1e-12) }
-        //         let i, j, k;
-        //         j = x
-        //         k = this.costD;
-
-        //         i = j.div(k[0]).log(k[1]).root(k[2]);
-        //         return i
-        //     }, 
-        //     display() { 
-        //         if (shiftDown) {
-        //             return `You have ${format(player.p.buyables[24], 0)} PP Upgrade 4.<br>Effect Base: x${format(this.effect(player.p.buyables[24].add(1)).ppe.div(this.effect(player.p.buyables[24]).ppe), 2)} Essence from Points, Upgrade 1's cost is divided by ${format(this.effect(player.p.buyables[24].add(1)).up1c.div(this.effect(player.p.buyables[24]).up1c), 2)}.<br>Cost Formula: ${format(this.costD[0])} × ${format(this.costD[1], 2)}<sup>x<sup>${format(this.costD[2], 3)}</sup></sup>` 
-        //         }
-        //         return `You have ${format(player.p.buyables[24], 0)} PP Upgrade 4.<br>Effect: x${format(tmp.p.buyables[24].effect.ppe, 2)} Essence from Points, Upgrade 1's cost is divided by ${format(tmp.p.buyables[24].effect.up1c, 2)}.<br>Cost: ${format(this.cost())} Essence` 
-        //     },
-        //     canAfford() { return player.p.essence.gte(this.cost()) },
-        //     buy() {
-        //         player.p.essence = player.p.essence.sub(this.cost())
-        //         setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).add(1))
-        //     },
-        //     buyMax() {
-        //         setBuyableAmount(this.layer, this.id, tmp.p.buyables[24].target.add(1).floor())
-        //     }
-        // },
-        // 25: {
-        //     title: "PP Upgrade 5",
-        //     get costD() {
-        //         let i = [D(1e8),  D(1),  D(2)]
-        //         return i
-        //     },
-        //     unlocked() {
-        //         let i = false
-        //         if (player.p.bestEssence.gte(1e7)) { i = true }
-        //         return i
-        //     },
-        //     effect(x) {
-        //         let i = x
-        //         i = {
-        //             ppu1: i.add(1).ln().add(1).pow(0.9).sub(1).exp().sub(1).div(8.34),
-        //             pts: i.mul(0.025).add(1).ln().add(1)
-        //         }
-        //         return i
-        //     },
-        //     cost(x) { 
-        //         let i, j, k;
-        //         j = x;
-        //         k = this.costD;
-        //         i = k[2].pow(j.pow(2)).mul(k[1].pow(j)).mul(k[0]);
-
-        //         return i
-        //     },
-        //     target(x = player.p.essence) {
-        //         if (x.lte(this.costD[0])) { return D(-1e-12) }
-        //         let i, j, k;
-        //         j = x
-        //         k = this.costD.map((x) => Decimal.log10(x));
-
-        //         if (k[2].eq(0)) { 
-        //             i = j.max(1).log10().sub(k[0]).div(k[1]);
-        //         } else {
-        //             i = j.max(1).log10().sub(k[0]).mul(k[2]).mul(4).add(k[1].pow(2)).sqrt().sub(k[1]).div(k[2]).div(2);
-        //         }
-
-        //         return i
-        //     },
-        //     display() { 
-        //         return `You have ${format(player.p.buyables[25], 0)} PP Upgrade 5.<br>Effect: +${format(tmp.p.buyables[25].effect.ppu1, 3)} PP Upgrade 1 base for Essence gain, Point slowdown after ${format(1e10)} is ${formatPerc(tmp.p.buyables[25].effect.pts, 3)} slower.<br>Cost: ${format(this.cost())} Essence` 
-        //     },
-        //     canAfford() { return player.p.essence.gte(this.cost()) },
-        //     buy() {
-        //         player.p.essence = player.p.essence.sub(this.cost())
-        //         setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).add(1))
-        //     },
-        //     buyMax() {
-        //         setBuyableAmount(this.layer, this.id, tmp.p.buyables[25].target.add(1).floor())
-        //     }
-        // },
-        // 26: {
-        //     title: "PP Upgrade 6",
-        //     get costD() {
-        //         let i = [D(1e10),  D(100),  D(1.1)]
-        //         return i
-        //     },
-        //     unlocked() {
-        //         let i = false
-        //         if (player.p.bestEssence.gte(1e10)) { i = true }
-        //         return i
-        //     },
-        //     effect(x) {
-        //         let i = x
-        //         i = {
-        //             ppe: Decimal.pow(1.01, i.pow(0.75)),
-        //             up4b: i.mul(0.1).add(1).ln().mul(0.02)
-        //         }
-        //         return i
-        //     },
-        //     cost(x) { 
-        //         let i, j, k;
-        //         j = x;
-        //         k = this.costD;
-        //         i = k[2].pow(j.pow(2)).mul(k[1].pow(j)).mul(k[0]);
-
-        //         return i
-        //     },
-        //     target(x = player.p.essence) {
-        //         if (x.lte(this.costD[0])) { return D(-1e-12) }
-        //         let i, j, k;
-        //         j = x
-        //         k = this.costD.map((x) => Decimal.log10(x));
-
-        //         if (k[2].eq(0)) { 
-        //             i = j.max(1).log10().sub(k[0]).div(k[1]);
-        //         } else {
-        //             i = j.max(1).log10().sub(k[0]).mul(k[2]).mul(4).add(k[1].pow(2)).sqrt().sub(k[1]).div(k[2]).div(2);
-        //         }
-
-        //         return i
-        //     },
-        //     display() { 
-        //         return `You have ${format(player.p.buyables[26], 0)} PP Upgrade 6.<br>Effect: ^${format(tmp.p.buyables[26].effect.ppe, 3)} Essence gain, +${format(tmp.p.buyables[26].effect.up4b, 4)} Upgrade 4 base.<br>Cost: ${format(this.cost())} Essence` 
-        //     },
-        //     canAfford() { return player.p.essence.gte(this.cost()) },
-        //     buy() {
-        //         player.p.essence = player.p.essence.sub(this.cost())
-        //         setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).add(1))
-        //     },
-        //     buyMax() {
-        //         setBuyableAmount(this.layer, this.id, tmp.p.buyables[25].target.add(1).floor())
-        //     }
-        // },
-        // 27: {
-        //     title: "PP Upgrade 7",
-        //     get costD() {
-        //         let i = [D(1e12),  D(1e6),  D(1)]
-        //         return i
-        //     },
-        //     unlocked() {
-        //         let i = false
-        //         if (player.p.bestEssence.gte(1e11)) { i = true }
-        //         return i
-        //     },
-        //     effect(x) {
-        //         let i = x
-        //         i = {
-        //             ess: i.mul(0.01).add(1).ln().add(1).pow(2),
-        //             ppss: Decimal.pow(20, i)
-        //         }
-        //         return i
-        //     },
-        //     cost(x) { 
-        //         let i, j, k;
-        //         j = x;
-        //         k = this.costD;
-        //         i = k[2].pow(j.pow(2)).mul(k[1].pow(j)).mul(k[0]);
-
-        //         return i
-        //     },
-        //     target(x = player.p.essence) {
-        //         if (x.lte(this.costD[0])) { return D(-1e-12) }
-        //         let i, j, k;
-        //         j = x
-        //         k = this.costD.map((x) => Decimal.log10(x));
-
-        //         if (k[2].eq(0)) { 
-        //             i = j.max(1).log10().sub(k[0]).div(k[1]);
-        //         } else {
-        //             i = j.max(1).log10().sub(k[0]).mul(k[2]).mul(4).add(k[1].pow(2)).sqrt().sub(k[1]).div(k[2]).div(2);
-        //         }
-
-        //         return i
-        //     },
-        //     display() { 
-        //         return `You have ${format(player.p.buyables[27], 0)} PP Upgrade 7.<br>Effect: Essence's slowdown exponent is reduced by -${formatPerc(tmp.p.buyables[27].effect.ess, 3)}, x${format(tmp.p.buyables[27].effect.ppss, 2)} PP effect softcap start.<br>Cost: ${format(this.cost())} Essence` 
-        //     },
-        //     canAfford() { return player.p.essence.gte(this.cost()) },
-        //     buy() {
-        //         player.p.essence = player.p.essence.sub(this.cost())
-        //         setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).add(1))
-        //     },
-        //     buyMax() {
-        //         setBuyableAmount(this.layer, this.id, tmp.p.buyables[25].target.add(1).floor())
-        //     }
-        // },
     },
     challenges: {
         11: {
@@ -1318,6 +899,7 @@ addLayer("p", {
             unlocked() { return true },
             effect() { 
                 let ret = player[this.layer].essence.max(1e5).log(1e5).pow(2.5).sub(1)
+                if (ret.gte(12)) { ret = scale(ret, 1.3, false, D(12), D(1), D(2)) }
                 return ret;
             },
             effectDisplay() { return `-${format(this.effect(), 3)} purchases` }, 
@@ -1333,6 +915,7 @@ addLayer("p", {
             unlocked() { return true },
             effect() { 
                 let ret = player[this.layer].essence.max(1).log10().pow(2)
+                if (ret.gte(1000)) { ret = scale(ret, 0, false, D(1000), D(1), D(0.5)) }
                 return ret;
             },
             effectDisplay() { return `+${format(this.effect(), 3)}` }, 
@@ -1369,7 +952,7 @@ addLayer("q", {
         return i
     },
     effectDescription(){
-        return ` multiplying prestiige point gain by ${format(tmp.q.effect, 2)}x`
+        return ` multiplying prestige point gain by ${format(tmp.q.effect, 2)}x`
     },
     getRequire() {
         let i = new Decimal(1e8)
@@ -1404,6 +987,9 @@ addLayer("q", {
     layerShown(){ return true },
     doReset() {
         player.points = D(0)
+        player.p.points = D(0)
+        player.p.best = D(0)
+        player.p.total = D(0)
         player.p.essence = D(0)
         player.p.bestEssence = D(0)
         player.p.ssChalBest = D(1e5)
