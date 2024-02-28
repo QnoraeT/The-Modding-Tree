@@ -6,7 +6,7 @@ addLayer("p", {
     position: 0, // Horizontal position within a row. By default it uses the layer id and sorts in alphabetical order
     startData() { return {
         unlocked: true,
-		points: new Decimal(0),
+        points: new Decimal(0),
         bestPointsInP: D(0),
         timeInP: D(0),
         essence: D(0),
@@ -1341,7 +1341,7 @@ addLayer("q", {
     position: 0, // Horizontal position within a row. By default it uses the layer id and sorts in alphabetical order
     startData() { return {
         unlocked: false,
-		points: new Decimal(0),
+        points: new Decimal(0),
         bestPointsInQ: D(0),
         timeInQ: D(0),
         allocated: [D(0), D(0), D(0), D(0)],
