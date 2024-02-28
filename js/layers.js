@@ -327,20 +327,22 @@ addLayer("p", {
                     display() { 
                         let txt = `You have ${format(player.p.buyables[id+11], 0)} Upgrade ${id+1}.<br>`
 
+                        const currEffect = this.effect(player.p.buyables[id+11])
+                        const nextEffect = this.effect(player.p.buyables[id+11].add(1))
                         if (shiftDown) {
                             txt += `Effect Base`
                             switch (id) {
                                 case 0:
-                                    txt += `: ${format(this.effect(player.p.buyables[id+11].add(1)).div(this.effect(player.p.buyables[id+11])), 2)}x point gain.` 
+                                    txt += `: ${format(nextEffect.div(currEffect), 2)}x point gain.` 
                                     break;
                                 case 1:
-                                    txt += `: +${format(this.effect(player.p.buyables[id+11].add(1)).sub(this.effect(player.p.buyables[id+11])), 2)} Upgrade 1 base.` 
+                                    txt += `: +${format(nextEffect.sub(currEffect), 2)} Upgrade 1 base.` 
                                     break;
                                 case 2:
-                                    txt += `s: +${format(this.effect(player.p.buyables[id+11].add(1)).free.sub(this.effect(player.p.buyables[id+11]).free), 2)} free UPG1, x${format(this.effect(player.p.buyables[id+11].add(1)).base.div(this.effect(player.p.buyables[id+11]).base), 2)} UPG1 base.` 
+                                    txt += `s: +${format(nextEffect.free.sub(currEffect.free), 2)} free UPG1, x${format(nextEffect.base.div(currEffect.base), 2)} UPG1 base.` 
                                     break;
                                 case 3:
-                                    txt += `: ^${format(this.effect(player.p.buyables[id+11].add(1)).div(this.effect(player.p.buyables[id+11])), 2)} point gain.`
+                                    txt += `: ^${format(nextEffect.div(currEffect), 2)} point gain.`
                                     break;
                                 default:
                                     throw new RangeError(`uh oh, display function failed at ${id} id lmao (switch 1)`)
@@ -353,16 +355,16 @@ addLayer("p", {
                             txt += `Effect: `
                             switch (id) {
                                 case 0:
-                                    txt += `${format(tmp.p.buyables[id+11].effect)}x point gain.` 
+                                    txt += `${format(currEffect)}x point gain.` 
                                     break;
                                 case 1:
-                                    txt += `+${format(tmp.p.buyables[id+11].effect, 3)} Upgrade 1 base.` 
+                                    txt += `+${format(currEffect, 3)} Upgrade 1 base.` 
                                     break;
                                 case 2:
-                                    txt += `+${format(tmp.p.buyables[id+11].effect.free, 2)} free UPG1, x${format(tmp.p.buyables[id+11].effect.base, 2)} UPG1 base.` 
+                                    txt += `+${format(currEffect.free, 2)} free UPG1, x${format(currEffect.base, 2)} UPG1 base.` 
                                     break;
                                 case 3:
-                                    txt += `^${format(tmp.p.buyables[id+11].effect, 3)} points.` 
+                                    txt += `^${format(currEffect, 3)} points.` 
                                     break;
                                 default:
                                     throw new RangeError(`uh oh, display function failed at ${id} id lmao (switch 2)`)
@@ -438,10 +440,10 @@ addLayer("p", {
                                 return i
                             case 1:
                                 if (i.lt(1)) { return {exp: D(0), pps: D(1)}; }
-                                j = D(0.15); // less = it slows down less
+                                j = D(0.25); // less = it slows down less
                                 i = {
                                     exp: i.ln().mul(j).add(1).root(j).mul(0.5),
-                                    pps: player.p.essence.add(1).pow(i.ln().add(1).mul(0.3)).log10().pow(i.ln().mul(0.01).add(1)).pow10()
+                                    pps: player.p.essence.add(1).pow(i.mul(0.25).add(1).ln()).log10().pow(i.ln().mul(0.01).add(1)).pow10()
                                 };
                                 return i
                             case 2:
@@ -624,30 +626,33 @@ addLayer("p", {
                         */
                         let txt = `You have ${format(player.p.buyables[list[id]], 0)} PP Upgrade ${id+1}.<br>`
 
+                        const currEffect = this.effect(player.p.buyables[list[id]])
+                        const nextEffect = this.effect(player.p.buyables[list[id]].add(1))
+                        console.log(`%cbuyable id ${id} detected ${shiftDown?'yes':'no'} shift`, `color: ${shiftDown?'#00FF00':'#FF0000'}`)
                         if (shiftDown) {
-                            console.log(`buyable id ${id} detected shift`)
+
                             txt += `Effect Bases: `
                             switch (id) {
                                 case 0:
-                                    txt += `x${format(this.effect(player.p.buyables[list[id]].add(1)).ppe.div(this.effect(player.p.buyables[list[id]]).ppe), 2)} Essence, -${formatPerc(this.effect(player.p.buyables[list[id]].add(1)).up3s.div(this.effect(player.p.buyables[list[id]]).up3s))} Upgrade 3 scaling.` 
+                                    txt += `x${format(nextEffect.ppe.div(currEffect.ppe), 2)} Essence, -${formatPerc(nextEffect.up3s.div(currEffect.up3s))} Upgrade 3 scaling.` 
                                     break;
                                 case 1:
-                                    txt += `+${format(this.effect(player.p.buyables[list[id]].add(1)).exp.sub(this.effect(player.p.buyables[list[id]]).exp), 2)} Essence exponent, Essence boosts points by ${format(this.effect(player.p.buyables[list[id]].add(1)).pps.div(this.effect(player.p.buyables[list[id]]).pps), 2)}x.` 
+                                    txt += `+${format(nextEffect.exp.sub(currEffect.exp), 2)} Essence exponent (x${format(player.p.total.add(1).mul(2).pow(nextEffect.exp.sub(currEffect.exp)).div(Decimal.pow(2, nextEffect.exp.sub(currEffect.exp))), 2)} Essence), Essence boosts points by ${format(nextEffect.pps.div(currEffect.pps), 2)}x.` 
                                     break;
                                 case 2:
-                                    txt += `PP Upgrade 1 is ${format(this.effect(player.p.buyables[list[id]].add(1)).peu1.div(this.effect(player.p.buyables[list[id]]).peu1).sub(1).mul(100))}% more effective, +${format(this.effect(player.p.buyables[list[id]].add(1)).free.sub(this.effect(player.p.buyables[list[id]]).free), 2)} Upgrade 3 Free base.` 
+                                    txt += `PP Upgrade 1 is ${format(nextEffect.peu1.div(currEffect.peu1).sub(1).mul(100))}% more effective, +${format(nextEffect.free.sub(currEffect.free), 2)} Upgrade 3 Free base.` 
                                     break;
                                 case 3:
-                                    txt += `x${format(this.effect(player.p.buyables[list[id]].add(1)).ppe.div(this.effect(player.p.buyables[list[id]]).ppe), 2)} Essence from Points, Upgrade 1's cost is divided by ${format(this.effect(player.p.buyables[list[id]].add(1)).up1c.div(this.effect(player.p.buyables[list[id]]).up1c), 2)}.` 
+                                    txt += `x${format(nextEffect.ppe.div(currEffect.ppe), 2)} Essence from Points, Upgrade 1's cost is divided by ${format(nextEffect.up1c.div(currEffect.up1c), 2)}.` 
                                     break;
                                 case 4:
-                                    txt += ``
+                                    txt += `+${format(nextEffect.ppu1.sub(currEffect.ppu1), 3)} PP Upgrade 1 base for Essence gain, Point slowdown after ${format(1e10)} is ${formatPerc(nextEffect.pts.div(currEffect.pts), 3)} slower.`
                                     break;
                                 case 5:
-                                    txt += ``
+                                    txt += `^${format(nextEffect.ppe.div(currEffect.ppe), 3)} Essence gain, +${format(nextEffect.up4b.sub(currEffect.up4b), 4)} Upgrade 4 base.`
                                     break;
                                 case 6:
-                                    txt += ``
+                                    txt += `Essence's slowdown exponent is reduced by -${formatPerc(nextEffect.ess.div(currEffect.ess), 3)}, x${format(nextEffect.ppss.div(currEffect.ppss), 2)} PP effect softcap start.`
                                     break;
                                 case 7:
                                     txt += ``
@@ -668,25 +673,25 @@ addLayer("p", {
                             txt += `Effect: `
                             switch (id) {
                                 case 0:
-                                    txt += `x${format(tmp.p.buyables[list[id]].effect.ppe, 2)} Essence, -${formatPerc(tmp.p.buyables[list[id]].effect.up3s)} Upgrade 3 scaling.` 
+                                    txt += `x${format(currEffect.ppe, 2)} Essence, -${formatPerc(currEffect.up3s)} Upgrade 3 scaling.` 
                                     break;
                                 case 1:
-                                    txt += `+${format(tmp.p.buyables[list[id]].effect.exp, 2)} Essence exponent, Essence boosts points by ${format(tmp.p.buyables[list[id]].effect.pps, 2)}x.` 
+                                    txt += `+${format(currEffect.exp, 2)} Essence exponent, Essence boosts points by ${format(currEffect.pps, 2)}x.` 
                                     break;
                                 case 2:
-                                    txt += `PP Upgrade 1 is ${format(tmp.p.buyables[list[id]].effect.peu1.sub(1).mul(100))}% more effective, +${format(tmp.p.buyables[list[id]].effect.free, 2)} Upgrade 3 Free base.` 
+                                    txt += `PP Upgrade 1 is ${format(currEffect.peu1.sub(1).mul(100))}% more effective, +${format(currEffect.free, 2)} Upgrade 3 Free base.` 
                                     break;
                                 case 3:
-                                    txt += `x${format(tmp.p.buyables[list[id]].effect.ppe, 2)} Essence from Points, Upgrade 1's cost is divided by ${format(tmp.p.buyables[list[id]].effect.up1c, 2)}.` 
+                                    txt += `x${format(currEffect.ppe, 2)} Essence from Points, Upgrade 1's cost is divided by ${format(currEffect.up1c, 2)}.` 
                                     break;
                                 case 4:
-                                    txt += `+${format(tmp.p.buyables[list[id]].effect.ppu1, 3)} PP Upgrade 1 base for Essence gain, Point slowdown after ${format(1e10)} is ${formatPerc(tmp.p.buyables[list[id]].effect.pts, 3)} slower.` 
+                                    txt += `+${format(currEffect.ppu1, 3)} PP Upgrade 1 base for Essence gain, Point slowdown after ${format(1e10)} is ${formatPerc(currEffect.pts, 3)} slower.` 
                                     break;
                                 case 5:
-                                    txt += `^${format(tmp.p.buyables[list[id]].effect.ppe, 3)} Essence gain, +${format(tmp.p.buyables[list[id]].effect.up4b, 4)} Upgrade 4 base.` 
+                                    txt += `^${format(currEffect.ppe, 3)} Essence gain, +${format(currEffect.up4b, 4)} Upgrade 4 base.` 
                                     break;
                                 case 6:
-                                    txt += `Essence's slowdown exponent is reduced by -${formatPerc(tmp.p.buyables[list[id]].effect.ess, 3)}, x${format(tmp.p.buyables[list[id]].effect.ppss, 2)} PP effect softcap start.` 
+                                    txt += `Essence's slowdown exponent is reduced by -${formatPerc(currEffect.ess, 3)}, x${format(currEffect.ppss, 2)} PP effect softcap start.` 
                                     break;
                                 case 7:
                                     txt += ``
