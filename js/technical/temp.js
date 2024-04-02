@@ -171,12 +171,12 @@ function checkDecimalNaN(x) {
 }
 
 /**
- * @param {Decimal} num 
- * @param {any} type 
- * @param {boolean} inverse 
- * @param {Decimal} start 
- * @param {Decimal} str 
- * @param {Decimal} powScale 
+ * @param {Decimal} num the input
+ * @param {any} type what type of scaling/softcap should be used
+ * @param {boolean} inverse if there should be an inverse for it
+ * @param {Decimal} start when the scale/softcap starts
+ * @param {Decimal} str the overall strength of the scaling/softcap (1.0 = 100%, 0.5 = 50%) taken as a power of powScale
+ * @param {Decimal} powScale inital value of the scaling/softcap that gets acted upon by str
  * @returns {Decimal}
  */
 function scale(num, type, inverse = false, start, str, powScale) {
@@ -185,18 +185,21 @@ function scale(num, type, inverse = false, start, str, powScale) {
     switch (type) {
         // Polynomial
         case 0:
-		case 0.1:
+        case 0.1:
         case "P":
+        case "P1":
             return inverse
                     ? num.sub(start).mul(str).div(start).add(1).root(str).mul(start)
                     : num.div(start).pow(str).sub(1).mul(start).div(str).add(start)
-		case 0.2:
-			return inverse
-					? num.div(start).root(str).sub(1).mul(str).add(1).mul(start)
-					: num.div(start).sub(1).div(str).add(1).pow(str).mul(start)
+        case 0.2: // alemaninc
+        case "P2":
+            return inverse
+                    ? num.div(start).root(str).sub(1).mul(str).add(1).mul(start)
+                    : num.div(start).sub(1).div(str).add(1).pow(str).mul(start)
         // Exponential
         case 1:
         case 1.1:
+        case "E":
         case "E1":
             return inverse
                     ? Decimal.min(num, num.div(start).log(str).add(1).mul(start))
@@ -206,16 +209,15 @@ function scale(num, type, inverse = false, start, str, powScale) {
             return inverse
                     ? num.mul(str).mul(str.ln()).div(start).lambertw().mul(start).div(str.ln())
                     : Decimal.pow(str, num.div(start).sub(1)).mul(num)
-        // i gotta say, i have to give props to alemaninc for coming up with this cuz i never figured out a way to make a log cap smooth without an extreme growth difference lol
-        case 1.3:
+        case 1.3: // i gotta say, i have to give props to alemaninc for coming up with this cuz i never figured out a way to make a log cap smooth without an extreme growth difference lol cuz i wasn't able to figure it out myself
         case "E3":
-            str = str.sub(1);
             return inverse
-                    ? num.div(start).pow(str).sub(1).div(str).exp().mul(start)
-                    : num.div(start).ln().mul(str).add(1).root(str).mul(start)
+                    ? num.div(start).root(str).sub(1).mul(str).exp().mul(start)
+                    : num.div(start).ln().div(str).add(1).pow(str).mul(start)
         // Semi-exponential
         case 2:
         case 2.1:
+        case "SE":
         case "SE1":
             return inverse
                     ? Decimal.pow(start, num.sub(start).mul(str).add(start).log(start).root(str))
@@ -280,4 +282,9 @@ function pad(num, length) {
         num = "0" + num;
     }
     return num;
+}
+
+function sumHarmonicSeries(x) {
+    x = D(x)
+    return x.ln().add(0.57721566490153286060651209008240243104215933593992).add(Decimal.div(0.5, x)).sub(Decimal.div(1, (x.pow(2).mul(12)))).add(Decimal.div(1, (x.pow(4).mul(120))))
 }

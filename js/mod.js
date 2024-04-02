@@ -26,7 +26,7 @@ let winText = `Congratulations! You have reached the end and beaten this game, b
 
 // If you add new functions anywhere inside of a layer, and those functions have an effect when called, add them here.
 // (The ones here are examples, all official functions are already taken care of)
-var doNotCallTheseFunctionsEveryTick = ["blowUpEverything"]
+var doNotCallTheseFunctionsEveryTick = ["blowUpEverything", "scaleModifEffective", "scaleModifCost", "scaleModifTarEff", "scaleModifTarCost"]
 
 function getStartPoints(){
     return new Decimal(modInfo.initialStartPoints)
@@ -45,7 +45,7 @@ function getPointGen() {
     if (!inChallenge('p', 13)) gain = gain.mul(tmp.p.effect)
     gain = gain.mul(tmp.p.buyables[22].effect.pps)
     gain = gain.pow(tmp.p.buyables[14].effect)
-    if (inChallenge('p', 12) && challengeCompletions("p", 12).gte(7)) { gain = gain.root(challengeCompletions("p", 12).sub(7).mul(0.25).pow(2).add(2)) }
+    if (inChallenge('p', 12) && challengeCompletions("p", 12).gte(7)) { gain = gain.root(challengeCompletions("p", 12).sub(5)) }
     return gain
 }
 
