@@ -1,202 +1,169 @@
-
-// function exponentialFormat(num, precision, mantissa = true) {
-//     let e = num.log10().floor()
-//     let m = num.div(Decimal.pow(10, e))
-//     if (m.toStringWithDecimalPlaces(precision) == 10) {
-//         m = decimalOne
-//         e = e.add(1)
-//     }
-//     e = (e.gte(1e9) ? format(e, 3) : (e.gte(10000) ? commaFormat(e, 0) : e.toStringWithDecimalPlaces(0)))
-//     if (mantissa)
-//         return m.toStringWithDecimalPlaces(precision) + "e" + e
-//     else return "e" + e
-// }
-
-// function commaFormat(num, precision) {
-//     if (num === null || num === undefined) return "NaN"
-//     if (num.mag < 0.001) return (0).toFixed(precision)
-//     let init = num.toStringWithDecimalPlaces(precision)
-//     let portions = init.split(".")
-//     portions[0] = portions[0].replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1,")
-//     if (portions.length == 1) return portions[0]
-//     return portions[0] + "." + portions[1]
-// }
-
-
-// function regularFormat(num, precision) {
-//     if (num === null || num === undefined) return "NaN"
-//     if (num.mag < 0.0001) return (0).toFixed(precision)
-//     if (num.mag < 0.1 && precision !==0) precision = Math.max(precision, 4)
-//     return num.toStringWithDecimalPlaces(precision)
-// }
-
-// function fixValue(x, y = 0) {
-//     return x || new Decimal(y)
-// }
-
-// function sumValues(x) {
-//     x = Object.values(x)
-//     if (!x[0]) return decimalZero
-//     return x.reduce((a, b) => Decimal.add(a, b))
-// }
-
-// function format(decimal, precision = 2, small) {
-//     small = small || modInfo.allowSmall
-//     decimal = new Decimal(decimal)
-//     if (isNaN(decimal.sign) || isNaN(decimal.layer) || isNaN(decimal.mag)) {
-//         player.hasNaN = true;
-//         return "NaN"
-//     }
-//     if (decimal.sign < 0) return "-" + format(decimal.neg(), precision, small)
-//     if (decimal.mag == Number.POSITIVE_INFINITY) return "Infinity"
-//     if (decimal.gte("eeee1000")) {
-//         var slog = decimal.slog()
-//         if (slog.gte(1e6)) return "F" + format(slog.floor())
-//         else return Decimal.pow(10, slog.sub(slog.floor())).toStringWithDecimalPlaces(3) + "F" + commaFormat(slog.floor(), 0)
-//     }
-//     else if (decimal.gte("1e1000000")) return exponentialFormat(decimal, 0, false)
-//     else if (decimal.gte("1e10000")) return exponentialFormat(decimal, 0)
-//     else if (decimal.gte(1e9)) return exponentialFormat(decimal, precision)
-//     else if (decimal.gte(1e3)) return commaFormat(decimal, 0)
-//     else if (decimal.gte(0.0001) || !small) return regularFormat(decimal, precision)
-//     else if (decimal.eq(0)) return (0).toFixed(precision)
-
-//     decimal = invertOOM(decimal)
-//     let val = ""
-//     if (decimal.lt("1e1000")){
-//         val = exponentialFormat(decimal, precision)
-//         return val.replace(/([^(?:e|F)]*)$/, '-$1')
-//     } else return format(decimal, precision) + "⁻¹"
-// }
-
-// function formatWhole(decimal) {
-//     decimal = new Decimal(decimal)
-//     if (decimal.gte(1e9)) return format(decimal, 2)
-//     if (decimal.lte(0.99) && !decimal.eq(0)) return format(decimal, 2)
-//     return format(decimal, 0)
-// }
-
-// function formatTime(s) {
-//     if (s < 60) return format(s) + "s"
-//     else if (s < 3600) return formatWhole(Math.floor(s / 60)) + "m " + format(s % 60) + "s"
-//     else if (s < 86400) return formatWhole(Math.floor(s / 3600)) + "h " + formatWhole(Math.floor(s / 60) % 60) + "m " + format(s % 60) + "s"
-//     else if (s < 31536000) return formatWhole(Math.floor(s / 86400) % 365) + "d " + formatWhole(Math.floor(s / 3600) % 24) + "h " + formatWhole(Math.floor(s / 60) % 60) + "m " + format(s % 60) + "s"
-//     else return formatWhole(Math.floor(s / 31536000)) + "y " + formatWhole(Math.floor(s / 86400) % 365) + "d " + formatWhole(Math.floor(s / 3600) % 24) + "h " + formatWhole(Math.floor(s / 60) % 60) + "m " + format(s % 60) + "s"
-// }
-
-// function toPlaces(x, precision, maxAccepted) {
-//     x = new Decimal(x)
-//     let result = x.toStringWithDecimalPlaces(precision)
-//     if (new Decimal(result).gte(maxAccepted)) {
-//         result = new Decimal(maxAccepted - Math.pow(0.1, precision)).toStringWithDecimalPlaces(precision)
-//     }
-//     return result
-// }
-
-// // Will also display very small numbers
-// function formatSmall(x, precision=2) { 
-//     return format(x, precision, true)    
-// }
-
-// function invertOOM(x){
-//     let e = x.log10().ceil()
-//     let m = x.div(Decimal.pow(10, e))
-//     e = e.neg()
-//     x = new Decimal(10).pow(e).times(m)
-
-//     return x
-// }
-
 "use strict";
-
-const abbSuffixes = ["", "K", "M", "B", "T", "Qa", "Qi", "Sx", "Sp", "Oc", "No", "Dc",
-                    "UDc", "DDc", "TDc", "QaDc", "QiDc", "SxDc", "SpDc", "OcDc", "NoDc", "Vg"];
-
+const abbSuffixes = ["","K","M","B","T","Qa","Qi","Sx","Sp","Oc","No","Dc","UDc","DDc","TDc","QaDc","QiDc","SxDc","SpDc","OcDc","NoDc","Vg"];
+const letter = ["a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y","z"];
 
 const timeList = [
-    { name: "pt",  stop: true,  amt: 5.39e-44    },
-    { name: "qs",  stop: true,  amt: 1 / 1e30    },
-    { name: "rs",  stop: true,  amt: 1 / 1e27    },
-    { name: "ys",  stop: true,  amt: 1 / 1e24    },
-    { name: "zs",  stop: true,  amt: 1 / 1e21    },
-    { name: "as",  stop: true,  amt: 1 / 1e18    },
-    { name: "fs",  stop: true,  amt: 1 / 1e15    },
-    { name: "ps",  stop: true,  amt: 1 / 1e12    },
-    { name: "ns",  stop: true,  amt: 1 / 1e9     },
-    { name: "µs",  stop: true,  amt: 1 / 1e6     },
-    { name: "ms",  stop: true,  amt: 1 / 1e3     },
-    { name: "s",   stop: true,  amt: 1           },
-    { name: "m",   stop: false, amt: 60          },
-    { name: "h",   stop: false, amt: 3600        },
-    { name: "d",   stop: false, amt: 86400       },
-    { name: "mo",  stop: false, amt: 2592000     },
-    { name: "y",   stop: false, amt: 3.1536e7    },
-    { name: "mil", stop: false, amt: 3.1536e10   },
-    { name: "uni", stop: false, amt: 4.320432e17 },
+    { name: "pt",  stop: true,  amt: 5.39e-44 },
+    { name: "qs",  stop: true,  amt: 1 / 1e30 },
+    { name: "rs",  stop: true,  amt: 1 / 1e27 },
+    { name: "ys",  stop: true,  amt: 1 / 1e24 },
+    { name: "zs",  stop: true,  amt: 1 / 1e21 },
+    { name: "as",  stop: true,  amt: 1 / 1e18 },
+    { name: "fs",  stop: true,  amt: 1 / 1e15 },
+    { name: "ps",  stop: true,  amt: 1 / 1e12 },
+    { name: "ns",  stop: true,  amt: 1 / 1e9 },
+    { name: "µs",  stop: true,  amt: 1 / 1e6 },
+    { name: "ms",  stop: true,  amt: 1 / 1e3 },
+    { name: "s",   stop: true,  amt: 1 },
+    { name: "m",   stop: false, amt: 60 },
+    { name: "h",   stop: false, amt: 3600 },
+    { name: "d",   stop: false, amt: 86400 },
+    { name: "mo",  stop: false, amt: 2592000 },
+    { name: "y",   stop: false, amt: 3.1536e7 },
+    { name: "mil", stop: false, amt: 3.1536e10 },
+    { name: "uni", stop: false, amt: 4.320432e17 }
 ];
 
-const abbExp = 1e66;
+const abbExp = D(1e66);
 
 function numberWithCommas(x) {
     return x.toString().replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",");
 }
 
-function format(number, dec = 0, expdec = 3) {
-    let n = new Decimal(number);
-    if (n.lt(0)) return "-" + format(n.negate(), dec, expdec);
-    if (n.eq(0)) return "0";
-    if (!Number.isFinite(n.mag)) return "Infinity";
-    if (Number.isNaN(n.mag)) return "NaN";
-    if (n.lt(0.001)) {
-        return "1 / " + format(n.recip(), dec, expdec);
-    } else if (n.lt(1e6)) {
-        return numberWithCommas(n.toNumber().toFixed(dec));
-    } else if (n.lt(abbExp)) {
-        let abb = n.log(1000).mul(1.000000001).floor();
-        return n.div(Decimal.pow(1000, abb)).toNumber().toFixed(expdec) + " " + abbSuffixes[abb];
-    } else if (n.lt("e1e6")) {
-        let exp = n.log10().mul(1.000001).floor();
-        return n.div(exp.pow10()).toNumber().toFixed(expdec) + "e" + format(exp, 0, expdec);
-    } else if (n.lt("10^^7")) {
-        return "e" + format(n.log10(), dec, expdec);
-    } else {
-        return "F" + format(n.slog(10), dec, expdec);
+function formatLetter(remainingLogNumber, string = ``) {
+    if (Decimal.gte(remainingLogNumber, 1e12)) {
+        console.error(
+            `formatLetter is taking in numbers greater than ee12! This *will* freeze the game!`
+        );
+        return ``;
     }
+    if (Decimal.lt(remainingLogNumber, letter.length)) {
+        return `${letter[new Decimal(remainingLogNumber).toNumber()]}${string}`;
+    }
+    return formatLetter(
+        Decimal.div(remainingLogNumber, letter.length).sub(1).floor(),
+        `${letter[new Decimal(remainingLogNumber).mod(letter.length).toNumber()]}${string}`
+    );
 }
+
+function format(number, dec = 0, expdec = 3, notation = 0) {
+    if (Decimal.lt(number, 0)) return `-${format(Decimal.negate(number), dec, expdec)}`;
+    if (Decimal.eq(number, 0)) return (0).toFixed(dec);
+    if (Decimal.isNaN(number)) return "NaN";
+    if (!Decimal.isFinite(number)) return "Infinity";
+    try {
+        switch (notation) {
+            case 0: // mixed
+                if (Decimal.gte(number, 1e8) && Decimal.lt(number, abbExp)) {
+                    const abb = Decimal.log10(number).mul(0.33333333336666665).floor();
+                    return `${Decimal.div(number, abb.mul(3).pow10()).toNumber().toFixed(expdec)} ${abbSuffixes[abb.toNumber()]}`;
+                }
+                return format(number, dec, expdec, 1);
+            case 1: // sci
+                if (Decimal.lt(number, "e-1e8")) {
+                    return `e${format(Decimal.log10(number), 0, expdec)}`;
+                } else if (Decimal.lt(number, 0.001)) {
+                    const exp = Decimal.log10(number).mul(1.00000000001).floor();
+                    return `${Decimal.div(number, exp.pow10()).toNumber().toFixed(expdec)}e${format(exp, 0, expdec)}`;
+                } else if (Decimal.lt(number, 1e8)) {
+                    return numberWithCommas(new Decimal(number).toNumber().toFixed(dec));
+                } else if (Decimal.lt(number, 'ee8')) {
+                    const exp = Decimal.log10(number).mul(1.00000000001).floor();
+                    return `${Decimal.div(number, exp.pow10()).toNumber().toFixed(expdec)}e${format(exp, 0, expdec)}`;
+                } else if (Decimal.lt(number, "10^^7")) {
+                    return `e${format(Decimal.log10(number), dec, expdec)}`;
+                } else {
+                    return `F${format(Decimal.slog(number), Math.max(dec, 3), expdec)}`;
+                }
+            case 2: // letters
+                if (Decimal.gte(number, 1e3) && Decimal.lt(number, 'ee8')) {
+                    const abb = Decimal.log10(number).mul(0.33333333336666665).floor();
+                    return `${Decimal.div(number, abb.mul(3).pow10()).toNumber().toFixed(expdec)} ${formatLetter(abb.sub(1), "")}`;
+                }
+                return format(number, dec, expdec, 1);
+            case 3:
+                if (Decimal.gte(number, "10^^7")) {
+                    return `IM^${format(Decimal.slog(number).sub(2.0221273333), Math.max(dec, 3), expdec, 0)}`;
+                }
+                if (Decimal.gte(number, Number.MAX_VALUE)) {
+                    if (Decimal.lt(number, "2.8e95173")) {
+                        return `${format(Decimal.log10(number).div(308).sub(0.75).pow10(), expdec, expdec, 0)} ᴵᴾ`;
+                    } else if (Decimal.lt(number, "e542945439")) {
+                        return `${format(Decimal.log10(number).div(308).sub(0.75).div(308).sub(0.7).pow_base(5), expdec, expdec, 0)} ᴱᴾ`;
+                    } else if (Decimal.lt(number, "e181502546658")) {
+                        return `${format(Decimal.log10(number).div(308).sub(0.75).div(308).sub(0.7).mul(0.6989700043360187).div(4000).sub(1).pow_base(1000), expdec, expdec, 0)} ᴿᴹ`;
+                    } else {
+                        const rm = Decimal.log10(number).div(308).sub(0.75).div(308).sub(0.7).mul(0.6989700043360187).div(4000).sub(1).mul(3);
+                        return `${format(rm.sub(1000).pow(2).mul(rm.sub(100000).max(1).pow(0.2)), expdec, expdec, Decimal.lt(number, "ee148.37336") ? 0 : 3)} ᴵᴹ`;
+                    }
+                }
+                return format(number, dec, expdec, 1);
+            case 4:
+                return `Rank ${format(Decimal.max(number, 10).div(10).log(2).sqrt().add(1), dec, expdec, 1)}`;
+            default:
+                throw new Error(`${player.value.settings.notation} is not a valid notation index!`);
+        }
+    } catch(e) {
+        console.warn(
+            `There was an error trying to get player.settings.notation! Falling back to Mixed Scientific...\n\nIf you have an object that has an item that uses format() without it being a get or function, this will occurr on load!`
+        );
+        console.warn(e);
+        if (Decimal.lt(number, "e-1e8")) {
+            return `e${format(Decimal.log10(number), 0, expdec)}`;
+        } else if (Decimal.lt(number, 0.001)) {
+            const exp = Decimal.log10(number).mul(1.00000000001).floor();
+            return `${Decimal.div(number, exp.pow10()).toNumber().toFixed(expdec)}e${format(exp, 0, expdec)}`;
+        } else if (Decimal.lt(number, 1e8)) {
+            return numberWithCommas(new Decimal(number).toNumber().toFixed(dec));
+        } else if (Decimal.lt(number, abbExp)) {
+            const abb = Decimal.log10(number).mul(0.33333333336666665).floor();
+            return `${Decimal.div(number, abb.mul(3).pow10()).toNumber().toFixed(expdec)} ${abbSuffixes[abb.toNumber()]}`;
+        } else if (Decimal.lt(number, 'ee8')) {
+            const exp = Decimal.log10(number).mul(1.00000000001).floor();
+            return `${Decimal.div(number, exp.pow10()).toNumber().toFixed(expdec)}e${format(exp, 0, expdec)}`;
+        } else if (Decimal.lt(number, "10^^7")) {
+            return `e${format(Decimal.log10(number), dec, expdec)}`;
+        } else {
+            return `F${format(Decimal.slog(number), Math.max(dec, 3), expdec)}`;
+        }
+    }
+};
 
 function formatPerc(number, dec = 3, expdec = 3) {
-    let n = new Decimal(number);
-    if (n.gte(1000)) {
-        return format(n, dec, expdec) + "x";
+    if (Decimal.gte(number, 1000)) {
+        return `${format(number, dec, expdec)}x`;
     } else {
-        return format(Decimal.sub(100, Decimal.div(100, n)), dec, expdec) + "%";
+        return `${format(Decimal.sub(100, Decimal.div(100, number)), dec, expdec)}%`;
     }
-}
+};
 
 function formatTime(number, dec = 0, expdec = 3, limit = 2) {
-    let n = new Decimal(number);
-    if (n.lt(0)) return "-" + formatTime(n.negate(), dec, expdec);
-    if (n.eq(0)) return "0";
-    if (!Number.isFinite(n.mag)) return "Forever";
-    if (Number.isNaN(n.mag)) return "I don't know?";
+    if (Decimal.lt(number, 0)) return `-${formatTime(Decimal.negate(number), dec, expdec)}`;
+    if (Decimal.eq(number, 0)) return `${(0).toFixed(dec)}s`;
+    if (Decimal.isNaN(number)) return "NaN";
+    if (!Decimal.isFinite(number)) return "Never";
     let lim = 0;
     let str = "";
+    let end = false;
+    let prevNumber;
     for (let i = timeList.length - 1; i >= 0; i--) {
         if (lim >= limit) {
             break;
         }
-        if (n.gte(timeList[i].amt)) {
-            str = str + " " + format(n.div(timeList[i].amt), 0, expdec) + " " + timeList[i].name;
-            n = n.sub(n.div(timeList[i].amt).floor().mul(timeList[i].amt));
+        if (Decimal.gte(number, timeList[i].amt)) {
+            end = lim + 1 >= limit || timeList[i].stop;
+            prevNumber = Decimal.div(number, timeList[i].amt);
+            str = `${str} ${format(prevNumber.sub(end ? 0 : 0.5), end ? dec : 0, expdec)}${timeList[i].name}`;
+            number = Decimal.sub(number, prevNumber.floor().mul(timeList[i].amt));
             lim++;
-            if (timeList[i].stop) {
+            if (timeList[i].stop || prevNumber.gte(1e8)) {
                 break;
             }
         } else {
             if (i === 0) {
-                return format(n, dec, expdec) + " s";
+                return `${str} ${format(number, dec, expdec)}s`.slice(1);
             }
         }
     }
     return str.slice(1);
-}
+};
