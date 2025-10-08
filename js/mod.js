@@ -1,13 +1,13 @@
 let modInfo = {
-    name: "The TearonQ (i have no creative names0",
+    name: "The TearonQ (i have no creative names)",
     id: "tearonq_another_game_lmao",
     author: "TearonQ",
     pointsName: "points",
     modFiles: ["layers.js", "tree.js"],
 
-    discordName: "",
-    discordLink: "",
-    initialStartPoints: new Decimal(0), // Used for hard resets and new players
+    discordName: "My stupid fcking server",
+    discordLink: "https://discord.gg/JJKRfR3gH9",
+    initialStartPoints: new Decimal(10), // Used for hard resets and new players
     offlineLimit: 1,  // In hours
 }
 
@@ -42,10 +42,18 @@ function getPointGen() {
     if(!canGenPoints()) { return new Decimal(0) }
     let gain = new Decimal(1)
     gain = gain.mul(tmp.p.buyables[11].effect)
-    if (!inChallenge('p', 13)) gain = gain.mul(tmp.p.effect)
+    if (!inChallenge('p', 13)) {
+        gain = gain.mul(tmp.p.effect)
+    }
     gain = gain.mul(tmp.p.buyables[22].effect.pps)
+    gain = gain.mul(tmp.p.sspEff)
+    if (hasUpgrade('p', 42)) {
+        gain = gain.mul(upgradeEffect('p', 42))
+    }
     gain = gain.pow(tmp.p.buyables[14].effect)
-    if (inChallenge('p', 12) && challengeCompletions("p", 12).gte(7)) { gain = gain.root(challengeCompletions("p", 12).sub(5)) }
+    if (inChallenge('p', 12) && challengeCompletions("p", 12).gte(7)) { 
+        gain = gain.root(challengeCompletions("p", 12).sub(5))
+    }
     return gain
 }
 

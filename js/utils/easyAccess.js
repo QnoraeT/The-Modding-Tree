@@ -11,7 +11,7 @@ function hasAchievement(layer, id) {
 }
 
 function hasChallenge(layer, id) {
-	return ((player[layer].challenges[id].gte(1)) && !tmp[layer].deactivated)
+	return ((player[layer].challenges[id]) && !tmp[layer].deactivated)
 }
 
 function maxedChallenge(layer, id) {
