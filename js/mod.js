@@ -50,10 +50,16 @@ function getPointGen() {
     if (hasUpgrade('p', 42)) {
         gain = gain.mul(upgradeEffect('p', 42))
     }
+    gain = gain.mul(tmp.q.generationEff[0])
     gain = gain.pow(tmp.p.buyables[14].effect)
     if (inChallenge('p', 12) && challengeCompletions("p", 12).gte(7)) { 
         gain = gain.root(challengeCompletions("p", 12).sub(5))
     }
+    if (inChallenge('q', 11)) {
+        gain = gain.root(Decimal.pow10(tmp.q.challenges[11].getDepths))
+    }
+
+    gain = gain.mul(player.globalTS)
     return gain
 }
 

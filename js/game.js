@@ -324,6 +324,34 @@ function autobuyUpgrades(layer){
 			buyUpg(layer, id) 
 }
 
+function pointGradualSoftcap(type, num, start, pow, inv) {
+	switch (type) {
+		case 2:
+			if (inv) {
+				return num.log10().root(pow).pow10().root(start)
+			} else {
+				return num.pow(start).log10().pow(pow).pow10()
+			}
+			break;
+		case 1:
+			if (inv) {
+				return num.log10().root(pow).pow10()
+			} else {
+				return num.log10().pow(pow).pow10()
+			}
+			break;
+		case 0:
+			if (inv) {
+				return num.div(start).sub(1).mul(pow).add(1).root(pow).mul(start)
+			} else {
+				return num.div(start).pow(pow).sub(1).div(pow).add(1).mul(start)
+			}
+			break;
+		default:
+			throw new Error(`invalid type ${type} for pointGradualSoftcap`)
+	}
+}
+
 function gameLoop(diff) {
 	if (isEndgame() || tmp.gameEnded){
 		tmp.gameEnded = true
@@ -347,60 +375,124 @@ function gameLoop(diff) {
     player.timeSpeed = D(1)
     player.globalTS = Decimal.mul(player.timeSpeed, player.setTimeSpeed)
 
-    tmp.reductionFactors = {
-        dilate: {exp: D(1.25), eff: D(1)},
-        sc1: {exp: D(2), start: D(1e10), eff: D(1)},
-        sc2: {exp: D(3), start: D(1e33), eff: D(1)},
-    }
-    if (challengeCompletions("p", 14).gte(1) && !(inChallenge('p', 11) || inChallenge('p', 12) || inChallenge('p', 13) || inChallenge('p', 14))) {
-        tmp.reductionFactors.sc1.start = tmp.reductionFactors.sc1.start.mul(tmp.p.challenges[14].rewardEffect)
-    }
+	if (tmp.reductionFactors) {
+		tmp.reductionFactors.dilate.exp = D(1.25)
+		tmp.reductionFactors.sc1.exp = D(2)
+		tmp.reductionFactors.sc1.start = D(1e10)
+		tmp.reductionFactors.sc2.exp = D(3)
+		tmp.reductionFactors.sc2.start = D(1e33)
+	} else {
+		tmp.reductionFactors = {
+			dilate: {exp: D(1.25), eff: D(1)},
+			sc1: {exp: D(2), start: D(1e10), eff: D(1)},
+			sc2: {exp: D(3), start: D(1e33), eff: D(1)},
+		}
+	}
+
     
     if (inChallenge('p', 11)) {
-        tmp.reductionFactors.dilate.exp = tmp.reductionFactors.dilate.exp.mul(Decimal.pow(25/24, tmp.p.challenges[11].getDepths));
+		tmp.reductionFactors.dilate.exp = tmp.reductionFactors.dilate.exp.mul(Decimal.pow(25/24, tmp.p.challenges[11].getDepths));
     }
+
+	if (hasMilestone("p", 0)) {
+		tmp.reductionFactors.dilate.exp = tmp.reductionFactors.dilate.exp.div(1.25/1.225)
+	}
+	
+	if (hasMilestone("p", 100)) {
+		tmp.reductionFactors.dilate.exp = tmp.reductionFactors.dilate.exp.div(1.225/1.2)
+	}
+	
+	if (challengeCompletions("p", 14).gte(1) && !(inChallenge('p', 11) || inChallenge('p', 12) || inChallenge('p', 13) || inChallenge('p', 14))) {
+		tmp.reductionFactors.sc1.start = tmp.reductionFactors.sc1.start.mul(tmp.p.challenges[14].rewardEffect)
+	}
+	
+	tmp.reductionFactors.sc1.exp = tmp.reductionFactors.sc1.exp.root(tmp.p.buyables[32].effect.pts)
 
     if (challengeCompletions("p", 11).gte(1)) {
         tmp.reductionFactors.sc1.exp = tmp.reductionFactors.sc1.exp.pow(0.5);
     }
-
+	
 	if (hasUpgrade('p', 44)) {
 		tmp.reductionFactors.sc2.start = tmp.reductionFactors.sc2.start.mul(upgradeEffect('p', 44))
 	}
-
+	
     if (inChallenge('p', 14)) {
-        tmp.reductionFactors.sc1.start = tmp.reductionFactors.sc1.start.root(tmp.p.challenges[14].getDepths.add(1).mul(2))
+		tmp.reductionFactors.sc1.start = tmp.reductionFactors.sc1.start.root(tmp.p.challenges[14].getDepths.add(1).mul(2))
         tmp.reductionFactors.sc2.start = tmp.reductionFactors.sc2.start.root(tmp.p.challenges[14].getDepths.add(1).mul(2))
     }
+	
+	if (hasMilestone("p", 7)) {
+		tmp.reductionFactors.sc2.exp = tmp.reductionFactors.sc2.exp.root(player.p.buyables[51].sub(7).pow_base(1/0.96));
+	}
 
-    tmp.reductionFactors.sc1.exp = tmp.reductionFactors.sc1.exp.root(tmp.p.buyables[32].effect.pts)
+	// cap lesser tier softcaps before higher tier softcaps
+	tmp.reductionFactors.sc1.start = tmp.reductionFactors.sc1.start.min(tmp.reductionFactors.sc2.start)
+	// end
 
     let finalPointGen = tmp.pointGen.mul(player.globalTS)
     let previous = player.points
 
     if (player.points.gte(tmp.reductionFactors.sc2.start)) {
-		tmp.reductionFactors.sc2.eff = player.points.add(finalPointGen).max(tmp.reductionFactors.sc2.start).div(tmp.reductionFactors.sc2.start).pow(tmp.reductionFactors.sc2.exp).sub(1).div(tmp.reductionFactors.sc2.exp).add(1).mul(tmp.reductionFactors.sc2.start).div(player.points.add(finalPointGen))
-        player.points = player.points.max(tmp.reductionFactors.sc2.start).div(tmp.reductionFactors.sc2.start).pow(tmp.reductionFactors.sc2.exp).sub(1).div(tmp.reductionFactors.sc2.exp).add(1).mul(tmp.reductionFactors.sc2.start)
-    }
+		tmp.reductionFactors.sc2.eff = pointGradualSoftcap(0, player.points, tmp.reductionFactors.sc2.start, tmp.reductionFactors.sc2.exp, false)
+		tmp.reductionFactors.sc2.eff = pointGradualSoftcap(0, tmp.reductionFactors.sc2.eff, tmp.reductionFactors.sc1.start, tmp.reductionFactors.sc1.exp, false)
+		tmp.reductionFactors.sc2.eff = pointGradualSoftcap(1, tmp.reductionFactors.sc2.eff, D(10), tmp.reductionFactors.dilate.exp, false)
+		if (Decimal.eq_tolerance(tmp.reductionFactors.sc2.eff, tmp.reductionFactors.sc2.eff.add(finalPointGen))) {
+			tmp.reductionFactors.sc2.eff = tmp.reductionFactors.sc2.eff.div(player.points)
+		} else {
+			tmp.reductionFactors.sc2.eff = pointGradualSoftcap(1, tmp.reductionFactors.sc2.eff.add(finalPointGen), D(10), tmp.reductionFactors.dilate.exp, true)
+			tmp.reductionFactors.sc2.eff = pointGradualSoftcap(0, tmp.reductionFactors.sc2.eff, tmp.reductionFactors.sc1.start, tmp.reductionFactors.sc1.exp, true)
+			tmp.reductionFactors.sc2.eff = pointGradualSoftcap(0, tmp.reductionFactors.sc2.eff, tmp.reductionFactors.sc2.start, tmp.reductionFactors.sc2.exp, true)
+			tmp.reductionFactors.sc2.eff = tmp.reductionFactors.sc2.eff.sub(player.points).div(finalPointGen).recip()
+			tmp.reductionFactors.sc2.eff = tmp.reductionFactors.sc2.eff.div(tmp.reductionFactors.dilate.eff)
+			tmp.reductionFactors.sc2.eff = tmp.reductionFactors.sc2.eff.div(tmp.reductionFactors.sc1.eff)
+		}
+
+        player.points = player.points.div(tmp.reductionFactors.sc2.start).pow(tmp.reductionFactors.sc2.exp).sub(1).div(tmp.reductionFactors.sc2.exp).add(1).mul(tmp.reductionFactors.sc2.start)
+    } else {
+		tmp.reductionFactors.sc2.eff = D(1)
+	}
+
     if (player.points.gte(tmp.reductionFactors.sc1.start)) {
-		tmp.reductionFactors.sc1.eff = player.points.add(finalPointGen).max(tmp.reductionFactors.sc1.start).div(tmp.reductionFactors.sc1.start).pow(tmp.reductionFactors.sc1.exp).sub(1).div(tmp.reductionFactors.sc1.exp).add(1).mul(tmp.reductionFactors.sc1.start).div(player.points.add(finalPointGen))
-        player.points = player.points.max(tmp.reductionFactors.sc1.start).div(tmp.reductionFactors.sc1.start).pow(tmp.reductionFactors.sc1.exp).sub(1).div(tmp.reductionFactors.sc1.exp).add(1).mul(tmp.reductionFactors.sc1.start)
-    }
+		tmp.reductionFactors.sc1.eff = pointGradualSoftcap(0, player.points, tmp.reductionFactors.sc1.start, tmp.reductionFactors.sc1.exp, false)
+		tmp.reductionFactors.sc1.eff = pointGradualSoftcap(1, tmp.reductionFactors.sc1.eff, D(10), tmp.reductionFactors.dilate.exp, false)
+		if (Decimal.eq_tolerance(tmp.reductionFactors.sc1.eff, tmp.reductionFactors.sc1.eff.add(finalPointGen))) {
+			tmp.reductionFactors.sc1.eff = tmp.reductionFactors.sc1.eff.div(player.points)
+		} else {
+			tmp.reductionFactors.sc1.eff = pointGradualSoftcap(1, tmp.reductionFactors.sc1.eff.add(finalPointGen), D(10), tmp.reductionFactors.dilate.exp, true)
+			tmp.reductionFactors.sc1.eff = pointGradualSoftcap(0, tmp.reductionFactors.sc1.eff, tmp.reductionFactors.sc1.start, tmp.reductionFactors.sc1.exp, true)
+			tmp.reductionFactors.sc1.eff = tmp.reductionFactors.sc1.eff.sub(player.points).div(finalPointGen).recip()
+			tmp.reductionFactors.sc1.eff = tmp.reductionFactors.sc1.eff.div(tmp.reductionFactors.dilate.eff)
+		}
+
+		player.points = player.points.div(tmp.reductionFactors.sc1.start).pow(tmp.reductionFactors.sc1.exp).sub(1).div(tmp.reductionFactors.sc1.exp).add(1).mul(tmp.reductionFactors.sc1.start)
+    } else {
+		tmp.reductionFactors.sc1.eff = D(1)
+	}
+
     if (player.points.gte(10)) {
-		tmp.reductionFactors.dilate.eff = player.points.add(finalPointGen).max(10).log10().pow(tmp.reductionFactors.dilate.exp).pow10().div(player.points.add(finalPointGen))
-        player.points = player.points.max(10).log10().pow(tmp.reductionFactors.dilate.exp).pow10()
-    }
+		tmp.reductionFactors.dilate.eff = pointGradualSoftcap(1, player.points, D(10), tmp.reductionFactors.dilate.exp, false)
+		if (Decimal.eq_tolerance(tmp.reductionFactors.dilate.eff, tmp.reductionFactors.dilate.eff.add(finalPointGen))) {
+			tmp.reductionFactors.dilate.eff = tmp.reductionFactors.dilate.eff.div(player.points)
+		} else {
+			tmp.reductionFactors.dilate.eff = pointGradualSoftcap(1, tmp.reductionFactors.dilate.eff.add(finalPointGen), D(10), tmp.reductionFactors.dilate.exp, true)
+			tmp.reductionFactors.dilate.eff = tmp.reductionFactors.dilate.eff.sub(player.points).div(finalPointGen).recip()
+		}
+
+		player.points = player.points.log10().pow(tmp.reductionFactors.dilate.exp).pow10()
+    } else {
+		tmp.reductionFactors.dilate.eff = D(1)
+	}
 
     player.points = player.points.add(finalPointGen.mul(diff))
 
     if (player.points.gte(10)) {
-        player.points = player.points.max(10).log10().root(tmp.reductionFactors.dilate.exp).pow10()
+        player.points = player.points.log10().root(tmp.reductionFactors.dilate.exp).pow10()
     }
     if (player.points.gte(tmp.reductionFactors.sc1.start)) {
-        player.points = player.points.max(tmp.reductionFactors.sc1.start).div(tmp.reductionFactors.sc1.start).sub(1).mul(tmp.reductionFactors.sc1.exp).add(1).root(tmp.reductionFactors.sc1.exp).mul(tmp.reductionFactors.sc1.start)
+        player.points = player.points.div(tmp.reductionFactors.sc1.start).sub(1).mul(tmp.reductionFactors.sc1.exp).add(1).root(tmp.reductionFactors.sc1.exp).mul(tmp.reductionFactors.sc1.start)
     }
     if (player.points.gte(tmp.reductionFactors.sc2.start)) {
-        player.points = player.points.max(tmp.reductionFactors.sc2.start).div(tmp.reductionFactors.sc2.start).sub(1).mul(tmp.reductionFactors.sc2.exp).add(1).root(tmp.reductionFactors.sc2.exp).mul(tmp.reductionFactors.sc2.start)
+        player.points = player.points.div(tmp.reductionFactors.sc2.start).sub(1).mul(tmp.reductionFactors.sc2.exp).add(1).root(tmp.reductionFactors.sc2.exp).mul(tmp.reductionFactors.sc2.start)
     }
 
     player.calcPointGen = player.points.sub(previous).div(diff)
