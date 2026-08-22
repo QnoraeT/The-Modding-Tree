@@ -11,7 +11,7 @@ addLayer('p', {
     layerShown(){ return true },
     startData() { return {
         unlocked: true,
-        points: new Decimal(0),
+        points: D(0),
         bestPointsInP: D(0),
         timeInP: D(0),
         essence: D(0),
@@ -35,10 +35,10 @@ addLayer('p', {
         challenge22Unlocks: [],
         hsPoints: D(0),
         hsTotal: D(0),
-        hsChalBest: D(0)
+        hsChalBest: D('e3000')
     }},
     color: "#8000FF",
-    requires: new Decimal(1e10), // Can be a function that takes requirement increases into account
+    requires: D(1e10), // Can be a function that takes requirement increases into account
     resource: "prestige points", // Name of prestige currency
     baseResource: "points", // Name of resource prestige is based on
     baseAmount() { return player.points }, // Get the current amount of baseResource
@@ -46,9 +46,9 @@ addLayer('p', {
     update(diff) {
         player[this.layer].timeInP = player[this.layer].timeInP.add(player.globalTS.mul(diff))
 
-        if (hasMilestone("q", 6)) {
+        if (hasMilestone('q', 6)) {
             let gen = tmp[this.layer].getResetGain.mul(player.globalTS).mul(diff).mul(0.01)
-            if (inChallenge('p', 21) || inChallenge('p', 23)) {
+            if (inChallenge(this.layer, 21) || inChallenge(this.layer, 23)) {
                 gen = D(0)
             }
 
@@ -59,7 +59,7 @@ addLayer('p', {
 
         if (player[this.layer].total.gte(10)) {
             let i, j = {dilate: D(1.333), exp: D(2)};
-            if (hasMilestone('p', 6)) {
+            if (hasMilestone(this.layer, 6)) {
                 j.dilate = D(
                     inChallenge('q', 11)
                         ? 1.3
@@ -93,22 +93,22 @@ addLayer('p', {
             player[this.layer].bestEssence = Decimal.max(player[this.layer].essence, player[this.layer].bestEssence);
         }
 
-        if (inChallenge('p', 13)) {
+        if (inChallenge(this.layer, 31)) {
             player[this.layer].ssChalBest = Decimal.max(player[this.layer].ssChalBest, player.points)
-            if (hasUpgrade('p', 31)) {
+            if (hasUpgrade(this.layer, 31)) {
                 player[this.layer].ssPoints = player[this.layer].ssPoints.add(tmp.p.sspGen.mul(diff))
                 player[this.layer].ssTotal = player[this.layer].ssTotal.add(tmp.p.sspGen.mul(diff))
             }
         }
 
-        if (inChallenge('p', 15)) {
+        if (inChallenge(this.layer, 41)) {
             player[this.layer].hsChalBest = Decimal.max(player[this.layer].hsChalBest, player.points)
-            player[this.layer].hsPoints = player[this.layer].hsPoints.add(tmp.p.hspGen.mul(diff))
-            player[this.layer].hsTotal = player[this.layer].hsTotal.add(tmp.p.hspGen.mul(diff))
         }
+        player[this.layer].hsPoints = player[this.layer].hsPoints.add(tmp.p.hspGen.mul(diff))
+        player[this.layer].hsTotal = player[this.layer].hsTotal.add(tmp.p.hspGen.mul(diff))
 
-        if (inChallenge('p', 23)) {
-            let loss = [D(2), D(2.5), D(3), D(3.5), D(4)][challengeCompletions('p', 23).floor().min(4).toNumber()]
+        if (inChallenge(this.layer, 23)) {
+            let loss = [D(2), D(2.5), D(3), D(3.5), D(4)][challengeCompletions(this.layer, 23).floor().min(4).toNumber()]
             player.p.buyable5Clicks = player.p.buyable5Clicks.sub(loss.mul(diff)).max(0)
             if (player.p.buyable5Clicks.eq(0)) {
                 player.p.activeChallenge = null
@@ -138,35 +138,35 @@ addLayer('p', {
             player[this.layer].totalEnergy = player[this.layer].totalEnergy.add(player[this.layer].energyPS.mul(diff))
         }
 
-        if (hasUpgrade('p', 21)) {
+        if (hasUpgrade(this.layer, 21)) {
             tmp[this.layer].buyables[11].buyMax()
         }
 
-        if (hasUpgrade('p', 22)) {
+        if (hasUpgrade(this.layer, 22)) {
             tmp[this.layer].buyables[12].buyMax()
         }
 
-        if (hasUpgrade('p', 23)) {
+        if (hasUpgrade(this.layer, 23)) {
             tmp[this.layer].buyables[13].buyMax()
         }
 
-        if (hasUpgrade('p', 24)) {
+        if (hasUpgrade(this.layer, 24)) {
             tmp[this.layer].buyables[14].buyMax()
         }
         
-        if (hasMilestone("q", 3)) {
+        if (hasMilestone('q', 3)) {
             tmp[this.layer].buyables[21].buyMax()
             tmp[this.layer].buyables[22].buyMax()
             tmp[this.layer].buyables[23].buyMax()
         }
         
-        if (hasMilestone("q", 4)) {
+        if (hasMilestone('q', 4)) {
             tmp[this.layer].buyables[31].buyMax()
             tmp[this.layer].buyables[32].buyMax()
             tmp[this.layer].buyables[33].buyMax()
         }
         
-        if (hasMilestone("q", 5)) {
+        if (hasMilestone('q', 5)) {
             tmp[this.layer].buyables[41].buyMax()
             tmp[this.layer].buyables[42].buyMax()
             tmp[this.layer].buyables[43].buyMax()
@@ -175,14 +175,14 @@ addLayer('p', {
         player[this.layer].buyable5ClickCooldown = Decimal.sub(player[this.layer].buyable5ClickCooldown, diff)
     },
     effect(){
-        if (inChallenge('p', 13) || inChallenge('q', 13)) {
+        if (inChallenge(this.layer, 31) || inChallenge('q', 13)) {
             return D(1)
         }
 
         let i = player[this.layer].total
         let j = D(3)
         j = j.add(tmp[this.layer].buyables[41].effect.ppss)
-        if (hasMilestone('p', 4)) {
+        if (hasMilestone(this.layer, 4)) {
             j = j.add(player[this.layer].buyables[51].sub(4).mul(5))
         }
 
@@ -199,7 +199,7 @@ addLayer('p', {
         return i
     },
     sspGen() {
-        if (!inChallenge('p', 13)) {
+        if (!inChallenge(this.layer, 31)) {
             return D(0)
         }
 
@@ -220,12 +220,64 @@ addLayer('p', {
         return i
     },
     hspGen() {
-        if (!inChallenge('p', 15)) {
+        let i = player.p.hsChalBest.gt('e3000')
+            ? player.p.hsChalBest.log10().div(3000).pow(3)
+            : D(0)
+        return i
+    },
+    hspGalaxyInterval() {
+        // 1 = 10x of HSP = +1 galaxy
+        // 2 = ~3x of HSP = +1 galaxy
+        let i = D(1)
+        return i
+    },
+    hspGalaxies() {
+        if (player.p.hsTotal.lt(1)) {
             return D(0)
         }
+        let i = player.p.hsTotal.log10().mul(tmp[this.layer].hspGalaxyInterval)
+        if (i.gte(1000)) {
+            i = i.div(1000).ln().add(1).mul(1000)
+        }
+        return i.floor()
+    },
+    hspGalaxyNextMult() {
+        if (player.p.hsTotal.lt(1)) {
+            return tmp[this.layer].hspGalaxyInterval.recip().pow10()
+        }
+        let i = tmp[this.layer].hspGalaxies.add(1)
+        if (i.gte(1000)) {
+            i = i.div(1000).sub(1).exp().mul(1000)
+        }
 
-        let i = player.points.max('ee4').log10().div(1e4).pow(3)
+        let j = tmp[this.layer].hspGalaxies
+        if (j.gte(1000)) {
+            j = j.div(1000).sub(1).exp().mul(1000)
+        }
+
+        // I = 10^(i/x)
+        // J = 10^(j/x)
+        // I/J
+        // 10^(i/x) / 10^(j/x)
+        // 10^(i/x - j/x)
+        // 10^((i - j) / x)
+
+        return i.sub(j).div(tmp[this.layer].hspGalaxyInterval).pow10()
+    },
+    hspGalaxyNext() {
+        if (player.p.hsTotal.lt(1)) {
+            return D(1)
+        }
+        let i = tmp[this.layer].hspGalaxies.add(1)
+        if (i.gte(1000)) {
+            i = i.div(1000).sub(1).exp().mul(1000)
+        }
+        i = i.div(tmp[this.layer].hspGalaxyInterval).pow10()
+
         return i
+    },
+    hspGalaxyTotalEffect() {
+        return tmp[this.layer].hspGalaxies.pow_base(0.999).recip()
     },
     energyEff() {
         let i = player[this.layer].totalEnergy
@@ -251,21 +303,21 @@ addLayer('p', {
         gain = gain.mul(tmp.q.effect)
         gain = gain.mul(tmp.q.generationEff[1])
         gain = gain.mul(tmp.q.buyables[12].effect)
-        if (hasUpgrade('p', 262)) {
+        if (hasUpgrade(this.layer, 262)) {
             gain = gain.pow(1.05)
         }
-        if (hasUpgrade('p', 273)) {
-            gain = gain.pow(upgradeEffect('p', 273))
+        if (hasUpgrade(this.layer, 273)) {
+            gain = gain.pow(upgradeEffect(this.layer, 273))
         }
         return gain
     },
     getNextAt() {
         let req = tmp[this.layer].getRequire
         let next = tmp[this.layer].getResetGain
-        if (hasUpgrade('p', 273)) {
-            next = next.root(upgradeEffect('p', 273))
+        if (hasUpgrade(this.layer, 273)) {
+            next = next.root(upgradeEffect(this.layer, 273))
         }
-        if (hasUpgrade('p', 262)) {
+        if (hasUpgrade(this.layer, 262)) {
             next = next.root(1.05)
         }
         next = next.div(tmp.q.buyables[12].effect)
@@ -308,18 +360,18 @@ addLayer('p', {
         return i
     },
     b5ClickMult() {
-        if (inChallenge('p', 23)) {
+        if (inChallenge(this.layer, 23)) {
             return D(1)
         }
 
         let i = D(1)
-        if (hasUpgrade('p', 223)) {
+        if (hasUpgrade(this.layer, 223)) {
             i = i.mul(tmp.p.totalBP)
         }
-        if (hasUpgrade('p', 233)) {
+        if (hasUpgrade(this.layer, 233)) {
             i = i.mul(25)
         }
-        i = i.mul([1, 1.5, 3, 9, 45, 360][challengeCompletions('p', 23).toNumber()])
+        i = i.mul([1, 1.5, 3, 9, 45, 360][challengeCompletions(this.layer, 23).toNumber()])
 
         return i
     },
@@ -333,7 +385,7 @@ addLayer('p', {
         player.points = D(0)
 
         player.p.timeInP = D(0)
-        if (hasUpgrade('p', 223)) {
+        if (hasUpgrade(this.layer, 223)) {
             player.p.buyable5Clicks = player.p.buyable5Clicks.mul(0.8)
         } else {
             player.p.buyable5Clicks = D(0)
@@ -343,9 +395,10 @@ addLayer('p', {
         setBuyableAmount(this.layer, "11", D(0))
         setBuyableAmount(this.layer, "12", D(0))
         setBuyableAmount(this.layer, "13", D(0))
-        if (!hasUpgrade('p', 13)) { setBuyableAmount(this.layer, "14", D(0)) }
+        if (!hasUpgrade(this.layer, 13)) { setBuyableAmount(this.layer, "14", D(0)) }
     },
     tabFormat: {
+        // ! NOTE!! IN tabFormat, this.layer DOESN'T WORK !!!
         "Main": {
             content: [
                 "main-display",
@@ -396,29 +449,32 @@ addLayer('p', {
             content: [
                 "main-display",
                 ["display-text",
-                function() { return `You have <h2 style="color: #C0C0C0; font-size: 26px; text-shadow: #C0C0C0 0px 0px 10px;">${format(player[this.layer].ssPoints)}</h2> Super Scaling Points, which multiplies point gain by &times;${format(tmp[this.layer].sspEff, 2)}. (${format(tmp.p.sspGen, 3)}/sec)` }],
+                function() { return hasUpgrade('p', 31) ? `You have <h2 style="color: #C0C0C0; font-size: 26px; text-shadow: #C0C0C0 0px 0px 10px;">${format(player[this.layer].ssPoints)}</h2> Super Scaling Points, which multiplies point gain by &times;${format(tmp[this.layer].sspEff, 2)}. (${format(tmp.p.sspGen, 3)}/sec)` : "" }],
                 ["display-text",
-                function() { return `You gain Super Scaling Points based off of your progress in the Super Scaling challenge. The higher your points, the higher the SSP you gain.` }],
+                function() { return hasUpgrade('p', 31) ? `You gain Super Scaling Points based off of your progress in the Super Scaling challenge. The higher your points, the higher the SSP you gain.` : "" }],
                 "blank",
                 ["upgrades", [4]],
                 "blank",
-                ["challenges", [1]],
+                ["challenges", [3]],
             ],
             unlocked(){
-                return hasUpgrade('p', 31)
+                return player.p.total.gte(100)
             },
         },
         "Hyper Scaling": {
             content: [
                 "main-display",
                 ["display-text",
-                function() { return `You have <h2 style="color: #C0C0C0; font-size: 26px; text-shadow: #C0C0C0 0px 0px 10px;">${format(player[this.layer].hsPoints)}</h2> Hyper Scaling Points. (${format(tmp.p.hspGen, 3)}/sec)` }],
+                function() { return `You have <h2 style="color: #C0C0C0; font-size: 26px; text-shadow: #C0C0C0 0px 0px 10px;">${format(player[this.layer].hsPoints)}</h2> Hyper Scaling Points. (${format(tmp[this.layer].hspGen, 3)}/sec)` }],
                 ["display-text",
-                function() { return `You gain Hyper Scaling Points based off of your progress in the Hyper Scaling challenge. The higher your points, the higher the HSP you gain.` }],
+                function() { return `You have <h2 style="color: #C0C0C0; font-size: 26px; text-shadow: #C0C0C0 0px 0px 10px;">${format(tmp[this.layer].hspGalaxies)}</h2> intervals (next at ${format(tmp[this.layer].hspGalaxyNext)} HSP), reducing your Basic Buyable cost scaling by -${formatPerc(tmp[this.layer].hspGalaxyTotalEffect, 3)}.` }],
+                "blank",
+                ["display-text",
+                function() { return `You gain Hyper Scaling Points based off of your progress in the Hyper Scaling challenge.<br>The higher your points, the higher the HSP you gain.<br><br>Every time your HSP increases by ${format(tmp[this.layer].hspGalaxyNextMult, 2)}&times;, all Basic Buyable cost scaling is decreased by &times;0.999.<br>The requirement will begin to scale after ${format(1e3)} intervals!` }],
                 "blank",
                 ["upgrades", [40]],
                 "blank",
-                ["challenges", [1]],
+                ["challenges", [4]],
             ],
             unlocked(){
                 return hasUpgrade('p', 301)
@@ -433,7 +489,7 @@ addLayer('p', {
                 ["microtabs", "RankTabs"],
             ],
             unlocked(){
-                return inChallenge('q', 11) || challengeCompletions("q", 12).gte(1)
+                return inChallenge('q', 11) || challengeCompletions('q', 12).gte(1)
             },
         },
         "Dimensions": {
@@ -446,7 +502,7 @@ addLayer('p', {
                 ["buyables", [6]],
             ],
             unlocked(){
-                return inChallenge('q', 12) || challengeCompletions("q", 13).gte(1)
+                return inChallenge('q', 12) || challengeCompletions('q', 13).gte(1)
             },
         },
         "Tree": {
@@ -509,24 +565,24 @@ addLayer('p', {
             requirementDescription: "Rank 2",
             effectDescription: "Point Buyable 1's linear cost scaling is reduced by -0.25.",
             done() { return player[this.layer].buyables[51].gte(2) },
-            unlocked() { return hasMilestone('p', 0) }
+            unlocked() { return hasMilestone(this.layer, 0) }
         },
         2: {
             requirementDescription: "Rank 3",
             effectDescription() {
                 return `Every Point Buyable 2 adds ${
-                    inChallenge('p', 11) 
+                    inChallenge(this.layer, 11) 
                         ? "1 free level"
                         : "0.1 free levels"} to Point Buyable 1.`
             },
             done() { return player[this.layer].buyables[51].gte(3) },
-            unlocked() { return hasMilestone('p', 1) }
+            unlocked() { return hasMilestone(this.layer, 1) }
         },
         3: {
             requirementDescription: "Rank 4",
             effectDescription: "Point Buyable 1's quadratic cost scaling is reduced by -0.005.",
             done() { return player[this.layer].buyables[51].gte(4) },
-            unlocked() { return hasMilestone('p', 2) }
+            unlocked() { return hasMilestone(this.layer, 2) }
         },
         4: {
             requirementDescription: "Rank 5",
@@ -534,19 +590,19 @@ addLayer('p', {
                 return `Every Rank past 4 adds +5.0 to the prestige point effect exponent.<br>Currently: +${format(player[this.layer].buyables[51].sub(4).max(0).mul(5), 1)} to exp.`
             },
             done() { return player[this.layer].buyables[51].gte(5) },
-            unlocked() { return hasMilestone('p', 3) }
+            unlocked() { return hasMilestone(this.layer, 3) }
         },
         5: {
             requirementDescription: "Rank 6",
             effectDescription: "Point Buyable 2's linear cost scaling is nullified.",
             done() { return player[this.layer].buyables[51].gte(6) },
-            unlocked() { return hasMilestone('p', 4) }
+            unlocked() { return hasMilestone(this.layer, 4) }
         },
         6: {
             requirementDescription: "Rank 7",
             effectDescription: "Prestige Essence's natural softcap is weakened slightly.",
             done() { return player[this.layer].buyables[51].gte(7) },
-            unlocked() { return hasMilestone('p', 5) }
+            unlocked() { return hasMilestone(this.layer, 5) }
         },
         7: {
             requirementDescription: "Rank 8",
@@ -556,7 +612,7 @@ addLayer('p', {
                     : `Point's 2nd softcap is -2% weaker every Rank past 7.<br>Currently: -${formatPerc(player[this.layer].buyables[51].sub(7).max(0).pow_base(1/0.98), 2)} softcap strength.`
             },
             done() { return player[this.layer].buyables[51].gte(8) },
-            unlocked() { return hasMilestone('p', 6) }
+            unlocked() { return hasMilestone(this.layer, 6) }
         },
         8: {
             requirementDescription: "Rank 12",
@@ -566,7 +622,7 @@ addLayer('p', {
                     : `PP Buyable 2 is +12.5% more effective every Rank past 11.<br>Currently: +${format(player[this.layer].buyables[51].sub(11).max(0).mul(0.125).add(1).sub(1).mul(100), 1)}% effective`
             },
             done() { return player[this.layer].buyables[51].gte(12) },
-            unlocked() { return hasMilestone('p', 7) }
+            unlocked() { return hasMilestone(this.layer, 7) }
         },
         100: {
             requirementDescription: "Tier 1",
@@ -581,7 +637,7 @@ addLayer('p', {
                     : "Reduce PP Buyable 9's linear cost scaling to 1.175."
             },
             done() { return player[this.layer].buyables[52].gte(2) },
-            unlocked() { return hasMilestone('p', 100) }
+            unlocked() { return hasMilestone(this.layer, 100) }
         },
         102: {
             requirementDescription: "Tier 3",
@@ -591,7 +647,7 @@ addLayer('p', {
                     : `Add 1 free level for Point Buyable 4 and PP Buyable 9's effect base is increased by +0.1 every Tier past 2.<br>Currently: +${format(player[this.layer].buyables[52].sub(2).max(0))} free levels, +${format(player[this.layer].buyables[52].sub(2).max(0).mul(0.1), 1)} effect base`
             },
             done() { return player[this.layer].buyables[52].gte(3) },
-            unlocked() { return hasMilestone('p', 101) }
+            unlocked() { return hasMilestone(this.layer, 101) }
         },
     },
     buyables: (() => {
@@ -601,13 +657,13 @@ addLayer('p', {
                 num: 1,
                 get costD() {
                     const obj = {type: 0, exp: 0, main: [D(10), D(1.6), D(1.025)]}
-                    if (hasUpgrade('p', 41)) {
+                    if (hasUpgrade(this.layer, 41)) {
                         obj.main[1] = D(1.25)
                     }
-                    if (hasMilestone('p', 1)) {
+                    if (hasMilestone(this.layer, 1)) {
                         obj.main[1] = obj.main[1].sub(0.25)
                     }
-                    if (hasMilestone('p', 3)) {
+                    if (hasMilestone(this.layer, 3)) {
                         obj.main[2] = obj.main[2].sub(0.005)
                     }
                     return obj
@@ -621,30 +677,33 @@ addLayer('p', {
                     let i = D(x), j
 
                     if (!override) {
+                        // mult to non-free level effectiveness
+                        i = i.mul(tmp[this.layer].challenges[41].rewardEffect)
+
                         i = i.add(tmp[this.layer].buyables[13].effect.free)
-                        if (hasMilestone('p', 2)) {
+                        if (hasMilestone(this.layer, 2)) {
                             i = i.add(player[this.layer].buyables[12].mul(
                                 inChallenge(this.layer, 11)
                                     ? 1
                                     : 0.1
                             ))
                         }
-                        if (hasUpgrade('p', 15)) {
+                        if (hasUpgrade(this.layer, 15)) {
                             i = i.add(player[this.layer].buyables[31].mul(0.4))
                         }
-                        if (challengeCompletions('p', 12).gte(5)) { i = i.mul(1.05) }
-                        if (hasUpgrade('p', 251)) { i = i.mul(1.05) }
+                        if (challengeCompletions(this.layer, 12).gte(5)) { i = i.mul(1.05) }
+                        if (hasUpgrade(this.layer, 251)) { i = i.mul(1.05) }
                     }
 
                     j = D(2)
                     j = j.add(tmp[this.layer].buyables[12].effect)
                     j = j.mul(tmp[this.layer].buyables[13].effect.base)
-                    if (hasUpgrade('p', 14)) { j = j.add(upgradeEffect(this.layer, 14)) }
-                    if (inChallenge('p', 12) && challengeCompletions('p', 12).gte(9)) { j = j.sub(1).div(3).add(1) }
+                    if (hasUpgrade(this.layer, 14)) { j = j.add(upgradeEffect(this.layer, 14)) }
+                    if (inChallenge(this.layer, 12) && challengeCompletions(this.layer, 12).gte(9)) { j = j.sub(1).div(3).add(1) }
 
                     i = Decimal.pow(j, i)
 
-                    if (challengeCompletions('p', 12).gte(8)) { i = i.log10().pow([1, 1.005, 1.010025, 1.015075125][challengeCompletions('p', 12).sub(7).max(0).toNumber()]).pow10() }
+                    if (challengeCompletions(this.layer, 12).gte(8)) { i = i.log10().pow([1, 1.005, 1.010025, 1.015075125][challengeCompletions(this.layer, 12).sub(7).max(0).toNumber()]).pow10() }
                     return i
                 },
                 dispEffect() {
@@ -657,9 +716,9 @@ addLayer('p', {
                     return `&times;${format(nextEffect.div(currEffect), 2)} point gain.` 
                 },
                 scaleModifEffective(x) {
-                    if (inChallenge('p', 12) && challengeCompletions('p', 12).gte(5)) { x = x.pow(2) }
+                    if (inChallenge(this.layer, 12) && challengeCompletions(this.layer, 12).gte(5)) { x = x.pow(2) }
 
-                    if (challengeCompletions("q", 11).gte(1)) {
+                    if (challengeCompletions('q', 11).gte(1)) {
                         x = x.mul(0.75)
                     }
                     return x
@@ -669,11 +728,11 @@ addLayer('p', {
                     return x
                 },
                 scaleModifTarEff(x) {
-                    if (challengeCompletions("q", 11).gte(1)) {
+                    if (challengeCompletions('q', 11).gte(1)) {
                         x = x.div(0.75)
                     }
 
-                    if (inChallenge('p', 12) && challengeCompletions('p', 12).gte(5)) { x = x.root(2) }
+                    if (inChallenge(this.layer, 12) && challengeCompletions(this.layer, 12).gte(5)) { x = x.root(2) }
                     return x
                 },
                 scaleModifTarCost(x) {
@@ -686,7 +745,7 @@ addLayer('p', {
                 num: 2,
                 get costD() {
                     const obj = {type: 0, exp: 0, main: [D(250), D(2), D(1.05)]}
-                    if (hasMilestone('p', 5)) {
+                    if (hasMilestone(this.layer, 5)) {
                         obj.main[1] = D(1)
                     }
                     return obj
@@ -694,7 +753,7 @@ addLayer('p', {
                 unlocked() { return player.bestPoints.gte(100) },
                 unavail() {
                     let x = false
-                    if (inChallenge('p', 12)) { x = true }
+                    if (inChallenge(this.layer, 12)) { x = true }
                     return x
                 },
                 preEffect(x, override) {
@@ -702,21 +761,21 @@ addLayer('p', {
                     let i = D(x), j
 
                     if (!override) {
-                        if (hasUpgrade('p', 15)) {
+                        if (hasUpgrade(this.layer, 15)) {
                             i = i.add(player[this.layer].buyables[32].mul(0.4))
                         }
-                        if (hasUpgrade('p', 251)) { i = i.mul(1.05) }
+                        if (hasUpgrade(this.layer, 251)) { i = i.mul(1.05) }
                     }
 
                     j = D(0.25)
-                    j = j.add([0, 0.025, 0.055, 0.09, 0.13, 0.175, 0.225, 0.28, 0.34, 0.405, 0.475][challengeCompletions('p', 12).toNumber()]);
+                    j = j.add([0, 0.025, 0.055, 0.09, 0.13, 0.175, 0.225, 0.28, 0.34, 0.405, 0.475][challengeCompletions(this.layer, 12).toNumber()]);
                     i = Decimal.mul(j, i)
-                    if (challengeCompletions('p', 12).gte(3)) { i = i.add(1).pow(1.1).sub(1) }
+                    if (challengeCompletions(this.layer, 12).gte(3)) { i = i.add(1).pow(1.1).sub(1) }
 
-                    i = i.add(1).pow(tmp[this.layer].challenges[13].rewardEffect).sub(1)
+                    i = i.add(1).pow(tmp[this.layer].challenges[31].rewardEffect).sub(1)
                     i = i.add(1).pow(tmp.q.buyables[13].effect).sub(1)
                     if (hasUpgrade(this.layer, 232)) {
-                        i = i.add(1).pow(upgradeEffect('p', 232)).sub(1)
+                        i = i.add(1).pow(upgradeEffect(this.layer, 232)).sub(1)
                     }
 
                     return i
@@ -731,7 +790,7 @@ addLayer('p', {
                     return `+${format(nextEffect.sub(currEffect), 3)} Point Buyable 1 base.` 
                 },
                 scaleModifEffective(x) {
-                    if (challengeCompletions('p', 12).gte(6)) { x = x.div([1, 1.025, 1.06, 1.12, 1.21, 1.343][challengeCompletions('p', 12).sub(5).max(0).toNumber()]) }      
+                    if (challengeCompletions(this.layer, 12).gte(6)) { x = x.div([1, 1.025, 1.06, 1.12, 1.21, 1.343][challengeCompletions(this.layer, 12).sub(5).max(0).toNumber()]) }      
                     return x
                 },
                 // put ?? D(1) as default for 1 because i think some race condition/wrong initalization order is causing that to be undefined, letting it be interpreted as 0
@@ -741,7 +800,7 @@ addLayer('p', {
                     return x
                 },
                 scaleModifTarEff(x) {
-                    if (challengeCompletions('p', 12).gte(6)) { x = x.mul([1, 1.025, 1.06, 1.12, 1.21, 1.343][challengeCompletions('p', 12).sub(5).max(0).toNumber()]) }      
+                    if (challengeCompletions(this.layer, 12).gte(6)) { x = x.mul([1, 1.025, 1.06, 1.12, 1.21, 1.343][challengeCompletions(this.layer, 12).sub(5).max(0).toNumber()]) }      
                     return x
                 },
                 scaleModifTarCost(x) {
@@ -753,7 +812,7 @@ addLayer('p', {
                 type: 0,
                 num: 3,
                 costD: {type: 0, exp: 1, main: [D(6), D(1.15), D(1.0005)]},
-                unlocked() { return player.bestPoints.gte(1e5) && challengeCompletions('p', 11).gte(1) },
+                unlocked() { return player.bestPoints.gte(1e5) && challengeCompletions(this.layer, 11).gte(1) },
                 unavail() {
                     let x = false
                     return x
@@ -762,15 +821,19 @@ addLayer('p', {
                     let i = D(x), j
 
                     if (!override) {
-                        if (hasUpgrade('p', 15)) {
+                        if (hasUpgrade(this.layer, 15)) {
                             i = i.add(player[this.layer].buyables[33].mul(0.4))
                         }
-                        if (challengeCompletions('p', 12).gte(2)) { i = i.mul(1.2) }
-                        if (hasUpgrade('p', 251)) { i = i.mul(1.05) }
+                        if (challengeCompletions(this.layer, 12).gte(2)) { i = i.mul(1.2) }
+                        if (hasUpgrade(this.layer, 251)) { i = i.mul(1.05) }
+
+                        if (inChallenge(this.layer, 41)) {
+                            i = i.pow(0.5)
+                        }
                     }
 
                     j = [D(0.5), D(1.02)];
-                    if (challengeCompletions('p', 12).gte(4)) { j[1] = j[1].add(0.01) }
+                    if (challengeCompletions(this.layer, 12).gte(4)) { j[1] = j[1].add(0.01) }
                     j[0] = j[0].add(tmp[this.layer].buyables[23].effect.free)
 
                     i = {free: Decimal.mul(j[0], i), base: Decimal.pow(j[1], i)};
@@ -786,9 +849,9 @@ addLayer('p', {
                     return `+${format(nextEffect.free.sub(currEffect.free), 2)} free BB1, &times;${format(nextEffect.base.div(currEffect.base), 3)} BB1 base.` 
                 },
                 scaleModifEffective(x) {
-                    if (hasUpgrade('p', 12)) { x = x.sub(upgradeEffect('p', 12)) }
+                    if (hasUpgrade(this.layer, 12)) { x = x.sub(upgradeEffect(this.layer, 12)) }
                     x = x.div(tmp[this.layer].buyables[21].effect.up3s)
-                    if (challengeCompletions("q", 12).gte(1)) {
+                    if (challengeCompletions('q', 12).gte(1)) {
                         x = x.mul(0.9)
                     }
 
@@ -798,11 +861,11 @@ addLayer('p', {
                     return x
                 },
                 scaleModifTarEff(x) {
-                    if (challengeCompletions("q", 12).gte(1)) {
+                    if (challengeCompletions('q', 12).gte(1)) {
                         x = x.div(0.9)
                     }
                     x = x.mul(tmp[this.layer].buyables[21].effect.up3s)
-                    if (hasUpgrade('p', 12)) { x = x.add(upgradeEffect('p', 12)) }
+                    if (hasUpgrade(this.layer, 12)) { x = x.add(upgradeEffect(this.layer, 12)) }
 
                     return x
                 },
@@ -814,10 +877,10 @@ addLayer('p', {
                 type: 0,
                 num: 4,
                 costD: {type: 0, exp: 1, main: [D(20), D(1.1), D(1.001)]},
-                unlocked() { return player.bestPoints.gte(1e10) && hasUpgrade('p', 11) },
+                unlocked() { return player.bestPoints.gte(1e10) && hasUpgrade(this.layer, 11) },
                 unavail() {
                     let x = false
-                    if (inChallenge('p', 24)) {
+                    if (inChallenge(this.layer, 24)) {
                         x = true
                     }
                     return x
@@ -826,13 +889,13 @@ addLayer('p', {
                     let i = D(x), j
 
                     if (!override) {
-                        if (hasMilestone('p', 102)) {
+                        if (hasMilestone(this.layer, 102)) {
                             i = i.add(player[this.layer].buyables[52].sub(2).max(0))
                         }
-                        if (hasUpgrade('p', 272)) {
+                        if (hasUpgrade(this.layer, 272)) {
                             i = i.add(2)
                         }
-                        if (hasUpgrade('p', 251)) { i = i.mul(1.05) }
+                        if (hasUpgrade(this.layer, 251)) { i = i.mul(1.05) }
                     }
 
                     j = D(1.01)
@@ -871,7 +934,7 @@ addLayer('p', {
                 type: 0,
                 num: 5,
                 costD: {type: 0, exp: 1, main: [D(1000), D(1.2), D(1.005)]},
-                unlocked() { return hasUpgrade('p', 201) },
+                unlocked() { return hasUpgrade(this.layer, 201) },
                 unavail() {
                     let x = false
                     return x
@@ -880,31 +943,31 @@ addLayer('p', {
                     let i = D(x), j
 
                     if (!override) {
-                        if (hasUpgrade('p', 251)) { i = i.mul(1.05) }
+                        if (hasUpgrade(this.layer, 251)) { i = i.mul(1.05) }
                     }
 
-                    if (hasUpgrade('p', 212)) {
+                    if (hasUpgrade(this.layer, 212)) {
                         j = player.p.buyable5Clicks.mul(0.4)
                     } else {
                         j = player.p.timeInP
-                        if (hasUpgrade('p', 281)) {
+                        if (hasUpgrade(this.layer, 281)) {
                             j = j.mul(2)
                         }
-                        j = j.mul([1, 1.5, 3, 9, 45, 360][challengeCompletions('p', 23).toNumber()])
+                        j = j.mul([1, 1.5, 3, 9, 45, 360][challengeCompletions(this.layer, 23).toNumber()])
                     }
 
                     j = j.mul(i).div(60).add(1).ln().mul(0.05)
 
-                    if (hasUpgrade('p', 211)) {
+                    if (hasUpgrade(this.layer, 211)) {
                         j = j.mul(1.3)
                     }
-                    if (hasUpgrade('p', 212)) {
+                    if (hasUpgrade(this.layer, 212)) {
                         j = j.mul(1.2)
                     }
 
                     i = Decimal.mul(j, i)
                     i = i.add(1)
-                    if (inChallenge('p', 23)) {
+                    if (inChallenge(this.layer, 23)) {
                         i = i.sub(1)
                     }
 
@@ -924,7 +987,7 @@ addLayer('p', {
                 },
                 scaleModifCost(x) {
                     if (hasUpgrade(this.layer, 243)) {
-                        x = x.pow(upgradeEffect('p', 243))
+                        x = x.pow(upgradeEffect(this.layer, 243))
                     }
                     return x
                 },
@@ -933,7 +996,7 @@ addLayer('p', {
                 },
                 scaleModifTarCost(x) {
                     if (hasUpgrade(this.layer, 243)) {
-                        x = x.root(upgradeEffect('p', 243))
+                        x = x.root(upgradeEffect(this.layer, 243))
                     }
                     return x
                 },
@@ -943,7 +1006,7 @@ addLayer('p', {
                 num: 1,
                 get costD() {
                     const obj = {type: 0, exp: 0, main: [D(10), D(10**0.5), D(10**0.005)]}
-                    if (hasMilestone('p', 100)) {
+                    if (hasMilestone(this.layer, 100)) {
                         obj.main[1] = D(1)
                     }
                     return obj
@@ -960,14 +1023,14 @@ addLayer('p', {
                         i = i.add(tmp[this.layer].buyables[43].effect)
                         i = i.add((player[this.layer].buyables[61] ?? D(0)).eq(0) ? D(0) : player[this.layer].buyables[61].max(1).log10().add(1).mul(tmp[this.layer].buyables[69].effect.free))
                         i = i.mul(tmp[this.layer].buyables[23].effect.peu1)
-                        i = i.mul([1, 1.05, 1.1, 1.15, 1.2, 1.25][challengeCompletions('p', 21).toNumber()])
-                        if (inChallenge('p', 21)) {
+                        i = i.mul([1, 1.05, 1.1, 1.15, 1.2, 1.25][challengeCompletions(this.layer, 21).toNumber()])
+                        if (inChallenge(this.layer, 21)) {
                             i = i.mul(tmp.p.challenge21Effect)
                         }
-                        if (hasUpgrade('p', 252)) {
+                        if (hasUpgrade(this.layer, 252)) {
                             i = i.mul(1.05)
                         }
-                        if (challengeCompletions('p', 22).gte(1)) {
+                        if (challengeCompletions(this.layer, 22).gte(1)) {
                             i = i.mul(1.1)
                         }
                     }
@@ -1017,17 +1080,17 @@ addLayer('p', {
                     if (!override) {
                         i = i.add(tmp[this.layer].buyables[43].effect)
                         i = i.add((player[this.layer].buyables[62] ?? D(0)).eq(0) ? D(0) : player[this.layer].buyables[62].max(1).log10().add(1).mul(tmp[this.layer].buyables[69].effect.free))
-                        if (hasMilestone('p', 8)) {
+                        if (hasMilestone(this.layer, 8)) {
                             i = i.mul(player[this.layer].buyables[51].sub(11).max(0).mul(inChallenge('q', 11) ? 0.25 : 0.125).add(1))
                         }
-                        i = i.mul([1, 1.05, 1.1, 1.15, 1.2, 1.25][challengeCompletions('p', 21).toNumber()])
-                        if (inChallenge('p', 21)) {
+                        i = i.mul([1, 1.05, 1.1, 1.15, 1.2, 1.25][challengeCompletions(this.layer, 21).toNumber()])
+                        if (inChallenge(this.layer, 21)) {
                             i = i.mul(tmp.p.challenge21Effect)
                         }
-                        if (hasUpgrade('p', 252)) {
+                        if (hasUpgrade(this.layer, 252)) {
                             i = i.mul(1.05)
                         }
-                        if (challengeCompletions('p', 22).gte(1)) {
+                        if (challengeCompletions(this.layer, 22).gte(1)) {
                             i = i.mul(1.1)
                         }
                     }
@@ -1083,14 +1146,14 @@ addLayer('p', {
                     if (!override) {
                         i = i.add(tmp[this.layer].buyables[43].effect)
                         i = i.add((player[this.layer].buyables[63] ?? D(0)).eq(0) ? D(0) : player[this.layer].buyables[63].max(1).log10().add(1).mul(tmp[this.layer].buyables[69].effect.free))
-                        i = i.mul([1, 1.05, 1.1, 1.15, 1.2, 1.25][challengeCompletions('p', 21).toNumber()])
-                        if (inChallenge('p', 21)) {
+                        i = i.mul([1, 1.05, 1.1, 1.15, 1.2, 1.25][challengeCompletions(this.layer, 21).toNumber()])
+                        if (inChallenge(this.layer, 21)) {
                             i = i.mul(tmp.p.challenge21Effect)
                         }
-                        if (hasUpgrade('p', 252)) {
+                        if (hasUpgrade(this.layer, 252)) {
                             i = i.mul(1.05)
                         }
-                        if (challengeCompletions('p', 22).gte(2)) {
+                        if (challengeCompletions(this.layer, 22).gte(2)) {
                             i = i.mul(1.1)
                         }
                     }
@@ -1130,7 +1193,7 @@ addLayer('p', {
                 unlocked() { return player[this.layer].bestEssence.gte(1e4) },
                 unavail() {
                     let x = false
-                    if (inChallenge('p', 24)) {
+                    if (inChallenge(this.layer, 24)) {
                         x = true
                     }
                     return x
@@ -1142,15 +1205,15 @@ addLayer('p', {
                     if (!override) {
                         i = i.add(tmp[this.layer].buyables[43].effect)
                         i = i.add((player[this.layer].buyables[64] ?? D(0)).eq(0) ? D(0) : player[this.layer].buyables[64].max(1).log10().add(1).mul(tmp[this.layer].buyables[69].effect.free))
-                        i = i.add(Decimal.mul([0, 10, 20, 30, 40, 50][challengeCompletions('p', 24).toNumber()], player[this.layer].buyables[14]))
-                        i = i.mul([1, 1.05, 1.1, 1.15, 1.2, 1.25][challengeCompletions('p', 21).toNumber()])
-                        if (inChallenge('p', 21)) {
+                        i = i.add(Decimal.mul([0, 10, 20, 30, 40, 50][challengeCompletions(this.layer, 24).toNumber()], player[this.layer].buyables[14]))
+                        i = i.mul([1, 1.05, 1.1, 1.15, 1.2, 1.25][challengeCompletions(this.layer, 21).toNumber()])
+                        if (inChallenge(this.layer, 21)) {
                             i = i.mul(tmp.p.challenge21Effect)
                         }
-                        if (hasUpgrade('p', 252)) {
+                        if (hasUpgrade(this.layer, 252)) {
                             i = i.mul(1.05)
                         }
-                        if (challengeCompletions('p', 22).gte(2)) {
+                        if (challengeCompletions(this.layer, 22).gte(2)) {
                             i = i.mul(1.1)
                         }
                     }
@@ -1198,14 +1261,14 @@ addLayer('p', {
                     if (!override) {
                         i = i.add(tmp[this.layer].buyables[43].effect)
                         i = i.add((player[this.layer].buyables[65] ?? D(0)).eq(0) ? D(0) : player[this.layer].buyables[65].max(1).log10().add(1).mul(tmp[this.layer].buyables[69].effect.free))
-                        i = i.mul([1, 1.05, 1.1, 1.15, 1.2, 1.25][challengeCompletions('p', 21).toNumber()])
-                        if (inChallenge('p', 21)) {
+                        i = i.mul([1, 1.05, 1.1, 1.15, 1.2, 1.25][challengeCompletions(this.layer, 21).toNumber()])
+                        if (inChallenge(this.layer, 21)) {
                             i = i.mul(tmp.p.challenge21Effect)
                         }
-                        if (hasUpgrade('p', 252)) {
+                        if (hasUpgrade(this.layer, 252)) {
                             i = i.mul(1.05)
                         }
-                        if (challengeCompletions('p', 22).gte(3)) {
+                        if (challengeCompletions(this.layer, 22).gte(3)) {
                             i = i.mul(1.1)
                         }
                     }
@@ -1253,14 +1316,14 @@ addLayer('p', {
                     if (!override) {
                         i = i.add(tmp[this.layer].buyables[43].effect)
                         i = i.add((player[this.layer].buyables[66] ?? D(0)).eq(0) ? D(0) : player[this.layer].buyables[66].max(1).log10().add(1).mul(tmp[this.layer].buyables[69].effect.free))
-                        i = i.mul([1, 1.05, 1.1, 1.15, 1.2, 1.25][challengeCompletions('p', 21).toNumber()])
-                        if (inChallenge('p', 21)) {
+                        i = i.mul([1, 1.05, 1.1, 1.15, 1.2, 1.25][challengeCompletions(this.layer, 21).toNumber()])
+                        if (inChallenge(this.layer, 21)) {
                             i = i.mul(tmp.p.challenge21Effect)
                         }
-                        if (hasUpgrade('p', 252)) {
+                        if (hasUpgrade(this.layer, 252)) {
                             i = i.mul(1.05)
                         }
-                        if (challengeCompletions('p', 22).gte(3)) {
+                        if (challengeCompletions(this.layer, 22).gte(3)) {
                             i = i.mul(1.1)
                         }
                     }
@@ -1309,14 +1372,14 @@ addLayer('p', {
                     if (!override) {
                         i = i.add(tmp[this.layer].buyables[43].effect)
                         i = i.add((player[this.layer].buyables[67] ?? D(0)).eq(0) ? D(0) : player[this.layer].buyables[67].max(1).log10().add(1).mul(tmp[this.layer].buyables[69].effect.free))
-                        i = i.mul([1, 1.05, 1.1, 1.15, 1.2, 1.25][challengeCompletions('p', 21).toNumber()])
-                        if (inChallenge('p', 21)) {
+                        i = i.mul([1, 1.05, 1.1, 1.15, 1.2, 1.25][challengeCompletions(this.layer, 21).toNumber()])
+                        if (inChallenge(this.layer, 21)) {
                             i = i.mul(tmp.p.challenge21Effect)
                         }
-                        if (hasUpgrade('p', 252)) {
+                        if (hasUpgrade(this.layer, 252)) {
                             i = i.mul(1.05)
                         }
-                        if (challengeCompletions('p', 22).gte(4)) {
+                        if (challengeCompletions(this.layer, 22).gte(4)) {
                             i = i.mul(1.1)
                         }
                     }
@@ -1364,14 +1427,14 @@ addLayer('p', {
                     if (!override) {
                         i = i.add(tmp[this.layer].buyables[43].effect)
                         i = i.add((player[this.layer].buyables[68] ?? D(0)).eq(0) ? D(0) : player[this.layer].buyables[68].max(1).log10().add(1).mul(tmp[this.layer].buyables[69].effect.free))
-                        i = i.mul([1, 1.05, 1.1, 1.15, 1.2, 1.25][challengeCompletions('p', 21).toNumber()])
-                        if (inChallenge('p', 21)) {
+                        i = i.mul([1, 1.05, 1.1, 1.15, 1.2, 1.25][challengeCompletions(this.layer, 21).toNumber()])
+                        if (inChallenge(this.layer, 21)) {
                             i = i.mul(tmp.p.challenge21Effect)
                         }
-                        if (hasUpgrade('p', 252)) {
+                        if (hasUpgrade(this.layer, 252)) {
                             i = i.mul(1.05)
                         }
-                        if (challengeCompletions('p', 22).gte(4)) {
+                        if (challengeCompletions(this.layer, 22).gte(4)) {
                             i = i.mul(1.1)
                         }
                     }
@@ -1381,7 +1444,7 @@ addLayer('p', {
                         up2c: i.mul(0.05).add(1).ln().add(1).recip()
                     }
 
-                    if (hasUpgrade('p', 283)) {
+                    if (hasUpgrade(this.layer, 283)) {
                         i.pp = i.pp.pow(25)
                     }
                     return i
@@ -1413,7 +1476,7 @@ addLayer('p', {
                 num: 9,
                 get costD() {
                     const obj = {type: 0, exp: 1, main: [D(20), D(1.2), D(1.001)]}
-                    if (hasMilestone('p', 101)) {
+                    if (hasMilestone(this.layer, 101)) {
                         obj.main[1] = inChallenge('q', 11) 
                             ? D(1.1)
                             : D(1.175)
@@ -1431,17 +1494,17 @@ addLayer('p', {
                         if (hasUpgrade(this.layer, 52)) {
                             i = i.add((player[this.layer].buyables[69] ?? D(0)).eq(0) ? D(0) : player[this.layer].buyables[69].max(1).log10().add(1).mul(tmp[this.layer].buyables[69].effect.free))
                         }
-                        i = i.mul([1, 1.05, 1.1, 1.15, 1.2, 1.25][challengeCompletions('p', 21).toNumber()])
-                        if (inChallenge('p', 21)) {
+                        i = i.mul([1, 1.05, 1.1, 1.15, 1.2, 1.25][challengeCompletions(this.layer, 21).toNumber()])
+                        if (inChallenge(this.layer, 21)) {
                             i = i.mul(tmp.p.challenge21Effect)
                         }
-                        if (hasUpgrade('p', 252)) {
+                        if (hasUpgrade(this.layer, 252)) {
                             i = i.mul(1.05)
                         }
                     }
 
                     let j = D(0.2)
-                    if (hasMilestone('p', 102)) {
+                    if (hasMilestone(this.layer, 102)) {
                         j = j.add(player[this.layer].buyables[52].sub(2).max(0).mul(inChallenge('q', 11) ? 0.3 : 0.1))
                     }
                     
@@ -1478,7 +1541,7 @@ addLayer('p', {
                         ? {type: 1, exp: 1, main: [D(4),     D(1.2), D(1.1)]}
                         : {type: 1, exp: 1, main: [D(10000), D(1.2), D(1.2)]}
                 },
-                unlocked() { return inChallenge('q', 11) || challengeCompletions("q", 12).gte(1) },
+                unlocked() { return inChallenge('q', 11) || challengeCompletions('q', 12).gte(1) },
                 unavail() {
                     let x = false
                     return x
@@ -1498,7 +1561,7 @@ addLayer('p', {
                 },
                 scaleModifCost(x) {
                     if (hasUpgrade(this.layer, 231)) {
-                        x = x.pow(upgradeEffect('p', 231))
+                        x = x.pow(upgradeEffect(this.layer, 231))
                     }
                     return x
                 },
@@ -1507,7 +1570,7 @@ addLayer('p', {
                 },
                 scaleModifTarCost(x) {
                     if (hasUpgrade(this.layer, 231)) {
-                        x = x.root(upgradeEffect('p', 231))
+                        x = x.root(upgradeEffect(this.layer, 231))
                     }
                     return x
                 },
@@ -1516,7 +1579,7 @@ addLayer('p', {
                 type: 2,
                 num: 2,
                 costD: {type: 0, exp: -1, main: [D(1e8), D(1e2), D(1e1)]},
-                unlocked() { return inChallenge('q', 11) || challengeCompletions("q", 12).gte(1) },
+                unlocked() { return inChallenge('q', 11) || challengeCompletions('q', 12).gte(1) },
                 unavail() {
                     let x = false
                     return x
@@ -1536,7 +1599,7 @@ addLayer('p', {
                 },
                 scaleModifCost(x) {
                     if (hasUpgrade(this.layer, 234)) {
-                        x = x.sub(upgradeEffect('p', 234))
+                        x = x.sub(upgradeEffect(this.layer, 234))
                     }
                     return x
                 },
@@ -1545,7 +1608,7 @@ addLayer('p', {
                 },
                 scaleModifTarCost(x) {
                     if (hasUpgrade(this.layer, 234)) {
-                        x = x.add(upgradeEffect('p', 234))
+                        x = x.add(upgradeEffect(this.layer, 234))
                     }
                     return x
                 },
@@ -1561,7 +1624,7 @@ addLayer('p', {
                             [D(100) , D(10),   D(100), D(1e3), D(1e4),  D(1e6),  D(1e8),  D(1e12)][i],
                             [D(1.05), D(1.05), D(1.1), D(1.2), D(1.5),  D(2),    D(5),    D(10)][i]
                         ]},
-                        unlocked() { return (i === 0 || (player[this.layer].buyables[60 + i] ?? D(0)).gte(1)) && (inChallenge('q', 12) || challengeCompletions("q", 13).gte(1)) },
+                        unlocked() { return (i === 0 || (player[this.layer].buyables[60 + i] ?? D(0)).gte(1)) && (inChallenge('q', 12) || challengeCompletions('q', 13).gte(1)) },
                         unavail() {
                             let x = false
                             return x
@@ -1608,7 +1671,7 @@ addLayer('p', {
                 type: 3,
                 num: 9,
                 costD: {type: 0, exp: 1, main: [D(25), D(1.2), D(1.002)]},
-                unlocked() { return inChallenge('q', 12) || challengeCompletions("q", 13).gte(1) },
+                unlocked() { return inChallenge('q', 12) || challengeCompletions('q', 13).gte(1) },
                 unavail() {
                     let x = false
                     return x
@@ -1689,9 +1752,54 @@ addLayer('p', {
                     }
                 }
                 return obj
-            })()
+            })(),
+            // TODO: implement the 3 hyper scaling buyables
+            //
+            // 81: {
+            //     type: 5,
+            //     num: 1,
+            //     costD: {type: 0, exp: 0, main: [D(25), D(4), D(1.05)]},
+            //     unlocked() { return player[this.layer].bestEssence.gte(1e10) },
+            //     unavail() {
+            //         let x = false
+            //         return x
+            //     },
+            //     preEffect(x, override) {
+            //         let i = D(x)
+
+            //         if (!override) {
+
+            //         }
+
+            //         let j = D(1.5)
+            //         i = Decimal.pow(j, i)
+            //         return i
+            //     },
+            //     dispEffect() {
+            //         const currEffect = this.effect(player[this.layer].buyables[81])
+            //         return `Multiply Hyper Scaling Point gain by &times;${formatPerc(currEffect, 3)}.` 
+            //     },
+            //     dispEffBase() {
+            //         const currEffect = this.effect(player[this.layer].buyables[81])
+            //         const nextEffect = this.effect(player[this.layer].buyables[81].add(1))
+            //         return `Multiply Hyper Scaling Point gain by &times;${formatPerc(nextEffect.div(currEffect), 3)}.`
+            //     },
+            //     scaleModifEffective(x) {
+            //         return x
+            //     },
+            //     scaleModifCost(x) {
+            //         return x
+            //     },
+            //     scaleModifTarEff(x) {
+            //         return x
+            //     },
+            //     scaleModifTarCost(x) {
+            //         return x
+            //     },
+            // },
         };
 
+        // ! NOTE!! this.layer doesn't work in the custom buyable script TwT
         for (const upgrade of Object.values(upgrades)) {
             upgrade.effect = (x) => {
                 // if (disabledPEB.includes(upgrade.num)) {
@@ -1735,11 +1843,14 @@ addLayer('p', {
                 if (hasUpgrade('p', 45) && upgrade.type === 1) {
                     j = j.div(upgradeEffect('p', 45))
                 }
-                if (hasUpgrade('p', 43) && upgrade.type === 0) {
-                    j = j.div(upgradeEffect('p', 43))
+                if (upgrade.type === 0) {
+                    if (hasUpgrade('p', 43)) {
+                        j = j.div(upgradeEffect('p', 43))
+                    }
+                    j = j.div(tmp.p.hspGalaxyTotalEffect)
                 }
-                if ((inChallenge('p', 13) || inChallenge('q', 13)) && upgrade.type === 0) { 
-                    j = j.add(1).log10().add(1).pow(Decimal.pow(1.5, tmp.p.challenges[13].getDepths)).sub(1).pow10().sub(1).div(2) 
+                if ((inChallenge('p', 31) || inChallenge('q', 13)) && upgrade.type === 0) { 
+                    j = j.add(1).log10().add(1).pow(Decimal.pow(1.5, tmp.p.challenges[31].getDepths)).sub(1).pow10().sub(1).div(2) 
                 }
 
                 if (upgrade.costD.type === 0) {
@@ -1840,11 +1951,14 @@ addLayer('p', {
                     return D(0)
                 }
 
-                if ((inChallenge('p', 13) || inChallenge('q', 13)) && upgrade.type === 0) { 
-                    i = i.mul(2).add(1).log10().add(1).root(Decimal.pow(1.5, tmp.p.challenges[13].getDepths)).sub(1).pow10().sub(1) 
+                if ((inChallenge('p', 31) || inChallenge('q', 13)) && upgrade.type === 0) { 
+                    i = i.mul(2).add(1).log10().add(1).root(Decimal.pow(1.5, tmp.p.challenges[31].getDepths)).sub(1).pow10().sub(1) 
                 }
-                if (hasUpgrade('p', 43) && upgrade.type === 0) {
-                    i = i.mul(upgradeEffect('p', 43))
+                if (upgrade.type === 0) {
+                    i = i.mul(tmp.p.hspGalaxyTotalEffect)
+                    if (hasUpgrade('p', 43)) {
+                        i = i.mul(upgradeEffect('p', 43))
+                    }
                 }
                 if (hasUpgrade('p', 45) && upgrade.type === 1) {
                     i = i.mul(upgradeEffect('p', 45))
@@ -1911,7 +2025,7 @@ addLayer('p', {
                 if (upgrade.stupidHack()) {
                     txt += `Effect Base: `
                     txt += upgrade.dispEffBase()
-                    txt += `<br>Cost Formula: ` 
+                    txt += `<br>Base Cost Formula: ` 
                     if (upgrade.costD.exp >= 1) { 
                         for (let i = 0; i < upgrade.costD.exp; i++) {
                             txt += `10<sup>` 
@@ -1926,6 +2040,20 @@ addLayer('p', {
                         for (let i = 0; i < upgrade.costD.exp; i++) {
                             txt += `</sup>` 
                         }
+                    }
+
+                    let hasExtra = false
+                    if (upgrade.type === 1 && upgrade.num === 2) {
+                        if (!hasExtra) {
+                            txt += `<br>`
+                        }
+                        txt += `<br>Scales exponentially after ${format(1e4)} purchases.`
+                    }
+                    if (upgrade.type === 1 && upgrade.num === 3) {
+                        if (!hasExtra) {
+                            txt += `<br>`
+                        }
+                        txt += `<br>Scales exponentially after ${format(1e6)} purchases.`
                     }
                 } else {
                     txt += `Effect: `
@@ -2110,7 +2238,7 @@ addLayer('p', {
         31: {
             title: "Strengthen Buyable 5",
             unlocked() {
-                return hasUpgrade('p', 212)
+                return hasUpgrade(this.layer, 212)
             },
             display() {
                 return `${player[this.layer].buyable5ClickCooldown.gt(0) ? 'You are on a cooldown for ' + format(player[this.layer].buyable5ClickCooldown, 1) + 's!' : '' }<br>You have clicked ${format(player.p.buyable5Clicks)} times.<br><br>Every click gives ${format(tmp.p.b5ClickMult, 1)} clicks.`
@@ -2120,7 +2248,7 @@ addLayer('p', {
             },
             onClick() {
                 player.p.buyable5Clicks = Decimal.add(player.p.buyable5Clicks, tmp.p.b5ClickMult)
-                player[this.layer].buyable5ClickCooldown = hasUpgrade(this.layer, 233) && !inChallenge('p', 23)
+                player[this.layer].buyable5ClickCooldown = hasUpgrade(this.layer, 233) && !inChallenge(this.layer, 23)
                     ? D(0.5)
                     : D(0)
             }
@@ -2128,7 +2256,7 @@ addLayer('p', {
         41: {
             title: "Recover Buyables",
             unlocked() {
-                return inChallenge('p', 21)
+                return inChallenge(this.layer, 21)
             },
             display() {
                 return `You have clicked ${format(player.p.challenge21Clicks)} times, making prestige buyables function at ${format(tmp.p.challenge21Effect.mul(100), 1)}% efficiency.<br><br>You have ${format(player.p.challenge21ClicksRemain, 1)} clicks remaining.`
@@ -2159,16 +2287,16 @@ addLayer('p', {
                 setBuyableAmount(this.layer, "11", D(0))
                 setBuyableAmount(this.layer, "12", D(0))
                 setBuyableAmount(this.layer, "13", D(0))
-                if (!hasUpgrade('p', 13)) { setBuyableAmount(this.layer, "14", D(0)) }
+                if (!hasUpgrade(this.layer, 13)) { setBuyableAmount(this.layer, "14", D(0)) }
             },
             getDepths() {
-                let i = inChallenge('p', 11, true) ? D(1) : D(0)
+                let i = inChallenge(this.layer, 11, true) ? D(1) : D(0)
 
-                if (inChallenge('p', 14)) {
+                if (inChallenge(this.layer, 14)) {
                     i = i.add(tmp[this.layer].challenges[14].getDepths.mul(2))
                 }
-                if (inChallenge('p', 15)) {
-                    i = i.add(tmp[this.layer].challenges[15].getDepths)
+                if (inChallenge(this.layer, 41)) {
+                    i = i.add(tmp[this.layer].challenges[41].getDepths)
                 }
                 return i
             }
@@ -2179,9 +2307,9 @@ addLayer('p', {
                 if (player[this.layer].total.gte(10)) { i = true }
                 return i
             },
-            name() { return `No BB2 (${format(challengeCompletions('p', 12), 0)}/${format(this.completionLimit(), 0)})`},
+            name() { return `No BB2 (${format(challengeCompletions(this.layer, 12), 0)}/${format(this.completionLimit(), 0)})`},
             challengeDescription() {
-                switch (challengeCompletions('p', 12).toNumber()) {
+                switch (challengeCompletions(this.layer, 12).toNumber()) {
                     case 0:
                     case 1:
                     case 2:
@@ -2199,11 +2327,11 @@ addLayer('p', {
                     case 10:
                         return `Maxed out lol`
                     default:
-                        throw new Error(`challenge 12 description sucks lmao ${challengeCompletions('p', 12).toNumber()} out of bounds?`)
+                        throw new Error(`challenge 12 description sucks lmao ${challengeCompletions(this.layer, 12).toNumber()} out of bounds?`)
                 }
             },
             rewardDescription() {
-                switch (challengeCompletions('p', 12).toNumber()) {
+                switch (challengeCompletions(this.layer, 12).toNumber()) {
                     case 0:
                         return `BB2's base is increased by +${format(0.025, 3)}`
                     case 1:
@@ -2227,12 +2355,12 @@ addLayer('p', {
                     case 10:
                         return `Maxed out lol`
                     default:
-                        throw new Error(`challenge 12 reward desc sucks lmao ${challengeCompletions('p', 12).toNumber()} out of bounds?`)
+                        throw new Error(`challenge 12 reward desc sucks lmao ${challengeCompletions(this.layer, 12).toNumber()} out of bounds?`)
                 }
             },
             goal() {
                 let lim = 9
-                return [D(1e6), D(1e8), D(1e10), D(1e12), D(1e14), D(1e14), D(1e16), D(1e13), D(1e18), D(1e18)][challengeCompletions('p', 12).min(lim).toNumber()]
+                return [D(1e6), D(1e8), D(1e10), D(1e12), D(1e14), D(1e14), D(1e16), D(1e13), D(1e18), D(1e18)][challengeCompletions(this.layer, 12).min(lim).toNumber()]
             },
             goalDescription() {
                 return `Get ${format(tmp[this.layer].challenges[12].goal)} Points.`
@@ -2243,17 +2371,261 @@ addLayer('p', {
                 setBuyableAmount(this.layer, "11", D(0))
                 setBuyableAmount(this.layer, "12", D(0))
                 setBuyableAmount(this.layer, "13", D(0))
-                if (!hasUpgrade('p', 13)) { setBuyableAmount(this.layer, "14", D(0)) }
+                if (!hasUpgrade(this.layer, 13)) { setBuyableAmount(this.layer, "14", D(0)) }
             },
             getDepths() {
-                let i = inChallenge('p', 12, true) ? D(1) : D(0)
+                let i = inChallenge(this.layer, 12, true) ? D(1) : D(0)
                 return i
             },
             completionLimit() {
                 return D(10)
             }
         },
-        13: {
+        14: {
+            unlocked() {
+                let i = false
+                if (hasUpgrade(this.layer, 11)) { i = true }
+                return i
+            },
+            name() { return `Crippled Points (${format(challengeCompletions(this.layer, 14), 0)})`},
+            challengeDescription: 'Point\'s scaling starts earlier, and Strengthened Dilation is applied twice.',
+            rewardEffect() {
+                let i = challengeCompletions(this.layer, 14)
+                i = Decimal.pow(25, i.pow(1.2))
+                return i
+            },
+            rewardDisplay() { return `Point scaling at ${format(1e10)} is delayed to ${format(this.rewardEffect().mul(1e10))} (Doesn't work in prestige challenges)` },
+            goal() {
+                let i = challengeCompletions(this.layer, 14)
+                i = Decimal.pow(100, i.pow(1.5)).mul(1e12)
+                return i
+            },
+            target() {
+                let i = player.points
+                i = i.div(1e12).log(100).root(1.5)
+                return i
+            },
+            goalDescription() {
+                return `Get ${format(tmp[this.layer].challenges[14].goal)} Points.`
+            },
+            canComplete() { return player.points.gte(tmp[this.layer].challenges[14].goal) },
+            onEnter() {
+                player.points = D(0)
+                setBuyableAmount(this.layer, "11", D(0))
+                setBuyableAmount(this.layer, "12", D(0))
+                setBuyableAmount(this.layer, "13", D(0))
+                if (!hasUpgrade(this.layer, 13)) { setBuyableAmount(this.layer, "14", D(0)) }
+            },
+            onComplete() {
+                if (hasMilestone('q', 10)) {
+                    player[this.layer].challenges[14] = Decimal.max(player[this.layer].challenges[14], tmp.p.challenges[14].target.ceil())
+                }
+            },
+            getDepths() {
+                let i = inChallenge(this.layer, 14, true) ? D(1) : D(0)
+
+                if (inChallenge('q', 13)) {
+                    i = i.add(tmp.q.challenges[13].getDepths)
+                }
+                return i
+            },
+            completionLimit() {
+                return D(Infinity)
+            },
+            countsAs: [11]
+        },
+        21: {
+            unlocked() {
+                let i = false
+                if (hasUpgrade(this.layer, 242)) { i = true }
+                if (inChallenge(this.layer, 21) || challengeCompletions(this.layer, 21).gt(0)) { i = true }
+                return i
+            },
+            name() { return `Limited PP Buyables (${format(challengeCompletions(this.layer, 21), 0)}/${format(this.completionLimit(), 0)})`},
+            challengeDescription: "Prestige Point autogeneration is disabled. PP Buyables are disabled, but a clickable can weakly re-enable them, resetting on prestige. You only have 200 clicks in this challenge total.",
+            rewardDescription() {
+                switch (challengeCompletions(this.layer, 21).toNumber()) {
+                    case 0:
+                        return `All PP Buyables are +5% more effective.`
+                    case 1:
+                        return `All PP Buyables are +5% more effective. (Next total: +10%)`
+                    case 2:
+                        return `All PP Buyables are +5% more effective. (Next total: +15%)`
+                    case 3:
+                        return `All PP Buyables are +5% more effective. (Next total: +20%)`
+                    case 4:
+                        return `All PP Buyables are +5% more effective. (Next total: +25%)`
+                    case 5:
+                        return `Maxed out lol`
+                    default:
+                        throw new Error(`challenge 21 reward desc sucks lmao ${challengeCompletions(this.layer, 21).toNumber()} out of bounds?`)
+                }
+            },
+            goal() {
+                let lim = 4
+                return [D('e365'), D('e415'), D('e465'), D('e515'), D('e565')][challengeCompletions(this.layer, 21).min(lim).toNumber()]
+            },
+            goalDescription() {
+                return `Get ${format(tmp[this.layer].challenges[21].goal)} Prestige Points.`
+            },
+            canComplete() { return player.p.points.gte(tmp[this.layer].challenges[21].goal) },
+            onEnter() {
+                player.p.challenge21ClicksRemain = D(200)
+                tmp.q.doReset(true, true, false)
+            },
+            ignoreHigherLayers: true,
+            getDepths() {
+                let i = inChallenge(this.layer, 21, true) ? D(1) : D(0)
+                return i
+            },
+            completionLimit() {
+                return D(5)
+            }
+        },
+        22: {
+            unlocked() {
+                let i = false
+                if (hasUpgrade(this.layer, 271)) { i = true }
+                if (inChallenge(this.layer, 22) || challengeCompletions(this.layer, 22).gt(0)) { i = true }
+                return i
+            },
+            name() { return `Pick Your Poison (${format(challengeCompletions(this.layer, 22), 0)}/${format(this.completionLimit(), 0)})`},
+            challengeDescription: "Prestige Essence Buyables are disabled. You must pay an upfront point cost in order to reenable prestige essence buyables.",
+            rewardDescription() {
+                switch (challengeCompletions(this.layer, 22).toNumber()) {
+                    case 0:
+                        return `Prestige Buyables #1-2 are boosted by +10%.`
+                    case 1:
+                        return `Prestige Buyables #3-4 are boosted by +10%.`
+                    case 2:
+                        return `Prestige Buyables #5-6 are boosted by +10%.`
+                    case 3:
+                        return `Prestige Buyables #7-8 are boosted by +10%.`
+                    case 4:
+                        return `Prestige Buyables #9 are boosted by +10%.`
+                    case 5:
+                        return `Maxed out lol`
+                    default:
+                        throw new Error(`challenge 22 reward desc sucks lmao ${challengeCompletions(this.layer, 22).toNumber()} out of bounds?`)
+                }
+            },
+            goal() {
+                let lim = 4
+                return [D('e390'), D('e450'), D('e510'), D('e570'), D('e630')][challengeCompletions(this.layer, 22).min(lim).toNumber()]
+            },
+            goalDescription() {
+                return `Get ${format(tmp[this.layer].challenges[22].goal)} Prestige Points.`
+            },
+            canComplete() { return player.p.points.gte(tmp[this.layer].challenges[22].goal) },
+            onEnter() {
+                player.p.challenge22Unlocks = []
+                tmp.q.doReset(true, true, false)
+            },
+            ignoreHigherLayers: true,
+            getDepths() {
+                let i = inChallenge(this.layer, 22, true) ? D(1) : D(0)
+                return i
+            },
+            completionLimit() {
+                return D(5)
+            }
+        },
+        23: {
+            unlocked() {
+                let i = false
+                if (hasUpgrade(this.layer, 275)) { i = true }
+                if (inChallenge(this.layer, 23) || challengeCompletions(this.layer, 23).gt(0)) { i = true }
+                return i
+            },
+            name() { return `Race to the Finish (${format(challengeCompletions(this.layer, 23), 0)}/${format(this.completionLimit(), 0)})`},
+            challengeDescription: "Points are stuck at your PPS. Prestige Points cannot be auto-generated. Point Buyable 5's effect is reduced and decays over time with clicks. Reach 0 points and you will be kicked out.",
+            rewardDescription() {
+                switch (challengeCompletions(this.layer, 23).toNumber()) {
+                    case 0:
+                        return `Point Buyable 5's timer & click multipliers are increased by 1.5&times;.`
+                    case 1:
+                        return `Point Buyable 5's timer & click multipliers are increased by 2&times;.` // total: 3x
+                    case 2:
+                        return `Point Buyable 5's timer & click multipliers are increased by 3&times;.` // total: 9x
+                    case 3:
+                        return `Point Buyable 5's timer & click multipliers are increased by 5&times;.` // total: 45x
+                    case 4:
+                        return `Point Buyable 5's timer & click multipliers are increased by 8&times;.` // total: 360x
+                    case 5:
+                        return `Maxed out lol`
+                    default:
+                        throw new Error(`challenge 23 reward desc sucks lmao ${challengeCompletions(this.layer, 23).toNumber()} out of bounds?`)
+                }
+            },
+            goal() {
+                let lim = 4
+                return [D('e475'), D('e550'), D('e625'), D('e700'), D('e775')][challengeCompletions(this.layer, 23).min(lim).toNumber()]
+            },
+            goalDescription() {
+                return `Get ${format(tmp[this.layer].challenges[23].goal)} Prestige Points.`
+            },
+            canComplete() { return player.p.points.gte(tmp[this.layer].challenges[23].goal) },
+            onEnter() {
+                tmp.q.doReset(true, true, false)
+                player.p.buyable5Clicks = D(20)
+            },
+            ignoreHigherLayers: true,
+            getDepths() {
+                let i = inChallenge(this.layer, 23, true) ? D(1) : D(0)
+                return i
+            },
+            completionLimit() {
+                return D(5)
+            }
+        },
+        24: {
+            unlocked() {
+                let i = false
+                if (hasUpgrade(this.layer, 291)) { i = true }
+                if (inChallenge(this.layer, 24) || challengeCompletions(this.layer, 24).gt(0)) { i = true }
+                return i
+            },
+            name() { return `Death (${format(challengeCompletions(this.layer, 24), 0)}/${format(this.completionLimit(), 0)})`},
+            challengeDescription: "Buyable 4 and Prestige Buyable 4 are disabled.",
+            rewardDescription() {
+                switch (challengeCompletions(this.layer, 24).toNumber()) {
+                    case 0:
+                        return `Point Buyable 4 adds 10 free levels to Prestige Buyable 4.`
+                    case 1:
+                        return `Point Buyable 4 adds 10 free levels to Prestige Buyable 4. (Next total: +20)`
+                    case 2:
+                        return `Point Buyable 4 adds 10 free levels to Prestige Buyable 4. (Next total: +30)`
+                    case 3:
+                        return `Point Buyable 4 adds 10 free levels to Prestige Buyable 4. (Next total: +40)`
+                    case 4:
+                        return `Point Buyable 4 adds 10 free levels to Prestige Buyable 4. (Next total: +50)`
+                    case 5:
+                        return `Maxed out lol`
+                    default:
+                        throw new Error(`challenge 24 reward desc sucks lmao ${challengeCompletions(this.layer, 24).toNumber()} out of bounds?`)
+                }
+            },
+            goal() {
+                let lim = 4
+                return [D('e475'), D('e555'), D('e635'), D('e715'), D('e795')][challengeCompletions(this.layer, 24).min(lim).toNumber()]
+            },
+            goalDescription() {
+                return `Get ${format(tmp[this.layer].challenges[24].goal)} Prestige Points.`
+            },
+            canComplete() { return player.p.points.gte(tmp[this.layer].challenges[24].goal) },
+            onEnter() {
+                tmp.q.doReset(true, true, false)
+            },
+            ignoreHigherLayers: true,
+            getDepths() {
+                let i = inChallenge(this.layer, 24, true) ? D(1) : D(0)
+                return i
+            },
+            completionLimit() {
+                return D(5)
+            }
+        },
+        31: {
             unlocked() {
                 let i = false
                 if (player[this.layer].total.gte(100)) { i = true }
@@ -2279,18 +2651,18 @@ addLayer('p', {
                 setBuyableAmount(this.layer, "11", D(0))
                 setBuyableAmount(this.layer, "12", D(0))
                 setBuyableAmount(this.layer, "13", D(0))
-                if (!hasUpgrade('p', 13)) { setBuyableAmount(this.layer, "14", D(0)) }
+                if (!hasUpgrade(this.layer, 13)) { setBuyableAmount(this.layer, "14", D(0)) }
             },
             getDepths() {
-                let i = inChallenge('p', 13, true) ? D(1) : D(0)
+                let i = inChallenge(this.layer, 13, true) ? D(1) : D(0)
 
-                if (inChallenge('p', 15)) {
-                    i = i.add(tmp[this.layer].challenges[15].getDepths)
+                if (inChallenge(this.layer, 41)) {
+                    i = i.add(tmp[this.layer].challenges[41].getDepths)
                 }
                 if (inChallenge('q', 13)) {
                     i = i.add(tmp.q.challenges[13].getDepths)
                 }
-                if (hasUpgrade('p', 282)) {
+                if (hasUpgrade(this.layer, 282)) {
                     i = i.mul(0.95)
                 }
                 return i
@@ -2299,60 +2671,7 @@ addLayer('p', {
                 return D(1)
             }
         },
-        14: {
-            unlocked() {
-                let i = false
-                if (hasUpgrade('p', 11)) { i = true }
-                return i
-            },
-            name() { return `Crippled Points (${format(challengeCompletions('p', 14), 0)})`},
-            challengeDescription: 'Point\'s scaling starts earlier, and Strengthened Dilation is applied twice.',
-            rewardEffect() {
-                let i = challengeCompletions('p', 14)
-                i = Decimal.pow(25, i.pow(1.2))
-                return i
-            },
-            rewardDisplay() { return `Point scaling at ${format(1e10)} is delayed to ${format(this.rewardEffect().mul(1e10))} (Doesn't work in prestige challenges)` },
-            goal() {
-                let i = challengeCompletions('p', 14)
-                i = Decimal.pow(100, i.pow(1.5)).mul(1e12)
-                return i
-            },
-            target() {
-                let i = player.points
-                i = i.div(1e12).log(100).root(1.5)
-                return i
-            },
-            goalDescription() {
-                return `Get ${format(tmp[this.layer].challenges[14].goal)} Points.`
-            },
-            canComplete() { return player.points.gte(tmp[this.layer].challenges[14].goal) },
-            onEnter() {
-                player.points = D(0)
-                setBuyableAmount(this.layer, "11", D(0))
-                setBuyableAmount(this.layer, "12", D(0))
-                setBuyableAmount(this.layer, "13", D(0))
-                if (!hasUpgrade('p', 13)) { setBuyableAmount(this.layer, "14", D(0)) }
-            },
-            onComplete() {
-                if (hasMilestone('q', 10)) {
-                    player[this.layer].challenges[14] = Decimal.max(player[this.layer].challenges[14], tmp.p.challenges[14].target.ceil())
-                }
-            },
-            getDepths() {
-                let i = inChallenge('p', 14, true) ? D(1) : D(0)
-
-                if (inChallenge('q', 13)) {
-                    i = i.add(tmp.q.challenges[13].getDepths)
-                }
-                return i
-            },
-            completionLimit() {
-                return D(Infinity)
-            },
-            countsAs: [11]
-        },
-        15: {
+        41: {
             unlocked() {
                 let i = false
                 if (hasUpgrade(this.layer, 301)) { i = true }
@@ -2363,7 +2682,7 @@ addLayer('p', {
             challengeDescription: 'Strengthed Dilation and Super Scaling are applied. Point Buyable 3\'s effectiveness is raised ^0.5. This challenge does a Q. Reset.',
             rewardEffect() {
                 let i = player[this.layer].hsChalBest
-                i = i.max(1e5).log(1e5).sub(1).div(10).add(1).ln().div(2).add(1)
+                i = i.max('e3000').log('e3000').add(1).pow(1)
                 return i
             },
             rewardDisplay() { return `Non-free Point Buyable 1 is &times;${format(this.rewardEffect(), 2)} more effective.` },
@@ -2379,202 +2698,11 @@ addLayer('p', {
             },
             ignoreHigherLayers: true,
             getDepths() {
-                let i = inChallenge('p', 15, true) ? D(1) : D(0)
+                let i = inChallenge(this.layer, 15, true) ? D(1) : D(0)
                 return i
             },
             completionLimit() {
                 return D(1)
-            }
-        },
-        21: {
-            unlocked() {
-                let i = false
-                if (hasUpgrade('p', 242)) { i = true }
-                if (inChallenge('p', 21) || challengeCompletions('p', 21).gt(0)) { i = true }
-                return i
-            },
-            name() { return `Limited PP Buyables (${format(challengeCompletions('p', 21), 0)}/${format(this.completionLimit(), 0)})`},
-            challengeDescription: "Prestige Point autogeneration is disabled. PP Buyables are disabled, but a clickable can weakly re-enable them, resetting on prestige. You only have 200 clicks in this challenge total.",
-            rewardDescription() {
-                switch (challengeCompletions('p', 21).toNumber()) {
-                    case 0:
-                        return `All PP Buyables are +5% more effective.`
-                    case 1:
-                        return `All PP Buyables are +5% more effective. (Next total: +10%)`
-                    case 2:
-                        return `All PP Buyables are +5% more effective. (Next total: +15%)`
-                    case 3:
-                        return `All PP Buyables are +5% more effective. (Next total: +20%)`
-                    case 4:
-                        return `All PP Buyables are +5% more effective. (Next total: +25%)`
-                    case 5:
-                        return `Maxed out lol`
-                    default:
-                        throw new Error(`challenge 21 reward desc sucks lmao ${challengeCompletions('p', 21).toNumber()} out of bounds?`)
-                }
-            },
-            goal() {
-                let lim = 4
-                return [D('e365'), D('e415'), D('e465'), D('e515'), D('e565')][challengeCompletions('p', 21).min(lim).toNumber()]
-            },
-            goalDescription() {
-                return `Get ${format(tmp[this.layer].challenges[21].goal)} Prestige Points.`
-            },
-            canComplete() { return player.p.points.gte(tmp[this.layer].challenges[21].goal) },
-            onEnter() {
-                player.p.challenge21ClicksRemain = D(200)
-                tmp.q.doReset(true, true, false)
-            },
-            ignoreHigherLayers: true,
-            getDepths() {
-                let i = inChallenge('p', 21, true) ? D(1) : D(0)
-                return i
-            },
-            completionLimit() {
-                return D(5)
-            }
-        },
-        22: {
-            unlocked() {
-                let i = false
-                if (hasUpgrade('p', 271)) { i = true }
-                if (inChallenge('p', 22) || challengeCompletions('p', 22).gt(0)) { i = true }
-                return i
-            },
-            name() { return `Pick Your Poison (${format(challengeCompletions('p', 22), 0)}/${format(this.completionLimit(), 0)})`},
-            challengeDescription: "Prestige Essence Buyables are disabled. You must pay an upfront point cost in order to reenable prestige essence buyables.",
-            rewardDescription() {
-                switch (challengeCompletions('p', 22).toNumber()) {
-                    case 0:
-                        return `Prestige Buyables #1-2 are boosted by +10%.`
-                    case 1:
-                        return `Prestige Buyables #3-4 are boosted by +10%.`
-                    case 2:
-                        return `Prestige Buyables #5-6 are boosted by +10%.`
-                    case 3:
-                        return `Prestige Buyables #7-8 are boosted by +10%.`
-                    case 4:
-                        return `Prestige Buyables #9 are boosted by +10%.`
-                    case 5:
-                        return `Maxed out lol`
-                    default:
-                        throw new Error(`challenge 22 reward desc sucks lmao ${challengeCompletions('p', 22).toNumber()} out of bounds?`)
-                }
-            },
-            goal() {
-                let lim = 4
-                return [D('e390'), D('e450'), D('e510'), D('e570'), D('e630')][challengeCompletions('p', 22).min(lim).toNumber()]
-            },
-            goalDescription() {
-                return `Get ${format(tmp[this.layer].challenges[22].goal)} Prestige Points.`
-            },
-            canComplete() { return player.p.points.gte(tmp[this.layer].challenges[22].goal) },
-            onEnter() {
-                player.p.challenge22Unlocks = []
-                tmp.q.doReset(true, true, false)
-            },
-            ignoreHigherLayers: true,
-            getDepths() {
-                let i = inChallenge('p', 22, true) ? D(1) : D(0)
-                return i
-            },
-            completionLimit() {
-                return D(5)
-            }
-        },
-        23: {
-            unlocked() {
-                let i = false
-                if (hasUpgrade('p', 275)) { i = true }
-                if (inChallenge('p', 23) || challengeCompletions('p', 23).gt(0)) { i = true }
-                return i
-            },
-            name() { return `Race to the Finish (${format(challengeCompletions('p', 23), 0)}/${format(this.completionLimit(), 0)})`},
-            challengeDescription: "Points are stuck at your PPS. Prestige Points cannot be auto-generated. Point Buyable 5's effect is reduced and decays over time with clicks. Reach 0 points and you will be kicked out.",
-            rewardDescription() {
-                switch (challengeCompletions('p', 23).toNumber()) {
-                    case 0:
-                        return `Point Buyable 5's timer & click multipliers are increased by 1.5&times;.`
-                    case 1:
-                        return `Point Buyable 5's timer & click multipliers are increased by 2&times;.` // total: 3x
-                    case 2:
-                        return `Point Buyable 5's timer & click multipliers are increased by 3&times;.` // total: 9x
-                    case 3:
-                        return `Point Buyable 5's timer & click multipliers are increased by 5&times;.` // total: 45x
-                    case 4:
-                        return `Point Buyable 5's timer & click multipliers are increased by 8&times;.` // total: 360x
-                    case 5:
-                        return `Maxed out lol`
-                    default:
-                        throw new Error(`challenge 23 reward desc sucks lmao ${challengeCompletions('p', 23).toNumber()} out of bounds?`)
-                }
-            },
-            goal() {
-                let lim = 4
-                return [D('e475'), D('e550'), D('e625'), D('e700'), D('e775')][challengeCompletions('p', 23).min(lim).toNumber()]
-            },
-            goalDescription() {
-                return `Get ${format(tmp[this.layer].challenges[23].goal)} Prestige Points.`
-            },
-            canComplete() { return player.p.points.gte(tmp[this.layer].challenges[23].goal) },
-            onEnter() {
-                tmp.q.doReset(true, true, false)
-                player.p.buyable5Clicks = D(20)
-            },
-            ignoreHigherLayers: true,
-            getDepths() {
-                let i = inChallenge('p', 23, true) ? D(1) : D(0)
-                return i
-            },
-            completionLimit() {
-                return D(5)
-            }
-        },
-        24: {
-            unlocked() {
-                let i = false
-                if (hasUpgrade('p', 291)) { i = true }
-                if (inChallenge('p', 24) || challengeCompletions('p', 24).gt(0)) { i = true }
-                return i
-            },
-            name() { return `Death (${format(challengeCompletions('p', 24), 0)}/${format(this.completionLimit(), 0)})`},
-            challengeDescription: "Buyable 4 and Prestige Buyable 4 are disabled.",
-            rewardDescription() {
-                switch (challengeCompletions('p', 24).toNumber()) {
-                    case 0:
-                        return `Point Buyable 4 adds 10 free levels to Prestige Buyable 4.`
-                    case 1:
-                        return `Point Buyable 4 adds 10 free levels to Prestige Buyable 4. (Next total: +20)`
-                    case 2:
-                        return `Point Buyable 4 adds 10 free levels to Prestige Buyable 4. (Next total: +30)`
-                    case 3:
-                        return `Point Buyable 4 adds 10 free levels to Prestige Buyable 4. (Next total: +40)`
-                    case 4:
-                        return `Point Buyable 4 adds 10 free levels to Prestige Buyable 4. (Next total: +50)`
-                    case 5:
-                        return `Maxed out lol`
-                    default:
-                        throw new Error(`challenge 24 reward desc sucks lmao ${challengeCompletions('p', 24).toNumber()} out of bounds?`)
-                }
-            },
-            goal() {
-                let lim = 4
-                return [D('e475'), D('e555'), D('e635'), D('e715'), D('e795')][challengeCompletions('p', 24).min(lim).toNumber()]
-            },
-            goalDescription() {
-                return `Get ${format(tmp[this.layer].challenges[24].goal)} Prestige Points.`
-            },
-            canComplete() { return player.p.points.gte(tmp[this.layer].challenges[24].goal) },
-            onEnter() {
-                tmp.q.doReset(true, true, false)
-            },
-            ignoreHigherLayers: true,
-            getDepths() {
-                let i = inChallenge('p', 24, true) ? D(1) : D(0)
-                return i
-            },
-            completionLimit() {
-                return D(5)
             }
         },
     },
@@ -2589,7 +2717,7 @@ addLayer('p', {
             title: "Delay. Delay?",
             description: "Prestige Essence delays Point Buyable 3 cost.",
             cost: new Decimal(1e7),
-            unlocked() { return hasUpgrade('p', 11) },
+            unlocked() { return hasUpgrade(this.layer, 11) },
             effect() { 
                 let ret = player[this.layer].essence.max(10).log10().log10().add(1).pow(2).sub(1)
                 return ret;
@@ -2600,13 +2728,13 @@ addLayer('p', {
             title: "Designations",
             description: "Keep Point Buyable 4 on PP reset, and unlock a new prestige layer.",
             cost: new Decimal(1e8),
-            unlocked() { return hasUpgrade('p', 12) },
+            unlocked() { return hasUpgrade(this.layer, 12) },
         },
         14: {
             title: "PE -> BB1",
             description: "Point Buyable 1's base is increased based off of Prestige Essence.",
             cost: new Decimal(1e10),
-            unlocked() { return hasUpgrade('p', 13) },
+            unlocked() { return hasUpgrade(this.layer, 13) },
             effect() { 
                 let ret = player[this.layer].essence.max(1).log10()
                 return ret;
@@ -2617,7 +2745,7 @@ addLayer('p', {
             title: "PBx -> BBx",
             description: "PP Buyables 4-6 add 0.4 free levels to Point Buyables 1-3 respectively.",
             cost: new Decimal('e450'),
-            unlocked() { return challengeCompletions("q", 11).gte(1) },
+            unlocked() { return challengeCompletions('q', 11).gte(1) },
         },
         21: {
             title: "AutoUnlock I",
@@ -2629,19 +2757,19 @@ addLayer('p', {
             title: "AutoUnlock II",
             description: "Unlock the Point Buyable 2 Autobuyer.",
             cost: new Decimal(250000),
-            unlocked() { return hasUpgrade('p', 21) },
+            unlocked() { return hasUpgrade(this.layer, 21) },
         },
         23: {
             title: "AutoUnlock III",
             description: "Unlock the Point Buyable 3 Autobuyer.",
             cost: new Decimal(2e6),
-            unlocked() { return hasUpgrade('p', 22) },
+            unlocked() { return hasUpgrade(this.layer, 22) },
         },
         24: {
             title: "AutoUnlock IV",
             description: "Unlock the Point Buyable 4 Autobuyer.",
             cost: new Decimal('e800'),
-            unlocked() { return challengeCompletions("q", 11).gte(1) },
+            unlocked() { return challengeCompletions('q', 11).gte(1) },
         },
         31: {
             title: "Accumulator",
@@ -2653,7 +2781,7 @@ addLayer('p', {
             title: "UP1 Cheapener",
             description: "Upgrade 1's exponential scaling is decreased from 1.60 to 1.25.",
             cost: new Decimal(1e9),
-            unlocked() { return hasUpgrade('p', 31) },
+            unlocked() { return hasUpgrade(this.layer, 31) },
             currencyInternalName: 'ssPoints',
             currencyDisplayName: 'Super Scaling Points',
             currencyLocation() {
@@ -2664,7 +2792,7 @@ addLayer('p', {
             title: "Secondary Reward",
             description: "Challenge Completions multiply point gain.",
             cost: new Decimal(1e12),
-            unlocked() { return hasUpgrade('p', 31) },
+            unlocked() { return hasUpgrade(this.layer, 31) },
             currencyInternalName: 'ssPoints',
             currencyDisplayName: 'Super Scaling Points',
             currencyLocation() {
@@ -2673,7 +2801,7 @@ addLayer('p', {
             effect() { 
                 let ret = D(0)
                 for (let i in tmp.p.challenges) {
-                    ret = ret.add(challengeCompletions('p', i))
+                    ret = ret.add(challengeCompletions(this.layer, i))
                 }
                 ret = ret.pow_base(2)
                 return ret;
@@ -2684,7 +2812,7 @@ addLayer('p', {
             title: "Upgrade Dampener",
             description: "All Point Buyables scale slower based off of your total prestige points.",
             cost: new Decimal(1e15),
-            unlocked() { return hasUpgrade('p', 31) },
+            unlocked() { return hasUpgrade(this.layer, 31) },
             currencyInternalName: 'ssPoints',
             currencyDisplayName: 'Super Scaling Points',
             currencyLocation() {
@@ -2700,7 +2828,7 @@ addLayer('p', {
             title: "Point Pusher",
             description: "The second point softcap at 1.000 Dc is delayed based off of your Super Scaling Points.",
             cost: new Decimal(1e21),
-            unlocked() { return hasUpgrade('p', 31) },
+            unlocked() { return hasUpgrade(this.layer, 31) },
             currencyInternalName: 'ssPoints',
             currencyDisplayName: 'Super Scaling Points',
             currencyLocation() {
@@ -2716,7 +2844,7 @@ addLayer('p', {
             title: "Prestige Dampener",
             description: "All PP Buyables scale slower based off of your Super Scaling points.",
             cost: new Decimal('e10000'),
-            unlocked() { return challengeCompletions("q", 11).gte(1) },
+            unlocked() { return challengeCompletions('q', 11).gte(1) },
             currencyInternalName: 'ssPoints',
             currencyDisplayName: 'Super Scaling Points',
             currencyLocation() {
@@ -2731,7 +2859,7 @@ addLayer('p', {
             title: "Enhancer^2",
             description: "Enhancers increase the multiplier per dimension bought.",
             cost: new Decimal(1e80),
-            unlocked() { return inChallenge('q', 12) || challengeCompletions("q", 13).gte(1) },
+            unlocked() { return inChallenge('q', 12) || challengeCompletions('q', 13).gte(1) },
             currencyInternalName: 'energy',
             currencyDisplayName: 'Prestige Energy',
             currencyLocation() {
@@ -2746,7 +2874,7 @@ addLayer('p', {
             title: "Self-Effect",
             description: "Enhancers also add free levels to Prestige Essence Buyable 9.",
             cost: new Decimal(1e100),
-            unlocked() { return inChallenge('q', 12) || challengeCompletions("q", 13).gte(1) },
+            unlocked() { return inChallenge('q', 12) || challengeCompletions('q', 13).gte(1) },
             currencyInternalName: 'energy',
             currencyDisplayName: 'Prestige Energy',
             currencyLocation() {
@@ -2757,7 +2885,7 @@ addLayer('p', {
             title: "Wrap-Around",
             description: "Prestige Dimension 1 produces Prestige Dimension 8 at a reduced rate.",
             cost: new Decimal(1e120),
-            unlocked() { return inChallenge('q', 12) || challengeCompletions("q", 13).gte(1) },
+            unlocked() { return inChallenge('q', 12) || challengeCompletions('q', 13).gte(1) },
             currencyInternalName: 'energy',
             currencyDisplayName: 'Prestige Energy',
             currencyLocation() {
@@ -3078,7 +3206,7 @@ addLayer('p', {
                 player.p.totalBPUsed = Decimal.add(player.p.totalBPUsed, this.cost)
             },
             effect() { 
-                let ret = challengeCompletions('p', 21).add(challengeCompletions('p', 22)).add(challengeCompletions('p', 23)).add(challengeCompletions('p', 24)).add(challengeCompletions('p', 25))
+                let ret = challengeCompletions(this.layer, 21).add(challengeCompletions(this.layer, 22)).add(challengeCompletions(this.layer, 23)).add(challengeCompletions(this.layer, 24)).add(challengeCompletions(this.layer, 25))
                 ret = ret.pow_base(0.9)
                 return ret;
             },
@@ -3097,7 +3225,7 @@ addLayer('p', {
             currencyDisplayName: 'Branch Points',
             canAfford() {
                 return tmp.p.totalBP.sub(player.p.totalBPUsed).gte(this.cost)
-                    && hasUpgrade(this.layer, 242) && challengeCompletions('p', 21).gte(1)
+                    && hasUpgrade(this.layer, 242) && challengeCompletions(this.layer, 21).gte(1)
                     && !(hasUpgrade(this.layer, 252) || hasUpgrade(this.layer, 253))
             },
             pay() {
@@ -3118,7 +3246,7 @@ addLayer('p', {
             currencyDisplayName: 'Branch Points',
             canAfford() {
                 return tmp.p.totalBP.sub(player.p.totalBPUsed).gte(this.cost)
-                    && hasUpgrade(this.layer, 242) && challengeCompletions('p', 21).gte(1)
+                    && hasUpgrade(this.layer, 242) && challengeCompletions(this.layer, 21).gte(1)
                     && !(hasUpgrade(this.layer, 251) || hasUpgrade(this.layer, 253))
             },
             pay() {
@@ -3139,7 +3267,7 @@ addLayer('p', {
             currencyDisplayName: 'Branch Points',
             canAfford() {
                 return tmp.p.totalBP.sub(player.p.totalBPUsed).gte(this.cost)
-                    && hasUpgrade(this.layer, 242) && challengeCompletions('p', 21).gte(1)
+                    && hasUpgrade(this.layer, 242) && challengeCompletions(this.layer, 21).gte(1)
                     && !(hasUpgrade(this.layer, 251) || hasUpgrade(this.layer, 252))
             },
             pay() {
@@ -3265,7 +3393,7 @@ addLayer('p', {
                 player.p.totalBPUsed = Decimal.add(player.p.totalBPUsed, this.cost)
             },
             effect() { 
-                let ret = challengeCompletions('p', 14).max(1).log10().mul(0.01).add(1)
+                let ret = challengeCompletions(this.layer, 14).max(1).log10().mul(0.01).add(1)
                 return ret;
             },
             effectDisplay() { return `^${format(this.effect(), 3)}` },
@@ -3424,7 +3552,7 @@ addLayer('p', {
             currencyDisplayName: 'Branch Points',
             canAfford() {
                 return tmp.p.totalBP.sub(player.p.totalBPUsed).gte(this.cost)
-                    && (hasUpgrade(this.layer, 291) && challengeCompletions('p', 24).gte(2))
+                    && (hasUpgrade(this.layer, 291) && challengeCompletions(this.layer, 24).gte(2))
             },
             pay() {
                 player.p.totalBPUsed = Decimal.add(player.p.totalBPUsed, this.cost)

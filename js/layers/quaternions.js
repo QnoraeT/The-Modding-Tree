@@ -5,14 +5,14 @@ addLayer('q', {
     symbol: 'Q', // This appears on the layer's node. Default is the id with the first letter capitalized
     position: 1, // Horizontal position within a row. By default it uses the layer id and sorts in alphabetical order
     row: 1, // Row the layer is in on the tree (0 is the first row)
-	branches: ["p"],
+	branches: ['p'],
     hotkeys: [
         {key: 'q', description: "Q: Reset for quaternions", onPress(){if (canReset(this.layer)) doReset(this.layer)}},
     ],
-    layerShown(){ return hasUpgrade("p", 13) || Decimal.gt(player[this.layer].best, 0) },
+    layerShown(){ return hasUpgrade('p', 13) || Decimal.gt(player[this.layer].best, 0) },
     startData() { return {
         unlocked: false,
-        points: new Decimal(0),
+        points: D(0),
         bestPointsInQ: D(0),
         timeInQ: D(0),
         allocated: [D(0), D(0), D(0), D(0)],
@@ -21,7 +21,7 @@ addLayer('q', {
     color() {
         return gRC(player.timePlayed / 6, 1.0, 1.0)
     },
-    requires: new Decimal(1e8), // Can be a function that takes requirement increases into account
+    requires: D(1e8), // Can be a function that takes requirement increases into account
     resource: "quaternions", // Name of prestige currency
     baseResource: "prestige points", // Name of resource prestige is based on
     baseAmount() { return player.p.total }, // Get the current amount of baseResource
@@ -65,7 +65,7 @@ addLayer('q', {
         arr[2] = player[this.layer].allocGen[2].add(1)
         arr[3] = player[this.layer].allocGen[3].add(1).root(2)
 
-        if (challengeCompletions('q', 12).gte(1)) {
+        if (challengeCompletions(this.layer, 12).gte(1)) {
             for (let i = 0; i < player[this.layer].allocated.length; i++) {
                 arr[i] = arr[i].pow(player[this.layer].allocated[i].max(1e10).log10().log10())
             }
@@ -177,13 +177,19 @@ addLayer('q', {
         setBuyableAmount('p', 73, D(0))
 
         const SAFE_UPGRADES = [11, 12, 13, 14, 15, 21, 22, 23, 24, 31, 41, 42, 43, 44, 45]
-
+        
         player.p.upgrades = player.p.upgrades.filter((value) => { return SAFE_UPGRADES.includes(value) });
         player.p.totalBPUsed = D(0)
-
+        
         setBuyableAmount('p', 15, D(0))
+        player.p.challenge21Clicks = D(0)
         player.p.challenge21ClicksRemain = D(200)
+        player.p.challenge22Unlocks = []
 
+        player.p.hsPoints = D(0)
+        player.p.hsTotal = D(0)
+        player.p.hsChalBest = D('e3000')
+        
         for (let i = 0; i < 8; i++) {
             player.p.dimensionAccu[i] = D(0)
             setBuyableAmount('p', 61 + i, D(0))
@@ -254,61 +260,61 @@ addLayer('q', {
             requirementDescription: "3 total quaternions",
             effectDescription: "Keep BB2 autobuyer.",
             done() { return player[this.layer].total.gte(3) },
-            unlocked() { return hasMilestone('q', 0) }
+            unlocked() { return hasMilestone(this.layer, 0) }
         },
         2: {
             requirementDescription: "5 total quaternions",
             effectDescription: "Keep BB3 autobuyer.",
             done() { return player[this.layer].total.gte(5) },
-            unlocked() { return hasMilestone('q', 1) }
+            unlocked() { return hasMilestone(this.layer, 1) }
         },
         3: {
             requirementDescription: "10 total quaternions",
             effectDescription: "PPB1-3 are autobought.",
             done() { return player[this.layer].total.gte(10) },
-            unlocked() { return hasMilestone('q', 2) }
+            unlocked() { return hasMilestone(this.layer, 2) }
         },
         4: {
             requirementDescription: "100 total quaternions",
             effectDescription: "PPB4-6 are autobought.",
             done() { return player[this.layer].total.gte(100) },
-            unlocked() { return hasMilestone('q', 3) }
+            unlocked() { return hasMilestone(this.layer, 3) }
         },
         5: {
             requirementDescription: "1,000 total quaternions",
             effectDescription: "PPB7-9 are autobought.",
             done() { return player[this.layer].total.gte(1000) },
-            unlocked() { return hasMilestone('q', 4) }
+            unlocked() { return hasMilestone(this.layer, 4) }
         },
         6: {
             requirementDescription: "10,000 total quaternions",
             effectDescription: "Gain 1% of PP gained every second.",
             done() { return player[this.layer].total.gte(10000) },
-            unlocked() { return hasMilestone('q', 5) }
+            unlocked() { return hasMilestone(this.layer, 5) }
         },
         7: {
             requirementDescription: "1,000,000 total quaternions",
             effectDescription: "Unlock new quaternion challenges.",
             done() { return player[this.layer].total.gte(1e6) },
-            unlocked() { return hasMilestone('q', 6) }
+            unlocked() { return hasMilestone(this.layer, 6) }
         },
         8: {
             requirementDescription: "100.000 M total quaternions",
             effectDescription: "Keep all PP Upgrades.",
             done() { return player[this.layer].total.gte(1e8) },
-            unlocked() { return hasMilestone('q', 7) }
+            unlocked() { return hasMilestone(this.layer, 7) }
         },
         9: {
             requirementDescription: "10.000 B total quaternions",
             effectDescription: "Keep PP Challenges 1, 2, and 4.",
             done() { return player[this.layer].total.gte(1e10) },
-            unlocked() { return hasMilestone('q', 8) }
+            unlocked() { return hasMilestone(this.layer, 8) }
         },
         10: {
             requirementDescription: "1.000 Sp total quaternions",
             effectDescription: "PP Challenge 4 can be bulk-completed.",
             done() { return player[this.layer].total.gte(1e24) },
-            unlocked() { return hasMilestone('q', 9) }
+            unlocked() { return hasMilestone(this.layer, 9) }
         },
     },
     challenges: {
@@ -320,7 +326,7 @@ addLayer('q', {
             canComplete() { return player.points.gte(1e300) },
             rewardDescription: `Point Buyable 1 scales 25.000% slower. Unlock a few more prestige upgrades and quaternion buyables.`,
             getDepths() {
-                let i = inChallenge('q', 11, true) ? D(1) : D(0)
+                let i = inChallenge(this.layer, 11, true) ? D(1) : D(0)
                 return i
             },
             onEnter() {
@@ -337,14 +343,14 @@ addLayer('q', {
             }
         },
         12: {
-            unlocked() { return challengeCompletions('q', 11).gte(1) },
+            unlocked() { return challengeCompletions(this.layer, 11).gte(1) },
             name: "Dimension Loss",
             challengeDescription: "Point Buyable #1 is disabled. While in this challenge, Prestige Dimensions are unlocked.",
             goalDescription: `Get ${format('e4000')} Points.`,
             canComplete() { return player.points.gte('e4000') },
             rewardDescription: `Point Buyable 3 scales 10.000% slower. Total allocated quaternions boost their respective effect. Reunlock Ranks and Tiers and they do not reset upon Quaternions, but they are weaker outside of Rank Loss.`,
             getDepths() {
-                let i = inChallenge('q', 12, true) ? D(1) : D(0)
+                let i = inChallenge(this.layer, 12, true) ? D(1) : D(0)
                 return i
             },
             onEnter() {
@@ -361,14 +367,14 @@ addLayer('q', {
             }
         },
         13: {
-            unlocked() { return challengeCompletions('q', 12).gte(1) },
+            unlocked() { return challengeCompletions(this.layer, 12).gte(1) },
             name: "Tree Loss",
             challengeDescription: "You are stuck in Super Scaling and Crippled Points. While in this challenge, Trees are unlocked.",
             goalDescription: `Get ${format('e4e6')} Points.`,
             canComplete() { return player.points.gte('e4e6') },
             rewardDescription: `PP Buyables add 0.01 free levels above and to the left (9 adds levels to 8 & 6, etc). Reunlock Dimensions and they do not reset upon Quaternions, but they are weaker outside of Dimension Loss.`,
             getDepths() {
-                let i = inChallenge('q', 13, true) ? D(1) : D(0)
+                let i = inChallenge(this.layer, 13, true) ? D(1) : D(0)
                 return i
             },
             onEnter() {
@@ -395,7 +401,7 @@ addLayer('q', {
 
                     return obj
                 },
-                unlocked() { return challengeCompletions('q', 11).gte(1) },
+                unlocked() { return challengeCompletions(this.layer, 11).gte(1) },
                 unavail() {
                     let x = false
                     return x
@@ -445,7 +451,7 @@ addLayer('q', {
 
                     return obj
                 },
-                unlocked() { return challengeCompletions('q', 11).gte(1) },
+                unlocked() { return challengeCompletions(this.layer, 11).gte(1) },
                 unavail() {
                     let x = false
                     return x
@@ -495,7 +501,7 @@ addLayer('q', {
 
                     return obj
                 },
-                unlocked() { return challengeCompletions('q', 11).gte(1) },
+                unlocked() { return challengeCompletions(this.layer, 11).gte(1) },
                 unavail() {
                     let x = false
                     return x
@@ -535,6 +541,8 @@ addLayer('q', {
                 },
             },
         };
+
+        // ! NOTE!! this.layer doesn't work in the custom buyable script TwT
 
         for (const upgrade of Object.values(upgrades)) {
             upgrade.effect = (x) => {
@@ -699,6 +707,7 @@ addLayer('q', {
         return upgrades;
     })(),
     tabFormat: {
+        // ! NOTE!! IN tabFormat, this.layer DOESN'T WORK !!!
         "Main": {
             content: [
                 "main-display",
@@ -757,6 +766,7 @@ addLayer('q', {
                 ["buyables", [1]],
             ],
             unlocked(){
+                // for some reason this.layer turns into undefined
                 return challengeCompletions('q', 11).gte(1)
             },
         },
@@ -773,6 +783,7 @@ addLayer('q', {
                 ["challenges", [1]],
             ],
             unlocked(){
+                // for some reason this.layer turns into undefined
                 return hasMilestone('q', 7)
             },
         },

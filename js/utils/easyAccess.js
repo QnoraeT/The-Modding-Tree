@@ -1,12 +1,21 @@
 function hasUpgrade(layer, id) {
+	if (layer === undefined) {
+		throw new Error(`hasUpgrade: layer is undefined!!`)
+	}
 	return ((player[layer].upgrades.includes(toNumber(id)) || player[layer].upgrades.includes(id.toString())) && !tmp[layer].deactivated)
 }
 
 function hasMilestone(layer, id) {
+	if (layer === undefined) {
+		throw new Error(`hasMilestone: layer is undefined!!`)
+	}
 	return ((player[layer].milestones.includes(toNumber(id)) || player[layer].milestones.includes(id.toString())) && !tmp[layer].deactivated)
 }
 
 function hasAchievement(layer, id) {
+	if (layer === undefined) {
+		throw new Error(`hasAchievement: layer is undefined!!`)
+	}
 	return ((player[layer].achievements.includes(toNumber(id)) || player[layer].achievements.includes(id.toString())) && !tmp[layer].deactivated)
 }
 
@@ -19,6 +28,9 @@ function maxedChallenge(layer, id) {
 }
 
 function challengeCompletions(layer, id) {
+	if (layer === undefined) {
+		throw new Error(`challengeCompletions: layer is undefined!!`)
+	}
 	return (player[layer].challenges[id])
 }
 
