@@ -5,7 +5,7 @@ var NaNalert = false;
 
 // Tmp will not call these
 var activeFunctions = [
-	"startData", "onPrestige", "doReset", "update", "automate",
+	"startData", "onPrestige", "doReset", "resetSpecialData", "update", "automate",
 	"buy", "buyMax", "respec", "onPress", "onClick", "onHold", "masterButtonPress",
 	"sellOne", "sellAll", "pay", "actualCostFunction", "actualEffectFunction",
 	"effectDescription", "display", "fullDisplay", "effectDisplay", "rewardDisplay",
@@ -223,6 +223,11 @@ function pad(num, length) {
 }
 
 function sumHarmonicSeries(x) {
-    x = D(x)
-    return x.ln().add(0.57721566490153286060651209008240243104215933593992).add(Decimal.div(0.5, x)).sub(Decimal.div(1, (x.pow(2).mul(12)))).add(Decimal.div(1, (x.pow(4).mul(120))))
+    x = D(x).add(1)
+	return Decimal.ln(x)
+        .sub(Decimal.div(0.5, x))
+        .sub(Decimal.div(1, Decimal.pow(x, 2).mul(12)))
+        .add(Decimal.div(1, Decimal.pow(x, 4).mul(120)))
+		.add(0.5772156649015329)
+		.sub(x.sub(1).recip());
 }

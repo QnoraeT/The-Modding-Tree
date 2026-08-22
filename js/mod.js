@@ -3,7 +3,8 @@ let modInfo = {
     id: "tearonq_another_game_lmao",
     author: "TearonQ",
     pointsName: "points",
-    modFiles: ["layers.js", "tree.js"],
+    // ! LATER LAYERS FIRST!! OTHERWISE BUGS
+    modFiles: ["layers/quaternions.js", "layers/prestige.js", "tree.js"],
 
     discordName: "My stupid fcking server",
     discordLink: "https://discord.gg/JJKRfR3gH9",
@@ -42,18 +43,29 @@ function getPointGen() {
     if(!canGenPoints()) { return new Decimal(0) }
     let gain = new Decimal(1)
     gain = gain.mul(tmp.p.buyables[11].effect)
-    if (!inChallenge('p', 13)) {
-        gain = gain.mul(tmp.p.effect)
-    }
+    gain = gain.mul(tmp.p.effect)
+
     gain = gain.mul(tmp.p.buyables[22].effect.pps)
     gain = gain.mul(tmp.p.sspEff)
     if (hasUpgrade('p', 42)) {
         gain = gain.mul(upgradeEffect('p', 42))
     }
+    if (hasUpgrade('p', 221)) {
+        gain = gain.mul(upgradeEffect('p', 221))
+    }
+    if (hasUpgrade('p', 224)) {
+        gain = gain.mul(upgradeEffect('p', 224))
+    }
     gain = gain.mul(tmp.q.generationEff[0])
+    gain = gain.mul(tmp.q.buyables[11].effect)
+    gain = gain.mul(tmp.p.bpEffect)
+    
     gain = gain.pow(tmp.p.buyables[14].effect)
-    if (inChallenge('p', 12) && challengeCompletions("p", 12).gte(7)) { 
-        gain = gain.root(challengeCompletions("p", 12).sub(5))
+    gain = gain.pow(tmp.p.buyables[15].effect)
+    gain = gain.pow(tmp.p.energyEff)
+    
+    if (inChallenge('p', 12) && challengeCompletions('p', 12).gte(7)) { 
+        gain = gain.root(challengeCompletions('p', 12).sub(5))
     }
     if (inChallenge('q', 11)) {
         gain = gain.root(Decimal.pow10(tmp.q.challenges[11].getDepths))

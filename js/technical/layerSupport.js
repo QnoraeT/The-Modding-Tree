@@ -111,6 +111,9 @@ function setupLayer(layer){
                 else if (layers[layer].challenges[thing].marked === undefined) 
                     layers[layer].challenges[thing].marked = function() {return maxedChallenge(this.layer, this.id)}
 
+                if (layers[layer].challenges[thing].ignoreHigherLayers === undefined) {
+                    layers[layer].challenges[thing].ignoreHigherLayers = false
+                }
             }
         }
     }

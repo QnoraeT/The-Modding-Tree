@@ -126,14 +126,29 @@ function canReset(layer)
 		return false
 }
 
-function rowReset(row, layer) {
+function rowReset(row, layer, challengeReset) {
 	for (lr in ROW_LAYERS[row]){
+		// stupid ass hack to make this work
 		if(layers[lr].doReset) {
-			if (!isNaN(row)) Vue.set(player[lr], "activeChallenge", null) // Exit challenges on any row reset on an equal or higher row
+			if (challengeReset) {
+				if (player[lr].activeChallenge != null) {
+					if (!layers[lr].challenges[player[lr].activeChallenge].ignoreHigherLayers) {
+						if (!isNaN(row)) Vue.set(player[lr], "activeChallenge", null) // Exit challenges on any row reset on an equal or higher row
+					}
+				} else {
+					if (!isNaN(row)) {
+						Vue.set(player[lr], "activeChallenge", null)
+					}
+				}
+			}
 			run(layers[lr].doReset, layers[lr], layer)
+			
+			if (challengeReset) {
+				player[lr].activeChallenge = null
+			}
+		} else {
+			if (tmp[layer].row > tmp[lr].row && !isNaN(row)) { layerDataReset(lr) }
 		}
-		else
-			if(tmp[layer].row > tmp[lr].row && !isNaN(row)) layerDataReset(lr)
 	}
 }
 
@@ -160,8 +175,6 @@ function layerDataReset(layer, keep = []) {
 	}
 }
 
-
-
 function addPoints(layer, gain) {
 	player[layer].points = player[layer].points.add(gain).max(0)
 	if (player[layer].best) player[layer].best = player[layer].best.max(player[layer].points)
@@ -172,7 +185,7 @@ function generatePoints(layer, diff) {
 	addPoints(layer, tmp[layer].resetGain.times(diff))
 }
 
-function doReset(layer, force=false) {
+function doReset(layer, force=false, challengeReset = true) {
 	if (tmp[layer].type == "none") return
 	let row = tmp[layer].row
 	if (!force) {
@@ -185,7 +198,7 @@ function doReset(layer, force=false) {
 			if (tmp[layer].baseAmount.lt(tmp[layer].nextAt)) return;
 			gain =(tmp[layer].canBuyMax ? gain : 1)
 		}
-
+		
 		if (layers[layer].onPrestige){
 			updateMilestones(layer)
 			run(layers[layer].onPrestige, layers[layer], gain)
@@ -194,37 +207,43 @@ function doReset(layer, force=false) {
 		addPoints(layer, gain)
 		updateMilestones(layer)
 		updateAchievements(layer)
-
+		
 		if (!player[layer].unlocked) {
 			player[layer].unlocked = true;
 			needCanvasUpdate = true;
-
+			
 			if (tmp[layer].increaseUnlockOrder){
 				lrs = tmp[layer].increaseUnlockOrder
 				for (lr in lrs)
 					if (!player[lrs[lr]].unlocked) player[lrs[lr]].unlockOrder++
 			}
 		}
-	
+		
 	}
-
+	
 	if (run(layers[layer].resetsNothing, layers[layer])) return
 	tmp[layer].baseAmount = decimalZero // quick fix
-
-
+	
+	
 	for (layerResetting in layers) {
-		if (row >= layers[layerResetting].row && (!force || layerResetting != layer)) completeChallenge(layerResetting)
+		if (row >= layers[layerResetting].row && (!force || layerResetting != layer)) {
+			if (!layers[layerResetting].challenges[player[layerResetting].activeChallenge].ignoreHigherLayers || challengeReset) {
+				completeChallenge(layerResetting)
+			}
+		}
 	}
-
+	
 	player.points = (row == 0 ? decimalZero : getStartPoints())
-
-	for (let x = row; x >= 0; x--) rowReset(x, layer)
-	for (r in OTHER_LAYERS){
-		rowReset(r, layer)
+	
+	for (let x = row; x >= 0; x--) {
+		rowReset(x, layer, challengeReset)
 	}
-
+	for (r in OTHER_LAYERS){
+		rowReset(r, layer, challengeReset)
+	}
+	
 	player[layer].resetTime = 0
-
+	
 	updateTemp()
 	updateTemp()
 }
@@ -394,35 +413,48 @@ function gameLoop(diff) {
 		tmp.reductionFactors.dilate.exp = tmp.reductionFactors.dilate.exp.mul(Decimal.pow(25/24, tmp.p.challenges[11].getDepths));
     }
 
-	if (hasMilestone("p", 0)) {
-		tmp.reductionFactors.dilate.exp = tmp.reductionFactors.dilate.exp.div(1.25/1.225)
+	if (hasMilestone('p', 0)) {
+		tmp.reductionFactors.dilate.exp = tmp.reductionFactors.dilate.exp.div(
+			1.25/(
+				inChallenge('q', 11)
+					? 1.2
+					: 1.24)
+		)
 	}
 	
-	if (hasMilestone("p", 100)) {
-		tmp.reductionFactors.dilate.exp = tmp.reductionFactors.dilate.exp.div(1.225/1.2)
+	if (hasMilestone('p', 100)) {
+		tmp.reductionFactors.dilate.exp = tmp.reductionFactors.dilate.exp.div(1.25/(
+			inChallenge('q', 11)
+				? 1.225
+				: 1.245
+		))
 	}
 	
-	if (challengeCompletions("p", 14).gte(1) && !(inChallenge('p', 11) || inChallenge('p', 12) || inChallenge('p', 13) || inChallenge('p', 14))) {
+	if (challengeCompletions('p', 14).gte(1) && !(inChallenge('p', 11) || inChallenge('p', 12) || inChallenge('p', 13) || inChallenge('p', 14))) {
 		tmp.reductionFactors.sc1.start = tmp.reductionFactors.sc1.start.mul(tmp.p.challenges[14].rewardEffect)
 	}
 	
 	tmp.reductionFactors.sc1.exp = tmp.reductionFactors.sc1.exp.root(tmp.p.buyables[32].effect.pts)
 
-    if (challengeCompletions("p", 11).gte(1)) {
+    if (challengeCompletions('p', 11).gte(1)) {
         tmp.reductionFactors.sc1.exp = tmp.reductionFactors.sc1.exp.pow(0.5);
     }
+	
+	if (hasUpgrade('p', 261)) {
+		tmp.reductionFactors.sc1.exp = tmp.reductionFactors.sc1.exp.pow(0.9);
+	}
 	
 	if (hasUpgrade('p', 44)) {
 		tmp.reductionFactors.sc2.start = tmp.reductionFactors.sc2.start.mul(upgradeEffect('p', 44))
 	}
 	
-    if (inChallenge('p', 14)) {
+    if (inChallenge('p', 14) || inChallenge('q', 13)) {
 		tmp.reductionFactors.sc1.start = tmp.reductionFactors.sc1.start.root(tmp.p.challenges[14].getDepths.add(1).mul(2))
         tmp.reductionFactors.sc2.start = tmp.reductionFactors.sc2.start.root(tmp.p.challenges[14].getDepths.add(1).mul(2))
     }
 	
-	if (hasMilestone("p", 7)) {
-		tmp.reductionFactors.sc2.exp = tmp.reductionFactors.sc2.exp.root(player.p.buyables[51].sub(7).pow_base(1/0.96));
+	if (hasMilestone('p', 7)) {
+		tmp.reductionFactors.sc2.exp = tmp.reductionFactors.sc2.exp.root(player.p.buyables[51].sub(7).pow_base(1/(inChallenge('q', 11) ? 0.96 : 0.98)));
 	}
 
 	// cap lesser tier softcaps before higher tier softcaps
@@ -430,14 +462,20 @@ function gameLoop(diff) {
 	// end
 
     let finalPointGen = tmp.pointGen.mul(player.globalTS)
+
+	if (inChallenge('p', 23)) {
+		player.points = D(0)
+	}
+
     let previous = player.points
 
     if (player.points.gte(tmp.reductionFactors.sc2.start)) {
 		tmp.reductionFactors.sc2.eff = pointGradualSoftcap(0, player.points, tmp.reductionFactors.sc2.start, tmp.reductionFactors.sc2.exp, false)
 		tmp.reductionFactors.sc2.eff = pointGradualSoftcap(0, tmp.reductionFactors.sc2.eff, tmp.reductionFactors.sc1.start, tmp.reductionFactors.sc1.exp, false)
+		let r = tmp.reductionFactors.sc2.eff
 		tmp.reductionFactors.sc2.eff = pointGradualSoftcap(1, tmp.reductionFactors.sc2.eff, D(10), tmp.reductionFactors.dilate.exp, false)
 		if (Decimal.eq_tolerance(tmp.reductionFactors.sc2.eff, tmp.reductionFactors.sc2.eff.add(finalPointGen))) {
-			tmp.reductionFactors.sc2.eff = tmp.reductionFactors.sc2.eff.div(player.points)
+			tmp.reductionFactors.sc2.eff = tmp.reductionFactors.sc2.eff.div(r)
 		} else {
 			tmp.reductionFactors.sc2.eff = pointGradualSoftcap(1, tmp.reductionFactors.sc2.eff.add(finalPointGen), D(10), tmp.reductionFactors.dilate.exp, true)
 			tmp.reductionFactors.sc2.eff = pointGradualSoftcap(0, tmp.reductionFactors.sc2.eff, tmp.reductionFactors.sc1.start, tmp.reductionFactors.sc1.exp, true)
@@ -454,9 +492,10 @@ function gameLoop(diff) {
 
     if (player.points.gte(tmp.reductionFactors.sc1.start)) {
 		tmp.reductionFactors.sc1.eff = pointGradualSoftcap(0, player.points, tmp.reductionFactors.sc1.start, tmp.reductionFactors.sc1.exp, false)
+		let r = tmp.reductionFactors.sc1.eff
 		tmp.reductionFactors.sc1.eff = pointGradualSoftcap(1, tmp.reductionFactors.sc1.eff, D(10), tmp.reductionFactors.dilate.exp, false)
 		if (Decimal.eq_tolerance(tmp.reductionFactors.sc1.eff, tmp.reductionFactors.sc1.eff.add(finalPointGen))) {
-			tmp.reductionFactors.sc1.eff = tmp.reductionFactors.sc1.eff.div(player.points)
+			tmp.reductionFactors.sc1.eff = tmp.reductionFactors.sc1.eff.div(r)
 		} else {
 			tmp.reductionFactors.sc1.eff = pointGradualSoftcap(1, tmp.reductionFactors.sc1.eff.add(finalPointGen), D(10), tmp.reductionFactors.dilate.exp, true)
 			tmp.reductionFactors.sc1.eff = pointGradualSoftcap(0, tmp.reductionFactors.sc1.eff, tmp.reductionFactors.sc1.start, tmp.reductionFactors.sc1.exp, true)
@@ -483,7 +522,7 @@ function gameLoop(diff) {
 		tmp.reductionFactors.dilate.eff = D(1)
 	}
 
-    player.points = player.points.add(finalPointGen.mul(diff))
+    player.points = player.points.add(finalPointGen.mul(inChallenge('p', 23) ? 1 : diff))
 
     if (player.points.gte(10)) {
         player.points = player.points.log10().root(tmp.reductionFactors.dilate.exp).pow10()
@@ -495,7 +534,7 @@ function gameLoop(diff) {
         player.points = player.points.div(tmp.reductionFactors.sc2.start).sub(1).mul(tmp.reductionFactors.sc2.exp).add(1).root(tmp.reductionFactors.sc2.exp).mul(tmp.reductionFactors.sc2.start)
     }
 
-    player.calcPointGen = player.points.sub(previous).div(diff)
+    player.calcPointGen = player.points.sub(previous).div(inChallenge('p', 23) ? 1 : diff)
     player.bestPoints = Decimal.max(player.bestPoints, player.points)
 
 	for (let x = 0; x <= maxRow; x++){
@@ -559,6 +598,11 @@ var interval = setInterval(function() {
 	ticking = true
 	let now = Date.now()
 	let diff = (now - player.time) / 1e3
+	if (diff < 0) {
+		console.warn(`diff between frames is less than 0 (${diff}), setting to 0...`)
+		diff = 0
+	}
+
 	let trueDiff = diff
 	if (player.offTime !== undefined) {
 		if (player.offTime.remain > modInfo.offlineLimit * 3600) player.offTime.remain = modInfo.offlineLimit * 3600

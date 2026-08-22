@@ -129,15 +129,27 @@ function clickGrid(layer, id) {
 }
 
 // Function to determine if the player is in a challenge
-function inChallenge(layer, id) {
-	let challenge = player[layer].activeChallenge
-	if (!challenge) return false
-	id = toNumber(id)
-	if (challenge == id) return true
+function inChallenge(layer, id, base = false) {
+	// ! changed
+	if (base) {
+		let challenge = player[layer].activeChallenge
+		if (!challenge) return false
+		id = toNumber(id)
+		if (challenge == id) return true
+	
+		if (layers[layer].challenges[challenge].countsAs)
+			return tmp[layer].challenges[challenge].countsAs.includes(id) || false
+		return false
+	}
 
-	if (layers[layer].challenges[challenge].countsAs)
-		return tmp[layer].challenges[challenge].countsAs.includes(id) || false
-	return false
+	if (tmp[layer] === undefined) {
+		console.warn(`Layer ${layer} doesn't exist in tmp for some reason! (tmp.${layer} === undefined) Falling back to assuming ID ${id} = true...`)
+		return true;
+	}
+	if (tmp[layer].challenges[id].getDepths === undefined) {
+		throw new Error(`Layer ${layer} ID ${id} does not have a getDepths function!!`)
+	}
+	return tmp[layer].challenges[id].getDepths.gt(0)
 }
 
 // ************ Misc ************
@@ -321,6 +333,9 @@ document.onkeydown = function (e) {
 		if (player[k.layer].unlocked && tmp[k.layer].hotkeys[k.id].unlocked)
 			k.onPress()
 	}
+    if (key === 'Enter' && e.repeat) {
+        e.preventDefault();
+    }
 }
 
 document.onkeyup = function (e) {
