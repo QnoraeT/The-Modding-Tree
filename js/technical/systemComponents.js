@@ -119,6 +119,7 @@ var systemComponents = {
 		<span class="overlayThing">Your points are naturally slowing down by /{{ format(tmp.reductionFactors.dilate.eff, 2) }}!<br></span>
 		<span v-if="player.points.pow(1.25).gte(tmp.reductionFactors.sc1.start)" class="overlayThing">Your points past {{ format(tmp.reductionFactors.sc1.start) }} are being slowed down by /{{ format(tmp.reductionFactors.sc1.eff, 2) }}!<br></span>
 		<span v-if="player.points.pow(1.25).gte(tmp.reductionFactors.sc2.start)" class="overlayThing">Your points past {{ format(tmp.reductionFactors.sc2.start) }} are being slowed down by /{{ format(tmp.reductionFactors.sc2.eff, 2) }}!<br></span>
+		<span v-if="player.points.log10().pow(1.25).gte(tmp.reductionFactors.sc3.start.log10())" class="overlayThing">Your points past {{ format(tmp.reductionFactors.sc3.start) }} are being slowed down by /{{ format(tmp.reductionFactors.sc3.eff, 2) }}!<br></span>
 		<span v-if="canGenPoints()"  class="overlayThing">({{tmp.other.oompsMag != 0 ? format(tmp.other.oomps) + " OOM" + (tmp.other.oompsMag < 0 ? "^OOM" : tmp.other.oompsMag > 1 ? "^" + tmp.other.oompsMag : "") + "s" : format(player.calcPointGen, 3)}}/sec)</span>
 		<div v-for="thing in tmp.displayThings" class="overlayThing"><span v-if="thing" v-html="thing"></span></div>
 	</div>

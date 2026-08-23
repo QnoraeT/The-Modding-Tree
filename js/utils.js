@@ -143,11 +143,16 @@ function inChallenge(layer, id, base = false) {
 	}
 
 	if (tmp[layer] === undefined) {
-		console.warn(`Layer ${layer} doesn't exist in tmp for some reason! (tmp.${layer} === undefined) Falling back to assuming ID ${id} = true...`)
-		return true;
+		console.warn(`Layer ${layer} doesn't exist in tmp for some reason! (tmp.${layer} === undefined) Falling back to assuming ID ${id} = false...`)
+		console.log(`setting delta to 0, disabling generation for 20 frames to update again`)
+		PAUSE_EVERYTHING = 20
+		return false
+	}
+	if (tmp[layer].challenges[id] === undefined) {
+		throw new Error(`Challenge ${layer}${id} doesn't exist!`)
 	}
 	if (tmp[layer].challenges[id].getDepths === undefined) {
-		throw new Error(`Layer ${layer} ID ${id} does not have a getDepths function!!`)
+		throw new Error(`Challenge ${layer}${id} does not have a getDepths function!!`)
 	}
 	return tmp[layer].challenges[id].getDepths.gt(0)
 }

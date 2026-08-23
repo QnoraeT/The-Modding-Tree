@@ -90,10 +90,13 @@ addLayer('q', {
         if (hasUpgrade('p', 274)) {
             i = i.pow(1.1)
         }
+        i = i.pow(challengeCompletions('p', 25).pow_base(1.02))
         return i
     },
     getNextAt() {
         let i = tmp[this.layer].getResetGain
+
+        i = i.root(challengeCompletions('p', 25).pow_base(1.02))
         if (hasUpgrade('p', 274)) {
             i = i.root(1.1)
         }
@@ -170,12 +173,14 @@ addLayer('q', {
         }
     },
     resetSpecialData() {
+        // chal 3
         player.p.treePoints = D(0)
         player.p.branchPoints = D(0)
+        player.p.upg412BP = D(0)
         setBuyableAmount('p', 71, D(0))
         setBuyableAmount('p', 72, D(0))
         setBuyableAmount('p', 73, D(0))
-
+        
         const SAFE_UPGRADES = [11, 12, 13, 14, 15, 21, 22, 23, 24, 31, 41, 42, 43, 44, 45]
         
         player.p.upgrades = player.p.upgrades.filter((value) => { return SAFE_UPGRADES.includes(value) });
@@ -185,11 +190,23 @@ addLayer('q', {
         player.p.challenge21Clicks = D(0)
         player.p.challenge21ClicksRemain = D(200)
         player.p.challenge22Unlocks = []
-
+        
         player.p.hsPoints = D(0)
         player.p.hsTotal = D(0)
+        player.p.hsBest = D(0)
+        player.p.hsBestGalaxies = D(0)
         player.p.hsChalBest = D('e3000')
+        setBuyableAmount('p', 81, D(0))
+        setBuyableAmount('p', 82, D(0))
+        setBuyableAmount('p', 83, D(0))
+
+        player.p.challenges[21] = D(0)
+        player.p.challenges[22] = D(0)
+        player.p.challenges[23] = D(0)
+        player.p.challenges[24] = D(0)
+        player.p.challenges[25] = D(0)
         
+        // chal 2
         for (let i = 0; i < 8; i++) {
             player.p.dimensionAccu[i] = D(0)
             setBuyableAmount('p', 61 + i, D(0))
@@ -199,6 +216,7 @@ addLayer('q', {
         player.p.enhancer = D(0)
         setBuyableAmount('p', 69, D(0))
 
+        // chal 1
         setBuyableAmount('p', 51, D(0))
         setBuyableAmount('p', 52, D(0))
 
@@ -253,18 +271,18 @@ addLayer('q', {
     milestones: {
         0: {
             requirementDescription: "2 total quaternions",
-            effectDescription: "Keep BB1 autobuyer.",
+            effectDescription: "Keep PB1 autobuyer.",
             done() { return player[this.layer].total.gte(2) }
         },
         1: {
             requirementDescription: "3 total quaternions",
-            effectDescription: "Keep BB2 autobuyer.",
+            effectDescription: "Keep PB2 autobuyer.",
             done() { return player[this.layer].total.gte(3) },
             unlocked() { return hasMilestone(this.layer, 0) }
         },
         2: {
             requirementDescription: "5 total quaternions",
-            effectDescription: "Keep BB3 autobuyer.",
+            effectDescription: "Keep PB3 autobuyer.",
             done() { return player[this.layer].total.gte(5) },
             unlocked() { return hasMilestone(this.layer, 1) }
         },
@@ -321,12 +339,17 @@ addLayer('q', {
         11: {
             unlocked: true,
             name: "Rank Loss",
-            challengeDescription: "Point gain is reduced by ^0.1, and BB4's effect past ^2 is softcapped. While in this challenge, Ranks and Tiers are unlocked.",
+            challengeDescription: "Point gain is reduced by ^0.1, and PB4's effect past ^2 is softcapped. While in this challenge, Ranks and Tiers are unlocked.",
             goalDescription: `Get ${format(1e300)} Points.`,
             canComplete() { return player.points.gte(1e300) },
             rewardDescription: `Point Buyable 1 scales 25.000% slower. Unlock a few more prestige upgrades and quaternion buyables.`,
             getDepths() {
                 let i = inChallenge(this.layer, 11, true) ? D(1) : D(0)
+
+                if (inChallenge(this.layer, 14)) {
+                    i = i.add(tmp[this.layer].challenges[14].getDepths)
+                }
+
                 return i
             },
             onEnter() {
@@ -351,6 +374,11 @@ addLayer('q', {
             rewardDescription: `Point Buyable 3 scales 10.000% slower. Total allocated quaternions boost their respective effect. Reunlock Ranks and Tiers and they do not reset upon Quaternions, but they are weaker outside of Rank Loss.`,
             getDepths() {
                 let i = inChallenge(this.layer, 12, true) ? D(1) : D(0)
+
+                if (inChallenge(this.layer, 14)) {
+                    i = i.add(tmp[this.layer].challenges[14].getDepths)
+                }
+
                 return i
             },
             onEnter() {
@@ -369,12 +397,41 @@ addLayer('q', {
         13: {
             unlocked() { return challengeCompletions(this.layer, 12).gte(1) },
             name: "Tree Loss",
-            challengeDescription: "You are stuck in Super Scaling and Crippled Points. While in this challenge, Trees are unlocked.",
+            challengeDescription: "You are stuck in Super Scaling and Crippled Points. Point's third softcap is in effect at e1,000,000. While in this challenge, Trees are unlocked.",
             goalDescription: `Get ${format('e4e6')} Points.`,
             canComplete() { return player.points.gte('e4e6') },
             rewardDescription: `PP Buyables add 0.01 free levels above and to the left (9 adds levels to 8 & 6, etc). Reunlock Dimensions and they do not reset upon Quaternions, but they are weaker outside of Dimension Loss.`,
             getDepths() {
                 let i = inChallenge(this.layer, 13, true) ? D(1) : D(0)
+
+                if (inChallenge(this.layer, 14)) {
+                    i = i.add(tmp[this.layer].challenges[14].getDepths)
+                }
+
+                return i
+            },
+            onEnter() {
+                tmp[this.layer].doReset(false)
+                updateTemp()
+            },
+            onExit() {
+                tmp[this.layer].doReset(false)
+                updateTemp()
+                tmp[this.layer].doReset(false)
+                updateTemp()
+                tmp[this.layer].doReset(false)
+                updateTemp()
+            }
+        },
+        14: {
+            unlocked() { return challengeCompletions(this.layer, 13).gte(1) },
+            name: "Full Loss",
+            challengeDescription: "All prior challenges combined with several changes.",
+            goalDescription: `Get ${format('e2e10')} Points.`,
+            canComplete() { return player.points.gte('e2e10') },
+            rewardDescription: `Unlock a new layer above and aside from this.`,
+            getDepths() {
+                let i = inChallenge(this.layer, 14, true) ? D(1) : D(0)
                 return i
             },
             onEnter() {
@@ -497,7 +554,7 @@ addLayer('q', {
                 type: 0,
                 num: 3,
                 get costD() {
-                    const obj = {type: 0, exp: 0, main: [D(1e19), D(50), D(2)]}
+                    const obj = {type: 1, exp: 1, main: [D(19), D(1.09), D(1.2)]}
 
                     return obj
                 },

@@ -1,9 +1,10 @@
+let PAUSE_EVERYTHING = 20
+
 let modInfo = {
     name: "The TearonQ (i have no creative names)",
     id: "tearonq_another_game_lmao",
     author: "TearonQ",
     pointsName: "points",
-    // ! LATER LAYERS FIRST!! OTHERWISE BUGS
     modFiles: ["layers/quaternions.js", "layers/prestige.js", "tree.js"],
 
     discordName: "My stupid fcking server",
@@ -56,13 +57,17 @@ function getPointGen() {
     if (hasUpgrade('p', 224)) {
         gain = gain.mul(upgradeEffect('p', 224))
     }
+    if (hasUpgrade('p', 402)) {
+        gain = gain.mul(upgradeEffect('p', 402))
+    }
+    gain = gain.mul(tmp.p.bpEffect)
     gain = gain.mul(tmp.q.generationEff[0])
     gain = gain.mul(tmp.q.buyables[11].effect)
-    gain = gain.mul(tmp.p.bpEffect)
     
     gain = gain.pow(tmp.p.buyables[14].effect)
     gain = gain.pow(tmp.p.buyables[15].effect)
     gain = gain.pow(tmp.p.energyEff)
+    gain = gain.pow(challengeCompletions('p', 25).pow_base(1.02))
     
     if (inChallenge('p', 12) && challengeCompletions('p', 12).gte(7)) { 
         gain = gain.root(challengeCompletions('p', 12).sub(5))

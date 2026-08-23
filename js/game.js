@@ -227,8 +227,11 @@ function doReset(layer, force=false, challengeReset = true) {
 	
 	for (layerResetting in layers) {
 		if (row >= layers[layerResetting].row && (!force || layerResetting != layer)) {
-			if (!layers[layerResetting].challenges[player[layerResetting].activeChallenge].ignoreHigherLayers || challengeReset) {
-				completeChallenge(layerResetting)
+			// activeChallenge null check because Q reset causes error (tested during challenge Q13)
+			if (player[layerResetting].activeChallenge != null) {
+				if (challengeReset || !layers[layerResetting].challenges[player[layerResetting].activeChallenge].ignoreHigherLayers) {
+					completeChallenge(layerResetting)
+				}
 			}
 		}
 	}
@@ -345,6 +348,14 @@ function autobuyUpgrades(layer){
 
 function pointGradualSoftcap(type, num, start, pow, inv) {
 	switch (type) {
+		case 3:
+			if (inv) {
+				return num.log(start).sub(1).mul(pow).add(1).root(pow).pow_base(start)
+			} else {
+				return num.log(start).pow(pow).sub(1).div(pow).add(1).pow_base(start)
+			}
+			break;
+		// case 2 is reserved for prestige essence
 		case 2:
 			if (inv) {
 				return num.log10().root(pow).pow10().root(start)
@@ -372,6 +383,12 @@ function pointGradualSoftcap(type, num, start, pow, inv) {
 }
 
 function gameLoop(diff) {
+	if (PAUSE_EVERYTHING > 0) {
+		diff = 0
+		console.log(`pausing generation for ${PAUSE_EVERYTHING} ticks`)
+		PAUSE_EVERYTHING -= 1
+	}
+
 	if (isEndgame() || tmp.gameEnded){
 		tmp.gameEnded = true
 		clearParticles()
@@ -403,8 +420,9 @@ function gameLoop(diff) {
 	} else {
 		tmp.reductionFactors = {
 			dilate: {exp: D(1.25), eff: D(1)},
-			sc1: {exp: D(2), start: D(1e10), eff: D(1)},
-			sc2: {exp: D(3), start: D(1e33), eff: D(1)},
+			sc1:    {exp: D(2),    start: D(1e10), eff: D(1)},
+			sc2:    {exp: D(3),    start: D(1e33), eff: D(1)},
+			sc3:    {exp: D(2.5),  start: D(inChallenge('q', 13) ? 'ee6' : 'ee100'), eff: D(1)}
 		}
 	}
 
@@ -430,7 +448,7 @@ function gameLoop(diff) {
 		))
 	}
 	
-	if (challengeCompletions('p', 14).gte(1) && !(inChallenge('p', 11) || inChallenge('p', 12) || inChallenge('p', 13) || inChallenge('p', 14))) {
+	if (challengeCompletions('p', 14).gte(1) && !(inChallenge('p', 11) || inChallenge('p', 12) || inChallenge('p', 14))) {
 		tmp.reductionFactors.sc1.start = tmp.reductionFactors.sc1.start.mul(tmp.p.challenges[14].rewardEffect)
 	}
 	
@@ -469,6 +487,30 @@ function gameLoop(diff) {
 
     let previous = player.points
 
+    if (player.points.gte(tmp.reductionFactors.sc3.start)) {
+		tmp.reductionFactors.sc3.eff = pointGradualSoftcap(3, player.points, tmp.reductionFactors.sc3.start, tmp.reductionFactors.sc3.exp, false)
+		tmp.reductionFactors.sc3.eff = pointGradualSoftcap(0, tmp.reductionFactors.sc3.eff, tmp.reductionFactors.sc2.start, tmp.reductionFactors.sc2.exp, false)
+		tmp.reductionFactors.sc3.eff = pointGradualSoftcap(0, tmp.reductionFactors.sc3.eff, tmp.reductionFactors.sc1.start, tmp.reductionFactors.sc1.exp, false)
+		let r = tmp.reductionFactors.sc3.eff
+		tmp.reductionFactors.sc3.eff = pointGradualSoftcap(1, tmp.reductionFactors.sc3.eff, D(10), tmp.reductionFactors.dilate.exp, false)
+		if (Decimal.eq_tolerance(tmp.reductionFactors.sc3.eff, tmp.reductionFactors.sc3.eff.add(finalPointGen))) {
+			tmp.reductionFactors.sc3.eff = tmp.reductionFactors.sc3.eff.div(r)
+		} else {
+			tmp.reductionFactors.sc3.eff = pointGradualSoftcap(1, tmp.reductionFactors.sc3.eff.add(finalPointGen), D(10), tmp.reductionFactors.dilate.exp, true)
+			tmp.reductionFactors.sc3.eff = pointGradualSoftcap(0, tmp.reductionFactors.sc3.eff, tmp.reductionFactors.sc1.start, tmp.reductionFactors.sc1.exp, true)
+			tmp.reductionFactors.sc3.eff = pointGradualSoftcap(0, tmp.reductionFactors.sc3.eff, tmp.reductionFactors.sc2.start, tmp.reductionFactors.sc2.exp, true)
+			tmp.reductionFactors.sc3.eff = pointGradualSoftcap(3, tmp.reductionFactors.sc3.eff, tmp.reductionFactors.sc3.start, tmp.reductionFactors.sc3.exp, true)
+			tmp.reductionFactors.sc3.eff = tmp.reductionFactors.sc3.eff.sub(player.points).div(finalPointGen).recip()
+			tmp.reductionFactors.sc3.eff = tmp.reductionFactors.sc3.eff.div(tmp.reductionFactors.dilate.eff)
+			tmp.reductionFactors.sc3.eff = tmp.reductionFactors.sc3.eff.div(tmp.reductionFactors.sc1.eff)
+			tmp.reductionFactors.sc3.eff = tmp.reductionFactors.sc3.eff.div(tmp.reductionFactors.sc2.eff)
+		}
+
+        player.points = pointGradualSoftcap(3, player.points, tmp.reductionFactors.sc3.start, tmp.reductionFactors.sc3.exp, false)
+    } else {
+		tmp.reductionFactors.sc3.eff = D(1)
+	}
+
     if (player.points.gte(tmp.reductionFactors.sc2.start)) {
 		tmp.reductionFactors.sc2.eff = pointGradualSoftcap(0, player.points, tmp.reductionFactors.sc2.start, tmp.reductionFactors.sc2.exp, false)
 		tmp.reductionFactors.sc2.eff = pointGradualSoftcap(0, tmp.reductionFactors.sc2.eff, tmp.reductionFactors.sc1.start, tmp.reductionFactors.sc1.exp, false)
@@ -485,7 +527,7 @@ function gameLoop(diff) {
 			tmp.reductionFactors.sc2.eff = tmp.reductionFactors.sc2.eff.div(tmp.reductionFactors.sc1.eff)
 		}
 
-        player.points = player.points.div(tmp.reductionFactors.sc2.start).pow(tmp.reductionFactors.sc2.exp).sub(1).div(tmp.reductionFactors.sc2.exp).add(1).mul(tmp.reductionFactors.sc2.start)
+        player.points = pointGradualSoftcap(0, player.points, tmp.reductionFactors.sc2.start, tmp.reductionFactors.sc2.exp, false)
     } else {
 		tmp.reductionFactors.sc2.eff = D(1)
 	}
@@ -503,7 +545,7 @@ function gameLoop(diff) {
 			tmp.reductionFactors.sc1.eff = tmp.reductionFactors.sc1.eff.div(tmp.reductionFactors.dilate.eff)
 		}
 
-		player.points = player.points.div(tmp.reductionFactors.sc1.start).pow(tmp.reductionFactors.sc1.exp).sub(1).div(tmp.reductionFactors.sc1.exp).add(1).mul(tmp.reductionFactors.sc1.start)
+		player.points = pointGradualSoftcap(0, player.points, tmp.reductionFactors.sc1.start, tmp.reductionFactors.sc1.exp, false)
     } else {
 		tmp.reductionFactors.sc1.eff = D(1)
 	}
@@ -517,7 +559,7 @@ function gameLoop(diff) {
 			tmp.reductionFactors.dilate.eff = tmp.reductionFactors.dilate.eff.sub(player.points).div(finalPointGen).recip()
 		}
 
-		player.points = player.points.log10().pow(tmp.reductionFactors.dilate.exp).pow10()
+		player.points = pointGradualSoftcap(1, player.points, D(10), tmp.reductionFactors.dilate.exp, false)
     } else {
 		tmp.reductionFactors.dilate.eff = D(1)
 	}
@@ -525,16 +567,20 @@ function gameLoop(diff) {
     player.points = player.points.add(finalPointGen.mul(inChallenge('p', 23) ? 1 : diff))
 
     if (player.points.gte(10)) {
-        player.points = player.points.log10().root(tmp.reductionFactors.dilate.exp).pow10()
+        player.points = pointGradualSoftcap(1, player.points, D(10), tmp.reductionFactors.dilate.exp, true)
     }
     if (player.points.gte(tmp.reductionFactors.sc1.start)) {
-        player.points = player.points.div(tmp.reductionFactors.sc1.start).sub(1).mul(tmp.reductionFactors.sc1.exp).add(1).root(tmp.reductionFactors.sc1.exp).mul(tmp.reductionFactors.sc1.start)
+        player.points = pointGradualSoftcap(0, player.points, tmp.reductionFactors.sc1.start, tmp.reductionFactors.sc1.exp, true)
     }
     if (player.points.gte(tmp.reductionFactors.sc2.start)) {
-        player.points = player.points.div(tmp.reductionFactors.sc2.start).sub(1).mul(tmp.reductionFactors.sc2.exp).add(1).root(tmp.reductionFactors.sc2.exp).mul(tmp.reductionFactors.sc2.start)
+        player.points = pointGradualSoftcap(0, player.points, tmp.reductionFactors.sc2.start, tmp.reductionFactors.sc2.exp, true)
+    }
+    if (player.points.gte(tmp.reductionFactors.sc3.start)) {
+        player.points = pointGradualSoftcap(3, player.points, tmp.reductionFactors.sc3.start, tmp.reductionFactors.sc3.exp, true)
     }
 
-    player.calcPointGen = player.points.sub(previous).div(inChallenge('p', 23) ? 1 : diff)
+	player.calcPointGen = diff != 0 ? player.points.sub(previous).div(inChallenge('p', 23) ? 1 : diff) : D(0)
+
     player.bestPoints = Decimal.max(player.bestPoints, player.points)
 
 	for (let x = 0; x <= maxRow; x++){

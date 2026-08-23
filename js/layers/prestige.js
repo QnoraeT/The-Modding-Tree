@@ -34,8 +34,11 @@ addLayer('p', {
         challenge21ClicksRemain: D(200),
         challenge22Unlocks: [],
         hsPoints: D(0),
+        hsBest: D(0),
+        hsBestGalaxies: D(0),
         hsTotal: D(0),
-        hsChalBest: D('e3000')
+        hsChalBest: D('e3000'),
+        upg412BP: D(0)
     }},
     color: "#8000FF",
     requires: D(1e10), // Can be a function that takes requirement increases into account
@@ -89,7 +92,7 @@ addLayer('p', {
             }
 
             player[this.layer].essence = player[this.layer].essence.max(1).pow(j.exp).log10().pow(j.dilate).pow10().add(pps).log10().root(j.dilate).pow10().root(j.exp);
-            player[this.layer].essencePS = player[this.layer].essence.sub(prev).div(diff)
+            player[this.layer].essencePS = diff != 0 ? player[this.layer].essence.sub(prev).div(diff) : D(0)
             player[this.layer].bestEssence = Decimal.max(player[this.layer].essence, player[this.layer].bestEssence);
         }
 
@@ -106,16 +109,9 @@ addLayer('p', {
         }
         player[this.layer].hsPoints = player[this.layer].hsPoints.add(tmp.p.hspGen.mul(diff))
         player[this.layer].hsTotal = player[this.layer].hsTotal.add(tmp.p.hspGen.mul(diff))
+        player[this.layer].hsBestGalaxies = Decimal.max(player[this.layer].hsBestGalaxies, tmp[this.layer].hspGalaxies)
 
-        if (inChallenge(this.layer, 23)) {
-            let loss = [D(2), D(2.5), D(3), D(3.5), D(4)][challengeCompletions(this.layer, 23).floor().min(4).toNumber()]
-            player.p.buyable5Clicks = player.p.buyable5Clicks.sub(loss.mul(diff)).max(0)
-            if (player.p.buyable5Clicks.eq(0)) {
-                player.p.activeChallenge = null
-            }
-        }
-
-        if (inChallenge('q', 12)) {
+        if (inChallenge('q', 12) || challengeCompletions('q', 13).gte(1)) {
             // goes backwards because higher dims need to be prioritized
             // ends at 1 because i-1 at 0 crashes (-1 index)
             for (let i = 7; i >= 1; i--) {
@@ -137,6 +133,24 @@ addLayer('p', {
             player[this.layer].energy = player[this.layer].energy.add(player[this.layer].energyPS.mul(diff))
             player[this.layer].totalEnergy = player[this.layer].totalEnergy.add(player[this.layer].energyPS.mul(diff))
         }
+
+        if (inChallenge(this.layer, 23)) {
+            let loss = [D(2), D(2.5), D(3), D(3.5), D(4)][challengeCompletions(this.layer, 23).floor().min(4).toNumber()]
+            if (inChallenge(this.layer, 25)) {
+                loss = loss.div(Decimal.pow(3, tmp[this.layer].challenges[25].getDepths))
+            }
+
+            player.p.buyable5Clicks = player.p.buyable5Clicks.sub(loss.mul(diff)).max(0)
+            if (player.p.buyable5Clicks.eq(0)) {
+                player.p.activeChallenge = null
+            }
+        }
+        
+        if (hasUpgrade('p', 412)) {
+            let gen = upgradeEffect('p', 412).mul(player.globalTS)
+            player[this.layer].upg412BP = player[this.layer].upg412BP.add(gen.mul(diff))
+        }
+        player[this.layer].buyable5ClickCooldown = Decimal.sub(player[this.layer].buyable5ClickCooldown, diff)
 
         if (hasUpgrade(this.layer, 21)) {
             tmp[this.layer].buyables[11].buyMax()
@@ -172,7 +186,6 @@ addLayer('p', {
             tmp[this.layer].buyables[43].buyMax()
         }
 
-        player[this.layer].buyable5ClickCooldown = Decimal.sub(player[this.layer].buyable5ClickCooldown, diff)
     },
     effect(){
         if (inChallenge(this.layer, 31) || inChallenge('q', 13)) {
@@ -209,6 +222,10 @@ addLayer('p', {
         if (i.gte(1e63)) {
             i = i.log10().div(63).cbrt().sub(1).mul(3).add(1).mul(63).pow10()
         }
+
+        if (i.gte('ee4')) {
+            i = i.log10().div(1e4).sqrt().sub(1).mul(2).add(1).mul(1e4).pow10()
+        }
         
         i = i.mul(tmp.q.generationEff[3])
 
@@ -216,41 +233,63 @@ addLayer('p', {
             i = i.pow(tmp.p.buyables[15].effect)
         }
 
+        if (hasUpgrade(this.layer, 405)) {
+            i = i.pow(upgradeEffect(this.layer, 405))
+        }
+
         i = i.mul(player.globalTS)
         return i
     },
     hspGen() {
         let i = player.p.hsChalBest.gt('e3000')
-            ? player.p.hsChalBest.log10().div(3000).pow(3)
+            ? player.p.hsChalBest.log10().div(3000).pow(4)
             : D(0)
+
+        i = i.pow(tmp[this.layer].buyables[83].effect.add(1))
+        
+        i = i.mul(tmp[this.layer].buyables[81].effect)
+        if (hasUpgrade(this.layer, 403)) {
+            i = i.mul(upgradeEffect(this.layer, 403))
+        }
+        if (hasUpgrade(this.layer, 404)) {
+            i = i.mul(upgradeEffect(this.layer, 404))
+        }
+        if (hasUpgrade(this.layer, 415)) {
+            i = i.mul(upgradeEffect(this.layer, 415))
+        }
+        i = i.pow(challengeCompletions('p', 25).pow_base(1.02))
         return i
     },
     hspGalaxyInterval() {
         // 1 = 10x of HSP = +1 galaxy
         // 2 = ~3x of HSP = +1 galaxy
-        let i = D(1)
+
+        // every 2x = +1 galaxy
+        // 1 / Math.log10(2)
+        let i = D(3.321928094887362)
+        i = i.div(tmp[this.layer].buyables[82].effect)
         return i
     },
     hspGalaxies() {
-        if (player.p.hsTotal.lt(1)) {
+        if (player.p.hsPoints.lt(1)) {
             return D(0)
         }
-        let i = player.p.hsTotal.log10().mul(tmp[this.layer].hspGalaxyInterval)
+        let i = player.p.hsPoints.log10().mul(tmp[this.layer].hspGalaxyInterval)
         if (i.gte(1000)) {
             i = i.div(1000).ln().add(1).mul(1000)
         }
         return i.floor()
     },
     hspGalaxyNextMult() {
-        if (player.p.hsTotal.lt(1)) {
+        if (player.p.hsPoints.lt(1)) {
             return tmp[this.layer].hspGalaxyInterval.recip().pow10()
         }
-        let i = tmp[this.layer].hspGalaxies.add(1)
+        let i = player[this.layer].hsBestGalaxies.add(1)
         if (i.gte(1000)) {
             i = i.div(1000).sub(1).exp().mul(1000)
         }
 
-        let j = tmp[this.layer].hspGalaxies
+        let j = player[this.layer].hsBestGalaxies
         if (j.gte(1000)) {
             j = j.div(1000).sub(1).exp().mul(1000)
         }
@@ -265,10 +304,10 @@ addLayer('p', {
         return i.sub(j).div(tmp[this.layer].hspGalaxyInterval).pow10()
     },
     hspGalaxyNext() {
-        if (player.p.hsTotal.lt(1)) {
+        if (player.p.hsPoints.lt(1)) {
             return D(1)
         }
-        let i = tmp[this.layer].hspGalaxies.add(1)
+        let i = player[this.layer].hsBestGalaxies.add(1)
         if (i.gte(1000)) {
             i = i.div(1000).sub(1).exp().mul(1000)
         }
@@ -277,11 +316,14 @@ addLayer('p', {
         return i
     },
     hspGalaxyTotalEffect() {
-        return tmp[this.layer].hspGalaxies.pow_base(0.999).recip()
+        return player[this.layer].hsBestGalaxies.pow_base(0.999).recip()
     },
     energyEff() {
         let i = player[this.layer].totalEnergy
         i = i.max(1).log10().mul(0.02).add(1)
+        if (!inChallenge('q', 12)) {
+            i = i.cbrt()
+        }
         if (i.gte(4)) {
             i = i.div(4).sqrt().mul(4)
         }
@@ -303,22 +345,33 @@ addLayer('p', {
         gain = gain.mul(tmp.q.effect)
         gain = gain.mul(tmp.q.generationEff[1])
         gain = gain.mul(tmp.q.buyables[12].effect)
+        if (hasUpgrade(this.layer, 401)) {
+            gain = gain.mul(upgradeEffect(this.layer, 401))
+        }
+
         if (hasUpgrade(this.layer, 262)) {
             gain = gain.pow(1.05)
         }
         if (hasUpgrade(this.layer, 273)) {
             gain = gain.pow(upgradeEffect(this.layer, 273))
         }
+        gain = gain.pow(challengeCompletions('p', 25).pow_base(1.02))
+
         return gain
     },
     getNextAt() {
         let req = tmp[this.layer].getRequire
         let next = tmp[this.layer].getResetGain
+
+        next = next.root(challengeCompletions('p', 25).pow_base(1.02))
         if (hasUpgrade(this.layer, 273)) {
             next = next.root(upgradeEffect(this.layer, 273))
         }
         if (hasUpgrade(this.layer, 262)) {
             next = next.root(1.05)
+        }
+        if (hasUpgrade(this.layer, 401)) {
+            next = next.div(upgradeEffect(this.layer, 401))
         }
         next = next.div(tmp.q.buyables[12].effect)
         next = next.div(tmp.q.generationEff[1])
@@ -350,6 +403,7 @@ addLayer('p', {
         let BP = tmp.p.buyables[71].effect ?? D(0)
         BP = BP.add(tmp.p.buyables[72].effect ?? D(0))
         BP = BP.add(tmp.p.buyables[73].effect ?? D(0))
+        BP = BP.add(player.p.upg412BP)
 
         return BP;
     },
@@ -376,7 +430,7 @@ addLayer('p', {
         return i
     },
     challenge21Effect() {
-        return player.p.challenge21Clicks.div(player.p.challenge21Clicks.add(50)).mul(0.9)
+        return player.p.challenge21Clicks.div(player.p.challenge21Clicks.add(50))
     },
     challenge22UnlockCost() {
         return Decimal.pow(4, (player.p.challenge22Unlocks ?? []).length).pow_base('ee3')
@@ -392,10 +446,10 @@ addLayer('p', {
         }
         player.p.challenge21Clicks = D(0)
 
-        setBuyableAmount(this.layer, "11", D(0))
-        setBuyableAmount(this.layer, "12", D(0))
-        setBuyableAmount(this.layer, "13", D(0))
-        if (!hasUpgrade(this.layer, 13)) { setBuyableAmount(this.layer, "14", D(0)) }
+        setBuyableAmount(this.layer, 11, D(0))
+        setBuyableAmount(this.layer, 12, D(0))
+        setBuyableAmount(this.layer, 13, D(0))
+        if (!hasUpgrade(this.layer, 13)) { setBuyableAmount(this.layer, 14, D(0)) }
     },
     tabFormat: {
         // ! NOTE!! IN tabFormat, this.layer DOESN'T WORK !!!
@@ -453,9 +507,9 @@ addLayer('p', {
                 ["display-text",
                 function() { return hasUpgrade('p', 31) ? `You gain Super Scaling Points based off of your progress in the Super Scaling challenge. The higher your points, the higher the SSP you gain.` : "" }],
                 "blank",
-                ["upgrades", [4]],
-                "blank",
                 ["challenges", [3]],
+                "blank",
+                ["upgrades", [4]],
             ],
             unlocked(){
                 return player.p.total.gte(100)
@@ -467,14 +521,18 @@ addLayer('p', {
                 ["display-text",
                 function() { return `You have <h2 style="color: #C0C0C0; font-size: 26px; text-shadow: #C0C0C0 0px 0px 10px;">${format(player[this.layer].hsPoints)}</h2> Hyper Scaling Points. (${format(tmp[this.layer].hspGen, 3)}/sec)` }],
                 ["display-text",
-                function() { return `You have <h2 style="color: #C0C0C0; font-size: 26px; text-shadow: #C0C0C0 0px 0px 10px;">${format(tmp[this.layer].hspGalaxies)}</h2> intervals (next at ${format(tmp[this.layer].hspGalaxyNext)} HSP), reducing your Basic Buyable cost scaling by -${formatPerc(tmp[this.layer].hspGalaxyTotalEffect, 3)}.` }],
+                function() { return `You gain Hyper Scaling Points based off of your progress in the Hyper Scaling challenge.<br>The higher your points, the higher the HSP you gain.` }],
                 "blank",
                 ["display-text",
-                function() { return `You gain Hyper Scaling Points based off of your progress in the Hyper Scaling challenge.<br>The higher your points, the higher the HSP you gain.<br><br>Every time your HSP increases by ${format(tmp[this.layer].hspGalaxyNextMult, 2)}&times;, all Basic Buyable cost scaling is decreased by &times;0.999.<br>The requirement will begin to scale after ${format(1e3)} intervals!` }],
-                "blank",
-                ["upgrades", [40]],
+                function() { return `You have <h2 style="color: #C0C0C0; font-size: 26px; text-shadow: #C0C0C0 0px 0px 10px;">${format(player[this.layer].hsBestGalaxies)}</h2> intervals (next at ${format(tmp[this.layer].hspGalaxyNext)} HSP), reducing your Basic Buyable cost scaling by -${formatPerc(tmp[this.layer].hspGalaxyTotalEffect, 3)}.` }],
+                ["display-text",
+                function() { return `Every time your HSP increases by ${format(tmp[this.layer].hspGalaxyNextMult, 2)}&times;, all Basic Buyable cost scaling is decreased by &times;0.999.<br>The requirement will begin to scale after ${format(1e3)} intervals!` }],
                 "blank",
                 ["challenges", [4]],
+                "blank",
+                ["upgrades", [40, 41]],
+                "blank",
+                ["buyables", [8]],
             ],
             unlocked(){
                 return hasUpgrade('p', 301)
@@ -841,12 +899,12 @@ addLayer('p', {
                 },
                 dispEffect() {
                     const currEffect = this.effect(player[this.layer].buyables[13])
-                    return `+${format(currEffect.free, 2)} free BB1, &times;${format(currEffect.base, 3)} BB1 base.` 
+                    return `+${format(currEffect.free, 2)} free PB1, &times;${format(currEffect.base, 3)} PB1 base.` 
                 },
                 dispEffBase() {
                     const currEffect = this.effect(player[this.layer].buyables[13])
                     const nextEffect = this.effect(player[this.layer].buyables[13].add(1))
-                    return `+${format(nextEffect.free.sub(currEffect.free), 2)} free BB1, &times;${format(nextEffect.base.div(currEffect.base), 3)} BB1 base.` 
+                    return `+${format(nextEffect.free.sub(currEffect.free), 2)} free PB1, &times;${format(nextEffect.base.div(currEffect.base), 3)} PB1 base.` 
                 },
                 scaleModifEffective(x) {
                     if (hasUpgrade(this.layer, 12)) { x = x.sub(upgradeEffect(this.layer, 12)) }
@@ -901,11 +959,13 @@ addLayer('p', {
                     j = D(1.01)
                     j = j.add(tmp[this.layer].buyables[33].effect.up4b)
                     i = Decimal.pow(j, i)
+                    
                     if (inChallenge('q', 11)) {
                         if (Decimal.gte(i, 2)) {
                             i = i.div(2).cbrt().mul(2)
                         }
                     }
+
                     return i
                 },
                 dispEffect() {
@@ -959,10 +1019,10 @@ addLayer('p', {
                     j = j.mul(i).div(60).add(1).ln().mul(0.05)
 
                     if (hasUpgrade(this.layer, 211)) {
-                        j = j.mul(1.3)
+                        j = j.mul(hasUpgrade(this.layer, 212) && hasUpgrade(this.layer, 414) ? 1 : 1.3)
                     }
                     if (hasUpgrade(this.layer, 212)) {
-                        j = j.mul(1.2)
+                        j = j.mul(hasUpgrade(this.layer, 211) && hasUpgrade(this.layer, 414) ? 1 : 1.2)
                     }
 
                     i = Decimal.mul(j, i)
@@ -1022,6 +1082,11 @@ addLayer('p', {
                     if (!override) {
                         i = i.add(tmp[this.layer].buyables[43].effect)
                         i = i.add((player[this.layer].buyables[61] ?? D(0)).eq(0) ? D(0) : player[this.layer].buyables[61].max(1).log10().add(1).mul(tmp[this.layer].buyables[69].effect.free))
+                        if (challengeCompletions('q', 13).gte(1)) {
+                            i = i.add((player[this.layer].buyables[22] ?? D(0)).mul(0.01))
+                            i = i.add((player[this.layer].buyables[31] ?? D(0)).mul(0.01))
+                        }
+
                         i = i.mul(tmp[this.layer].buyables[23].effect.peu1)
                         i = i.mul([1, 1.05, 1.1, 1.15, 1.2, 1.25][challengeCompletions(this.layer, 21).toNumber()])
                         if (inChallenge(this.layer, 21)) {
@@ -1080,6 +1145,11 @@ addLayer('p', {
                     if (!override) {
                         i = i.add(tmp[this.layer].buyables[43].effect)
                         i = i.add((player[this.layer].buyables[62] ?? D(0)).eq(0) ? D(0) : player[this.layer].buyables[62].max(1).log10().add(1).mul(tmp[this.layer].buyables[69].effect.free))
+                        if (challengeCompletions('q', 13).gte(1)) {
+                            i = i.add((player[this.layer].buyables[23] ?? D(0)).mul(0.01))
+                            i = i.add((player[this.layer].buyables[32] ?? D(0)).mul(0.01))
+                        }
+
                         if (hasMilestone(this.layer, 8)) {
                             i = i.mul(player[this.layer].buyables[51].sub(11).max(0).mul(inChallenge('q', 11) ? 0.25 : 0.125).add(1))
                         }
@@ -1146,6 +1216,10 @@ addLayer('p', {
                     if (!override) {
                         i = i.add(tmp[this.layer].buyables[43].effect)
                         i = i.add((player[this.layer].buyables[63] ?? D(0)).eq(0) ? D(0) : player[this.layer].buyables[63].max(1).log10().add(1).mul(tmp[this.layer].buyables[69].effect.free))
+                        if (challengeCompletions('q', 13).gte(1)) {
+                            i = i.add((player[this.layer].buyables[33] ?? D(0)).mul(0.01))
+                        }
+
                         i = i.mul([1, 1.05, 1.1, 1.15, 1.2, 1.25][challengeCompletions(this.layer, 21).toNumber()])
                         if (inChallenge(this.layer, 21)) {
                             i = i.mul(tmp.p.challenge21Effect)
@@ -1174,12 +1248,18 @@ addLayer('p', {
                     return `PP Buyable 1 is ${format(nextEffect.peu1.div(currEffect.peu1).sub(1).mul(100), 2)}% more effective, +${format(nextEffect.free.sub(currEffect.free), 2)} Point Buyable 3 Free base.` 
                 },
                 scaleModifEffective(x) {
+                    if (x.gte(1e6)) {
+                        x = x.div(1e6).sub(1).exp().mul(1e6)
+                    }
                     return x
                 },
                 scaleModifCost(x) {
                     return x
                 },
                 scaleModifTarEff(x) {
+                    if (x.gte(1e6)) {
+                        x = x.div(1e6).ln().add(1).mul(1e6)
+                    }
                     return x
                 },
                 scaleModifTarCost(x) {
@@ -1205,7 +1285,12 @@ addLayer('p', {
                     if (!override) {
                         i = i.add(tmp[this.layer].buyables[43].effect)
                         i = i.add((player[this.layer].buyables[64] ?? D(0)).eq(0) ? D(0) : player[this.layer].buyables[64].max(1).log10().add(1).mul(tmp[this.layer].buyables[69].effect.free))
-                        i = i.add(Decimal.mul([0, 10, 20, 30, 40, 50][challengeCompletions(this.layer, 24).toNumber()], player[this.layer].buyables[14]))
+                        i = i.add(Decimal.mul([0, 25, 75, 150, 250, 400][challengeCompletions(this.layer, 24).toNumber()], player[this.layer].buyables[14]))
+                        if (challengeCompletions('q', 13).gte(1)) {
+                            i = i.add((player[this.layer].buyables[32] ?? D(0)).mul(0.01))
+                            i = i.add((player[this.layer].buyables[41] ?? D(0)).mul(0.01))
+                        }
+
                         i = i.mul([1, 1.05, 1.1, 1.15, 1.2, 1.25][challengeCompletions(this.layer, 21).toNumber()])
                         if (inChallenge(this.layer, 21)) {
                             i = i.mul(tmp.p.challenge21Effect)
@@ -1261,6 +1346,11 @@ addLayer('p', {
                     if (!override) {
                         i = i.add(tmp[this.layer].buyables[43].effect)
                         i = i.add((player[this.layer].buyables[65] ?? D(0)).eq(0) ? D(0) : player[this.layer].buyables[65].max(1).log10().add(1).mul(tmp[this.layer].buyables[69].effect.free))
+                        if (challengeCompletions('q', 13).gte(1)) {
+                            i = i.add((player[this.layer].buyables[33] ?? D(0)).mul(0.01))
+                            i = i.add((player[this.layer].buyables[42] ?? D(0)).mul(0.01))
+                        }
+
                         i = i.mul([1, 1.05, 1.1, 1.15, 1.2, 1.25][challengeCompletions(this.layer, 21).toNumber()])
                         if (inChallenge(this.layer, 21)) {
                             i = i.mul(tmp.p.challenge21Effect)
@@ -1316,6 +1406,10 @@ addLayer('p', {
                     if (!override) {
                         i = i.add(tmp[this.layer].buyables[43].effect)
                         i = i.add((player[this.layer].buyables[66] ?? D(0)).eq(0) ? D(0) : player[this.layer].buyables[66].max(1).log10().add(1).mul(tmp[this.layer].buyables[69].effect.free))
+                        if (challengeCompletions('q', 13).gte(1)) {
+                            i = i.add((player[this.layer].buyables[43] ?? D(0)).mul(0.01))
+                        }
+
                         i = i.mul([1, 1.05, 1.1, 1.15, 1.2, 1.25][challengeCompletions(this.layer, 21).toNumber()])
                         if (inChallenge(this.layer, 21)) {
                             i = i.mul(tmp.p.challenge21Effect)
@@ -1372,6 +1466,10 @@ addLayer('p', {
                     if (!override) {
                         i = i.add(tmp[this.layer].buyables[43].effect)
                         i = i.add((player[this.layer].buyables[67] ?? D(0)).eq(0) ? D(0) : player[this.layer].buyables[67].max(1).log10().add(1).mul(tmp[this.layer].buyables[69].effect.free))
+                        if (challengeCompletions('q', 13).gte(1)) {
+                            i = i.add((player[this.layer].buyables[42] ?? D(0)).mul(0.01))
+                        }
+
                         i = i.mul([1, 1.05, 1.1, 1.15, 1.2, 1.25][challengeCompletions(this.layer, 21).toNumber()])
                         if (inChallenge(this.layer, 21)) {
                             i = i.mul(tmp.p.challenge21Effect)
@@ -1427,6 +1525,10 @@ addLayer('p', {
                     if (!override) {
                         i = i.add(tmp[this.layer].buyables[43].effect)
                         i = i.add((player[this.layer].buyables[68] ?? D(0)).eq(0) ? D(0) : player[this.layer].buyables[68].max(1).log10().add(1).mul(tmp[this.layer].buyables[69].effect.free))
+                        if (challengeCompletions('q', 13).gte(1)) {
+                            i = i.add((player[this.layer].buyables[43] ?? D(0)).mul(0.01))
+                        }
+
                         i = i.mul([1, 1.05, 1.1, 1.15, 1.2, 1.25][challengeCompletions(this.layer, 21).toNumber()])
                         if (inChallenge(this.layer, 21)) {
                             i = i.mul(tmp.p.challenge21Effect)
@@ -1501,6 +1603,9 @@ addLayer('p', {
                         if (hasUpgrade(this.layer, 252)) {
                             i = i.mul(1.05)
                         }
+                        if (challengeCompletions(this.layer, 22).gte(5)) {
+                            i = i.mul(1.1)
+                        }
                     }
 
                     let j = D(0.2)
@@ -1557,6 +1662,9 @@ addLayer('p', {
                     return `Check Rank Milestones...`
                 },
                 scaleModifEffective(x) {
+                    if (hasUpgrade('p', 411)) {
+                        x = x.div(upgradeEffect('p', 411))
+                    }
                     return x
                 },
                 scaleModifCost(x) {
@@ -1566,6 +1674,9 @@ addLayer('p', {
                     return x
                 },
                 scaleModifTarEff(x) {
+                    if (hasUpgrade('p', 411)) {
+                        x = x.mul(upgradeEffect('p', 411))
+                    }
                     return x
                 },
                 scaleModifTarCost(x) {
@@ -1619,10 +1730,10 @@ addLayer('p', {
                     obj[61 + i] = {
                         type: 3,
                         num: i + 1,
-                        costD: {type: 0, exp: 0, main: [
-                            [D(1e60), D(100),  D(1e5), D(1e9), D(1e15), D(1e21), D(1e30), D(1e45)][i],
-                            [D(100) , D(10),   D(100), D(1e3), D(1e4),  D(1e6),  D(1e8),  D(1e12)][i],
-                            [D(1.05), D(1.05), D(1.1), D(1.2), D(1.5),  D(2),    D(5),    D(10)][i]
+                        costD: {type: 0, exp: (!inChallenge('q', 12) && i === 0) ? 1 : 0, main: [
+                            [inChallenge('q', 12) ? D(1e60) : D(7000),  D(100),  D(1e5), D(1e9), D(1e15), D(1e21), D(1e30), D(1e45)][i],
+                            [inChallenge('q', 12) ? D(100)  : D(1.05),  D(10),   D(100), D(1e3), D(1e4),  D(1e6),  D(1e8),  D(1e12)][i],
+                            [inChallenge('q', 12) ? D(1.05) : D(1.001), D(1.05), D(1.1), D(1.2), D(1.5),  D(2),    D(5),    D(10)][i]
                         ]},
                         unlocked() { return (i === 0 || (player[this.layer].buyables[60 + i] ?? D(0)).gte(1)) && (inChallenge('q', 12) || challengeCompletions('q', 13).gte(1)) },
                         unavail() {
@@ -1753,50 +1864,132 @@ addLayer('p', {
                 }
                 return obj
             })(),
-            // TODO: implement the 3 hyper scaling buyables
-            //
-            // 81: {
-            //     type: 5,
-            //     num: 1,
-            //     costD: {type: 0, exp: 0, main: [D(25), D(4), D(1.05)]},
-            //     unlocked() { return player[this.layer].bestEssence.gte(1e10) },
-            //     unavail() {
-            //         let x = false
-            //         return x
-            //     },
-            //     preEffect(x, override) {
-            //         let i = D(x)
+            81: {
+                type: 5,
+                num: 1,
+                costD: {type: 0, exp: 0, main: [D(30), D(3), D(1.02)]},
+                unlocked() { return hasUpgrade(this.layer, 301) },
+                unavail() {
+                    let x = false
+                    return x
+                },
+                preEffect(x, override) {
+                    let i = D(x)
 
-            //         if (!override) {
+                    if (!override) {
 
-            //         }
+                    }
 
-            //         let j = D(1.5)
-            //         i = Decimal.pow(j, i)
-            //         return i
-            //     },
-            //     dispEffect() {
-            //         const currEffect = this.effect(player[this.layer].buyables[81])
-            //         return `Multiply Hyper Scaling Point gain by &times;${formatPerc(currEffect, 3)}.` 
-            //     },
-            //     dispEffBase() {
-            //         const currEffect = this.effect(player[this.layer].buyables[81])
-            //         const nextEffect = this.effect(player[this.layer].buyables[81].add(1))
-            //         return `Multiply Hyper Scaling Point gain by &times;${formatPerc(nextEffect.div(currEffect), 3)}.`
-            //     },
-            //     scaleModifEffective(x) {
-            //         return x
-            //     },
-            //     scaleModifCost(x) {
-            //         return x
-            //     },
-            //     scaleModifTarEff(x) {
-            //         return x
-            //     },
-            //     scaleModifTarCost(x) {
-            //         return x
-            //     },
-            // },
+                    let j = D(1.5)
+                    i = Decimal.pow(j, i)
+                    return i
+                },
+                dispEffect() {
+                    const currEffect = this.effect(player[this.layer].buyables[81])
+                    return `Multiply Hyper Scaling Point gain by &times;${format(currEffect, 2)}.` 
+                },
+                dispEffBase() {
+                    const currEffect = this.effect(player[this.layer].buyables[81])
+                    const nextEffect = this.effect(player[this.layer].buyables[81].add(1))
+                    return `Multiply Hyper Scaling Point gain by &times;${format(nextEffect.div(currEffect), 2)}.`
+                },
+                scaleModifEffective(x) {
+                    return x
+                },
+                scaleModifCost(x) {
+                    return x
+                },
+                scaleModifTarEff(x) {
+                    return x
+                },
+                scaleModifTarCost(x) {
+                    return x
+                },
+            },
+            82: {
+                type: 5,
+                num: 2,
+                costD: {type: 0, exp: 1, main: [D(3), D(1.333), D(1.01)]},
+                unlocked() { return hasUpgrade(this.layer, 301) },
+                unavail() {
+                    let x = false
+                    return x
+                },
+                preEffect(x, override) {
+                    let i = D(x)
+
+                    if (!override) {
+
+                    }
+
+                    let j = D(0.95)
+                    i = Decimal.pow(j, i)
+                    return i
+                },
+                dispEffect() {
+                    const currEffect = this.effect(player[this.layer].buyables[82])
+                    return `Reduce the HSP interval by ^${format(currEffect, 3)}.` 
+                },
+                dispEffBase() {
+                    const currEffect = this.effect(player[this.layer].buyables[82])
+                    const nextEffect = this.effect(player[this.layer].buyables[82].add(1))
+                    return `Reduce the HSP interval by ^${format(nextEffect.div(currEffect), 3)}.`
+                },
+                scaleModifEffective(x) {
+                    return x
+                },
+                scaleModifCost(x) {
+                    return x
+                },
+                scaleModifTarEff(x) {
+                    return x
+                },
+                scaleModifTarCost(x) {
+                    return x
+                },
+            },
+            83: {
+                type: 5,
+                num: 3,
+                costD: {type: 0, exp: 1, main: [D(5), D(1.2), D(1.02)]},
+                unlocked() { return hasUpgrade(this.layer, 301) },
+                unavail() {
+                    let x = false
+                    return x
+                },
+                preEffect(x, override) {
+                    let i = D(x)
+
+                    if (!override) {
+
+                    }
+
+                    let j = D(0.25)
+                    i = Decimal.mul(j, i)
+                    return i
+                },
+                dispEffect() {
+                    const currEffect = this.effect(player[this.layer].buyables[83])
+                    return `Point to HSP generation speed is raised by +^${format(currEffect, 2)}. (&times;${format(player.p.hsChalBest.log10().div(3000).pow(4).pow(currEffect), 1)} to HSP gain)` 
+                },
+                dispEffBase() {
+                    const currEffect = this.effect(player[this.layer].buyables[83])
+                    const nextEffect = this.effect(player[this.layer].buyables[83].add(1))
+                    return `Point to HSP generation speed is raised by +^${format(nextEffect.sub(currEffect), 2)}.  (&times;${format(player.p.hsChalBest.log10().div(3000).pow(4).pow(nextEffect.sub(currEffect)), 1)} to HSP gain)`
+                },
+                scaleModifEffective(x) {
+                    return x
+                },
+                scaleModifCost(x) {
+                    return x
+                },
+                scaleModifTarEff(x) {
+                    return x
+                },
+                scaleModifTarCost(x) {
+                    return x
+                },
+            },
         };
 
         // ! NOTE!! this.layer doesn't work in the custom buyable script TwT
@@ -1840,15 +2033,23 @@ addLayer('p', {
                 k = upgrade.costD.main
 
                 j = upgrade.scaleModifEffective(j)
-                if (hasUpgrade('p', 45) && upgrade.type === 1) {
-                    j = j.div(upgradeEffect('p', 45))
+
+                if (upgrade.type === 1) {
+                    if (hasUpgrade('p', 45)) {
+                        j = j.div(upgradeEffect('p', 45))
+                    }
+                    if (hasUpgrade('p', 413)) {
+                        j = j.div(upgradeEffect('p', 413))
+                    }
                 }
+
                 if (upgrade.type === 0) {
                     if (hasUpgrade('p', 43)) {
                         j = j.div(upgradeEffect('p', 43))
                     }
                     j = j.div(tmp.p.hspGalaxyTotalEffect)
                 }
+
                 if ((inChallenge('p', 31) || inChallenge('q', 13)) && upgrade.type === 0) { 
                     j = j.add(1).log10().add(1).pow(Decimal.pow(1.5, tmp.p.challenges[31].getDepths)).sub(1).pow10().sub(1).div(2) 
                 }
@@ -1903,6 +2104,9 @@ addLayer('p', {
                         x = player.p.treePoints
                     }
                 }
+                if (upgrade.type === 5) {
+                    x = player.p.hsPoints
+                }
                 
                 if (x.lt(upgrade.costD.main[0])) { return D(-1e-12) }
 
@@ -1954,15 +2158,22 @@ addLayer('p', {
                 if ((inChallenge('p', 31) || inChallenge('q', 13)) && upgrade.type === 0) { 
                     i = i.mul(2).add(1).log10().add(1).root(Decimal.pow(1.5, tmp.p.challenges[31].getDepths)).sub(1).pow10().sub(1) 
                 }
+
                 if (upgrade.type === 0) {
                     i = i.mul(tmp.p.hspGalaxyTotalEffect)
                     if (hasUpgrade('p', 43)) {
                         i = i.mul(upgradeEffect('p', 43))
                     }
                 }
-                if (hasUpgrade('p', 45) && upgrade.type === 1) {
-                    i = i.mul(upgradeEffect('p', 45))
+                if (upgrade.type === 1) {
+                    if (hasUpgrade('p', 413)) {
+                        i = i.mul(upgradeEffect('p', 413))
+                    }
+                    if (hasUpgrade('p', 45)) {
+                        i = i.mul(upgradeEffect('p', 45))
+                    }
                 }
+
                 if (Decimal.isNaN(i)) {
                     console.warn(`[Layer: p, Type: buyable, ID: ${upgrade.id}] NaN detected (set to 0) after layeradd10 in target of id${upgrade.id} after modifers before scaleModifTarEff! (modifiers causing NaN?)`)
                     return D(0)
@@ -1993,6 +2204,9 @@ addLayer('p', {
                     }
                     return `Prestige Dimension ${upgrade.num}`
                 }
+                if (upgrade.type === 5) {
+                    return `Hyper Scaling Buyable ${upgrade.num}`
+                }
             },
 
             upgrade.stupidHack = () => {
@@ -2020,7 +2234,7 @@ addLayer('p', {
                 } else if (upgrade.type === 2) {
                     txt = `${[null, "Rank", "Tier", "Tetr"][upgrade.num]} ${format(player.p.buyables[upgrade.id])}<br>` 
                 } else {
-                    txt = `You have ${format(player.p.buyables[upgrade.id], 0)} ${["Point", "PP", null][upgrade.type]} Buyable ${upgrade.num}.<br>`
+                    txt = `You have ${format(player.p.buyables[upgrade.id], 0)} ${["Point", "PP", null, null, null, "Hyper Scaling"][upgrade.type]} Buyable ${upgrade.num}.<br>`
                 }
                 if (upgrade.stupidHack()) {
                     txt += `Effect Base: `
@@ -2090,6 +2304,9 @@ addLayer('p', {
                             txt += `Tree Points`
                         }
                     }
+                    if (upgrade.type === 5) {
+                        txt += `Hyper Scaling Points`
+                    }
                 }
                 return txt
             }
@@ -2130,6 +2347,9 @@ addLayer('p', {
                         resource = player.p.treePoints
                     }
                 }
+                if (upgrade.type === 5) {
+                    resource = player.p.hsPoints;
+                }
 
                 return resource.gte(upgrade.cost());
             }
@@ -2146,10 +2366,10 @@ addLayer('p', {
                 }
                 if (upgrade.type === 2) {
                     if (upgrade.num >= 3) {
-                        setBuyableAmount('p', "52", D(0))
+                        setBuyableAmount('p', 52, D(0))
                     }
                     if (upgrade.num >= 2) {
-                        setBuyableAmount('p', "51", D(0))
+                        setBuyableAmount('p', 51, D(0))
                         player.p.milestones = []
                     }
                     tmp.q.doReset(true)
@@ -2179,6 +2399,9 @@ addLayer('p', {
                     if (upgrade.num === 3) {
                         player.p.treePoints = player.p.treePoints.sub(upgrade.cost());
                     }
+                }
+                if (upgrade.type === 5) {
+                    player.p.hsPoints = player.p.hsPoints.sub(upgrade.cost());
                 }
 
                 addBuyables(upgrade.layer, upgrade.id, 1);
@@ -2228,7 +2451,7 @@ addLayer('p', {
                 return true
             },
             onClick() {
-                const SAFE_UPGRADES = [11, 12, 13, 14, 15, 21, 22, 23, 24, 31, 41, 42, 43, 44, 45]
+                const SAFE_UPGRADES = [11, 12, 13, 14, 15, 21, 22, 23, 24, 31, 41, 42, 43, 44, 45, 401, 402, 403, 404, 405, 411, 412, 413, 414, 415]
 
                 player.p.upgrades = player.p.upgrades.filter((value) => { return SAFE_UPGRADES.includes(value) });
                 player.p.totalBPUsed = D(0)
@@ -2307,7 +2530,7 @@ addLayer('p', {
                 if (player[this.layer].total.gte(10)) { i = true }
                 return i
             },
-            name() { return `No BB2 (${format(challengeCompletions(this.layer, 12), 0)}/${format(this.completionLimit(), 0)})`},
+            name() { return `No PB2 (${format(challengeCompletions(this.layer, 12), 0)}/${format(this.completionLimit(), 0)})`},
             challengeDescription() {
                 switch (challengeCompletions(this.layer, 12).toNumber()) {
                     case 0:
@@ -2333,25 +2556,25 @@ addLayer('p', {
             rewardDescription() {
                 switch (challengeCompletions(this.layer, 12).toNumber()) {
                     case 0:
-                        return `BB2's base is increased by +${format(0.025, 3)}`
+                        return `PB2's base is increased by +${format(0.025, 3)}`
                     case 1:
-                        return `BB2's base is increased by +${format(0.03, 3)}, and make Point Buyable 3 ${format(20, 3)}% more effective`
+                        return `PB2's base is increased by +${format(0.03, 3)}, and make Point Buyable 3 ${format(20, 3)}% more effective`
                     case 2:
-                        return `BB2's base is increased by +${format(0.035, 3)}, and raise Point Buyable 2's effect to the ^${format(1.1, 3)}`
+                        return `PB2's base is increased by +${format(0.035, 3)}, and raise Point Buyable 2's effect to the ^${format(1.1, 3)}`
                     case 3:
-                        return `BB2's base is increased by +${format(0.04, 3)}, and Point Buyable 3's multiplier &times;${format(1.02, 3)} -> &times;${format(1.03, 3)}`
+                        return `PB2's base is increased by +${format(0.04, 3)}, and Point Buyable 3's multiplier &times;${format(1.02, 3)} -> &times;${format(1.03, 3)}`
                     case 4:
-                        return `BB2's base is increased by +${format(0.045, 3)}, and Point Buyable 1 is ${format(15, 3)}% more effective`
+                        return `PB2's base is increased by +${format(0.045, 3)}, and Point Buyable 1 is ${format(15, 3)}% more effective`
                     case 5:
-                        return `BB2's base is increased by +${format(0.05, 3)} and scales ${formatPerc(1/(1-0.025), 2)} slower`
+                        return `PB2's base is increased by +${format(0.05, 3)} and scales ${formatPerc(1/(1-0.025), 2)} slower`
                     case 6:
-                        return `BB2's base is increased by +${format(0.055, 3)} and scales ${formatPerc(1/(1-0.035), 2)} slower`
+                        return `PB2's base is increased by +${format(0.055, 3)} and scales ${formatPerc(1/(1-0.035), 2)} slower`
                     case 7:
-                        return `BB2's base is increased by +${format(0.06, 3)}, scales ${formatPerc(1/(1-0.05), 2)} slower, and BB1's effect is dilated by ^${format(1.005, 3)}`
+                        return `PB2's base is increased by +${format(0.06, 3)}, scales ${formatPerc(1/(1-0.05), 2)} slower, and PB1's effect is dilated by ^${format(1.005, 3)}`
                     case 8:
-                        return `BB2's base is increased by +${format(0.065, 3)}, scales ${formatPerc(1/(1-0.75), 2)} slower, and BB1's effect is dilated by ^${format(1.005, 3)}`
+                        return `PB2's base is increased by +${format(0.065, 3)}, scales ${formatPerc(1/(1-0.75), 2)} slower, and PB1's effect is dilated by ^${format(1.005, 3)}`
                     case 9:
-                        return `BB2's base is increased by +${format(0.07, 3)}, scales ${formatPerc(1/(1-0.1), 2)} slower, and BB1's effect is dilated by ^${format(1.005, 3)}`
+                        return `PB2's base is increased by +${format(0.07, 3)}, scales ${formatPerc(1/(1-0.1), 2)} slower, and PB1's effect is dilated by ^${format(1.005, 3)}`
                     case 10:
                         return `Maxed out lol`
                     default:
@@ -2476,6 +2699,11 @@ addLayer('p', {
             ignoreHigherLayers: true,
             getDepths() {
                 let i = inChallenge(this.layer, 21, true) ? D(1) : D(0)
+
+                if (inChallenge(this.layer, 25)) {
+                    i = i.add(tmp[this.layer].challenges[25].getDepths)
+                }
+
                 return i
             },
             completionLimit() {
@@ -2524,6 +2752,11 @@ addLayer('p', {
             ignoreHigherLayers: true,
             getDepths() {
                 let i = inChallenge(this.layer, 22, true) ? D(1) : D(0)
+
+                if (inChallenge(this.layer, 25)) {
+                    i = i.add(tmp[this.layer].challenges[25].getDepths)
+                }
+
                 return i
             },
             completionLimit() {
@@ -2544,13 +2777,13 @@ addLayer('p', {
                     case 0:
                         return `Point Buyable 5's timer & click multipliers are increased by 1.5&times;.`
                     case 1:
-                        return `Point Buyable 5's timer & click multipliers are increased by 2&times;.` // total: 3x
+                        return `Point Buyable 5's timer & click multipliers are increased by 2&times;. (Next total: 3&times;)` // total: 3x
                     case 2:
-                        return `Point Buyable 5's timer & click multipliers are increased by 3&times;.` // total: 9x
+                        return `Point Buyable 5's timer & click multipliers are increased by 3&times;. (Next total: 9&times;)` // total: 9x
                     case 3:
-                        return `Point Buyable 5's timer & click multipliers are increased by 5&times;.` // total: 45x
+                        return `Point Buyable 5's timer & click multipliers are increased by 5&times;. (Next total: 45&times;)` // total: 45x
                     case 4:
-                        return `Point Buyable 5's timer & click multipliers are increased by 8&times;.` // total: 360x
+                        return `Point Buyable 5's timer & click multipliers are increased by 8&times;. (Next total: 360&times;)` // total: 360x
                     case 5:
                         return `Maxed out lol`
                     default:
@@ -2572,6 +2805,11 @@ addLayer('p', {
             ignoreHigherLayers: true,
             getDepths() {
                 let i = inChallenge(this.layer, 23, true) ? D(1) : D(0)
+
+                if (inChallenge(this.layer, 25)) {
+                    i = i.add(tmp[this.layer].challenges[25].getDepths)
+                }
+
                 return i
             },
             completionLimit() {
@@ -2590,15 +2828,15 @@ addLayer('p', {
             rewardDescription() {
                 switch (challengeCompletions(this.layer, 24).toNumber()) {
                     case 0:
-                        return `Point Buyable 4 adds 10 free levels to Prestige Buyable 4.`
+                        return `Point Buyable 4 adds 25 free levels to Prestige Buyable 4.`
                     case 1:
-                        return `Point Buyable 4 adds 10 free levels to Prestige Buyable 4. (Next total: +20)`
+                        return `Point Buyable 4 adds 50 free levels to Prestige Buyable 4. (Next total: +75)`
                     case 2:
-                        return `Point Buyable 4 adds 10 free levels to Prestige Buyable 4. (Next total: +30)`
+                        return `Point Buyable 4 adds 75 free levels to Prestige Buyable 4. (Next total: +150)`
                     case 3:
-                        return `Point Buyable 4 adds 10 free levels to Prestige Buyable 4. (Next total: +40)`
+                        return `Point Buyable 4 adds 100 free levels to Prestige Buyable 4. (Next total: +250)`
                     case 4:
-                        return `Point Buyable 4 adds 10 free levels to Prestige Buyable 4. (Next total: +50)`
+                        return `Point Buyable 4 adds 150 free levels to Prestige Buyable 4. (Next total: +400)`
                     case 5:
                         return `Maxed out lol`
                     default:
@@ -2619,6 +2857,61 @@ addLayer('p', {
             ignoreHigherLayers: true,
             getDepths() {
                 let i = inChallenge(this.layer, 24, true) ? D(1) : D(0)
+
+                if (inChallenge(this.layer, 25)) {
+                    i = i.add(tmp[this.layer].challenges[25].getDepths)
+                }
+
+                return i
+            },
+            completionLimit() {
+                return D(5)
+            }
+        },
+        25: {
+            unlocked() {
+                let i = false
+                if (hasUpgrade(this.layer, 311)) { i = true }
+                if (inChallenge(this.layer, 25) || challengeCompletions(this.layer, 25).gt(0)) { i = true }
+                return i
+            },
+            name() { return `Finality (${format(challengeCompletions(this.layer, 25), 0)}/${format(this.completionLimit(), 0)})`},
+            challengeDescription: "Branch Challenges 1-4 are applied. Point Buyable 5's click decay is 3&times; slower.",
+            rewardDescription() {
+                switch (challengeCompletions(this.layer, 25).toNumber()) {
+                    case 0:
+                        return `Point, Prestige, Quaternion, and HSP gain is increased by ^1.02.`
+                    case 1:
+                        return `Point, Prestige, Quaternion, and HSP gain is increased by ^1.02. (Next total: ^1.04)`
+                    case 2:
+                        return `Point, Prestige, Quaternion, and HSP gain is increased by ^1.02. (Next total: ^1.06)`
+                    case 3:
+                        return `Point, Prestige, Quaternion, and HSP gain is increased by ^1.02. (Next total: ^1.08)`
+                    case 4:
+                        return `Point, Prestige, Quaternion, and HSP gain is increased by ^1.02. (Next total: ^1.10)`
+                    case 5:
+                        return `Maxed out lol`
+                    default:
+                        throw new Error(`challenge 25 reward desc sucks lmao ${challengeCompletions(this.layer, 25).toNumber()} out of bounds?`)
+                }
+            },
+            goal() {
+                let lim = 4
+                return [D('e600'), D('e750'), D('e900'), D('e1050'), D('e1200')][challengeCompletions(this.layer, 25).min(lim).toNumber()]
+            },
+            goalDescription() {
+                return `Get ${format(tmp[this.layer].challenges[25].goal)} Prestige Points.`
+            },
+            canComplete() { return player.p.points.gte(tmp[this.layer].challenges[25].goal) },
+            onEnter() {
+                tmp.q.doReset(true, true, false)
+                player.p.buyable5Clicks = D(20)
+                player.p.challenge22Unlocks = []
+                player.p.challenge21ClicksRemain = D(200)
+            },
+            ignoreHigherLayers: true,
+            getDepths() {
+                let i = inChallenge(this.layer, 25, true) ? D(1) : D(0)
                 return i
             },
             completionLimit() {
@@ -2654,7 +2947,7 @@ addLayer('p', {
                 if (!hasUpgrade(this.layer, 13)) { setBuyableAmount(this.layer, "14", D(0)) }
             },
             getDepths() {
-                let i = inChallenge(this.layer, 13, true) ? D(1) : D(0)
+                let i = inChallenge(this.layer, 31, true) ? D(1) : D(0)
 
                 if (inChallenge(this.layer, 41)) {
                     i = i.add(tmp[this.layer].challenges[41].getDepths)
@@ -2682,7 +2975,10 @@ addLayer('p', {
             challengeDescription: 'Strengthed Dilation and Super Scaling are applied. Point Buyable 3\'s effectiveness is raised ^0.5. This challenge does a Q. Reset.',
             rewardEffect() {
                 let i = player[this.layer].hsChalBest
-                i = i.max('e3000').log('e3000').add(1).pow(1)
+                i = i.max('e3000').log('e3000').pow(3)
+                if (i.gte(10)) {
+                    i = i.log10().mul(10)
+                }
                 return i
             },
             rewardDisplay() { return `Non-free Point Buyable 1 is &times;${format(this.rewardEffect(), 2)} more effective.` },
@@ -2698,7 +2994,7 @@ addLayer('p', {
             },
             ignoreHigherLayers: true,
             getDepths() {
-                let i = inChallenge(this.layer, 15, true) ? D(1) : D(0)
+                let i = inChallenge(this.layer, 41, true) ? D(1) : D(0)
                 return i
             },
             completionLimit() {
@@ -2731,7 +3027,7 @@ addLayer('p', {
             unlocked() { return hasUpgrade(this.layer, 12) },
         },
         14: {
-            title: "PE -> BB1",
+            title: "PE -> PB1",
             description: "Point Buyable 1's base is increased based off of Prestige Essence.",
             cost: new Decimal(1e10),
             unlocked() { return hasUpgrade(this.layer, 13) },
@@ -2742,7 +3038,7 @@ addLayer('p', {
             effectDisplay() { return `+${format(this.effect(), 3)}` }, 
         },
         15: {
-            title: "PBx -> BBx",
+            title: "PBx -> PBx",
             description: "PP Buyables 4-6 add 0.4 free levels to Point Buyables 1-3 respectively.",
             cost: new Decimal('e450'),
             unlocked() { return challengeCompletions('q', 11).gte(1) },
@@ -2785,7 +3081,7 @@ addLayer('p', {
             currencyInternalName: 'ssPoints',
             currencyDisplayName: 'Super Scaling Points',
             currencyLocation() {
-                return player.p
+                return player[this.layer]
             }
         },
         42: {
@@ -2796,7 +3092,7 @@ addLayer('p', {
             currencyInternalName: 'ssPoints',
             currencyDisplayName: 'Super Scaling Points',
             currencyLocation() {
-                return player.p
+                return player[this.layer]
             },
             effect() { 
                 let ret = D(0)
@@ -2816,7 +3112,7 @@ addLayer('p', {
             currencyInternalName: 'ssPoints',
             currencyDisplayName: 'Super Scaling Points',
             currencyLocation() {
-                return player.p
+                return player[this.layer]
             },
             effect() { 
                 let ret = player[this.layer].total.max(1e6).log(1e6).ln().add(1).ln().div(10).add(1)
@@ -2832,7 +3128,7 @@ addLayer('p', {
             currencyInternalName: 'ssPoints',
             currencyDisplayName: 'Super Scaling Points',
             currencyLocation() {
-                return player.p
+                return player[this.layer]
             },
             effect() { 
                 let ret = player[this.layer].ssPoints.max(1e21).div(1e21).pow(0.25)
@@ -2848,7 +3144,7 @@ addLayer('p', {
             currencyInternalName: 'ssPoints',
             currencyDisplayName: 'Super Scaling Points',
             currencyLocation() {
-                return player.p
+                return player[this.layer]
             },
             effect() { 
                 return player[this.layer].ssPoints.max(1e10).log10().log10().log(4).mul(0.01).add(1)
@@ -2863,7 +3159,7 @@ addLayer('p', {
             currencyInternalName: 'energy',
             currencyDisplayName: 'Prestige Energy',
             currencyLocation() {
-                return player.p
+                return player[this.layer]
             },
             effect() { 
                 return player[this.layer].buyables[69].mul(0.05)
@@ -2878,7 +3174,7 @@ addLayer('p', {
             currencyInternalName: 'energy',
             currencyDisplayName: 'Prestige Energy',
             currencyLocation() {
-                return player.p
+                return player[this.layer]
             },
         },
         53: {
@@ -2889,7 +3185,7 @@ addLayer('p', {
             currencyInternalName: 'energy',
             currencyDisplayName: 'Prestige Energy',
             currencyLocation() {
-                return player.p
+                return player[this.layer]
             },
             effect() { 
                 return D(0.1)
@@ -2903,10 +3199,10 @@ addLayer('p', {
             unlocked() { return inChallenge('q', 13) },
             currencyDisplayName: 'Branch Points',
             canAfford() {
-                return tmp.p.totalBP.sub(player.p.totalBPUsed).gte(this.cost)
+                return tmp[this.layer].totalBP.sub(player[this.layer].totalBPUsed).gte(this.cost)
             },
             pay() {
-                player.p.totalBPUsed = Decimal.add(player.p.totalBPUsed, this.cost)
+                player[this.layer].totalBPUsed = Decimal.add(player[this.layer].totalBPUsed, this.cost)
             },
             branches: [211, 212],
             style: {
@@ -2917,17 +3213,19 @@ addLayer('p', {
         },
         211: {
             title: "(u2-1) General Boost",
-            description: "Needs u1<br><b>Disables u2-2</b><br><br>Point Buyable 5 is boosted by 1.3x.",
+            description() {
+                return `Needs u1<br>${hasUpgrade(this.layer, 414) ? '' : '<b>Disables u2-2</b>'}<br><br>Point Buyable 5 is boosted by ${hasUpgrade(this.layer, 212) && hasUpgrade(this.layer, 414) ? 1 : 1.3}x.`
+            },
             cost: new Decimal(1),
             unlocked() { return inChallenge('q', 13) },
             currencyDisplayName: 'Branch Points',
             canAfford() {
-                return tmp.p.totalBP.sub(player.p.totalBPUsed).gte(this.cost)
+                return tmp[this.layer].totalBP.sub(player[this.layer].totalBPUsed).gte(this.cost)
                     && hasUpgrade(this.layer, 201)
-                    && !hasUpgrade(this.layer, 212)
+                    && (!hasUpgrade(this.layer, 212) || hasUpgrade(this.layer, 414))
             },
             pay() {
-                player.p.totalBPUsed = Decimal.add(player.p.totalBPUsed, this.cost)
+                player[this.layer].totalBPUsed = Decimal.add(player[this.layer].totalBPUsed, this.cost)
             },
             branches: [222],
             style: {
@@ -2938,17 +3236,19 @@ addLayer('p', {
         },
         212: {
             title: "(u2-2) Average Clicker Game",
-            description: "Needs u1<br><b>Disables u2-1</b><br><br>Point Buyable 5 is boosted by 1.2x, but time is replaced with clicks. (A clickable will spawn under BB5.)",
+            description() {
+                return `Needs u1<br>${hasUpgrade(this.layer, 414) ? '' : '<b>Disables u2-1</b>'}<br><br>Point Buyable 5 is boosted by ${hasUpgrade(this.layer, 211) && hasUpgrade(this.layer, 414) ? 1 : 1.2}x, but time is replaced with clicks. (A clickable will spawn under PB5.)`
+            },
             cost: new Decimal(1),
             unlocked() { return inChallenge('q', 13) },
             currencyDisplayName: 'Branch Points',
             canAfford() {
-                return tmp.p.totalBP.sub(player.p.totalBPUsed).gte(this.cost)
+                return tmp[this.layer].totalBP.sub(player[this.layer].totalBPUsed).gte(this.cost)
                     && hasUpgrade(this.layer, 201)
-                    && !hasUpgrade(this.layer, 211)
+                    && (!hasUpgrade(this.layer, 211) || hasUpgrade(this.layer, 414))
             },
             pay() {
-                player.p.totalBPUsed = Decimal.add(player.p.totalBPUsed, this.cost)
+                player[this.layer].totalBPUsed = Decimal.add(player[this.layer].totalBPUsed, this.cost)
             },
             branches: [223],
             style: {
@@ -2964,14 +3264,14 @@ addLayer('p', {
             unlocked() { return inChallenge('q', 13) },
             currencyDisplayName: 'Branch Points',
             canAfford() {
-                return tmp.p.totalBP.sub(player.p.totalBPUsed).gte(this.cost)
+                return tmp[this.layer].totalBP.sub(player[this.layer].totalBPUsed).gte(this.cost)
                     && hasUpgrade(this.layer, 222)
             },
             pay() {
-                player.p.totalBPUsed = Decimal.add(player.p.totalBPUsed, this.cost)
+                player[this.layer].totalBPUsed = Decimal.add(player[this.layer].totalBPUsed, this.cost)
             },
             effect() { 
-                let ret = Decimal.max(player.p.points, 1).pow(10)
+                let ret = Decimal.max(player[this.layer].points, 1).pow(10)
                 return ret;
             },
             effectDisplay() { return `&times;${format(this.effect())}` },
@@ -2989,11 +3289,11 @@ addLayer('p', {
             unlocked() { return inChallenge('q', 13) },
             currencyDisplayName: 'Branch Points',
             canAfford() {
-                return tmp.p.totalBP.sub(player.p.totalBPUsed).gte(this.cost)
+                return tmp[this.layer].totalBP.sub(player[this.layer].totalBPUsed).gte(this.cost)
                     && hasUpgrade(this.layer, 211)
             },
             pay() {
-                player.p.totalBPUsed = Decimal.add(player.p.totalBPUsed, this.cost)
+                player[this.layer].totalBPUsed = Decimal.add(player[this.layer].totalBPUsed, this.cost)
             },
             branches: [221, 232],
             style: {
@@ -3009,14 +3309,14 @@ addLayer('p', {
             unlocked() { return inChallenge('q', 13) },
             currencyDisplayName: 'Branch Points',
             canAfford() {
-                return tmp.p.totalBP.sub(player.p.totalBPUsed).gte(this.cost)
+                return tmp[this.layer].totalBP.sub(player[this.layer].totalBPUsed).gte(this.cost)
                     && hasUpgrade(this.layer, 212)
             },
             pay() {
-                player.p.totalBPUsed = Decimal.add(player.p.totalBPUsed, this.cost)
+                player[this.layer].totalBPUsed = Decimal.add(player[this.layer].totalBPUsed, this.cost)
             },
             effect() { 
-                let ret = tmp.p.totalBP
+                let ret = tmp[this.layer].totalBP
                 return ret;
             },
             effectDisplay() { return `&times;${format(this.effect())}` },
@@ -3034,14 +3334,14 @@ addLayer('p', {
             unlocked() { return inChallenge('q', 13) },
             currencyDisplayName: 'Branch Points',
             canAfford() {
-                return tmp.p.totalBP.sub(player.p.totalBPUsed).gte(this.cost)
+                return tmp[this.layer].totalBP.sub(player[this.layer].totalBPUsed).gte(this.cost)
                     && hasUpgrade(this.layer, 223)
             },
             pay() {
-                player.p.totalBPUsed = Decimal.add(player.p.totalBPUsed, this.cost)
+                player[this.layer].totalBPUsed = Decimal.add(player[this.layer].totalBPUsed, this.cost)
             },
             effect() { 
-                let ret = Decimal.max(player.p.ssPoints, 1).pow(2)
+                let ret = Decimal.max(player[this.layer].ssPoints, 1).pow(2)
                 return ret;
             },
             effectDisplay() { return `&times;${format(this.effect())}` },
@@ -3059,11 +3359,11 @@ addLayer('p', {
             unlocked() { return inChallenge('q', 13) },
             currencyDisplayName: 'Branch Points',
             canAfford() {
-                return tmp.p.totalBP.sub(player.p.totalBPUsed).gte(this.cost)
+                return tmp[this.layer].totalBP.sub(player[this.layer].totalBPUsed).gte(this.cost)
                     && hasUpgrade(this.layer, 221)
             },
             pay() {
-                player.p.totalBPUsed = Decimal.add(player.p.totalBPUsed, this.cost)
+                player[this.layer].totalBPUsed = Decimal.add(player[this.layer].totalBPUsed, this.cost)
             },
             effect() { 
                 let ret = player.q.timeInQ
@@ -3088,14 +3388,14 @@ addLayer('p', {
             unlocked() { return inChallenge('q', 13) },
             currencyDisplayName: 'Branch Points',
             canAfford() {
-                return tmp.p.totalBP.sub(player.p.totalBPUsed).gte(this.cost)
+                return tmp[this.layer].totalBP.sub(player[this.layer].totalBPUsed).gte(this.cost)
                     && hasUpgrade(this.layer, 222)
             },
             pay() {
-                player.p.totalBPUsed = Decimal.add(player.p.totalBPUsed, this.cost)
+                player[this.layer].totalBPUsed = Decimal.add(player[this.layer].totalBPUsed, this.cost)
             },
             effect() { 
-                let ret = tmp.p.buyables[15].effect.sub(1).div(2).add(1)
+                let ret = tmp[this.layer].buyables[15].effect.sub(1).div(2).add(1)
                 return ret;
             },
             effectDisplay() { return `^${format(this.effect(), 3)}` },
@@ -3113,11 +3413,11 @@ addLayer('p', {
             unlocked() { return inChallenge('q', 13) },
             currencyDisplayName: 'Branch Points',
             canAfford() {
-                return tmp.p.totalBP.sub(player.p.totalBPUsed).gte(this.cost)
+                return tmp[this.layer].totalBP.sub(player[this.layer].totalBPUsed).gte(this.cost)
                     && hasUpgrade(this.layer, 223)
             },
             pay() {
-                player.p.totalBPUsed = Decimal.add(player.p.totalBPUsed, this.cost)
+                player[this.layer].totalBPUsed = Decimal.add(player[this.layer].totalBPUsed, this.cost)
             },
             branches: [242],
             style: {
@@ -3133,16 +3433,16 @@ addLayer('p', {
             unlocked() { return inChallenge('q', 13) },
             currencyDisplayName: 'Branch Points',
             canAfford() {
-                return tmp.p.totalBP.sub(player.p.totalBPUsed).gte(this.cost)
+                return tmp[this.layer].totalBP.sub(player[this.layer].totalBPUsed).gte(this.cost)
                     && hasUpgrade(this.layer, 224)
             },
             pay() {
-                player.p.totalBPUsed = Decimal.add(player.p.totalBPUsed, this.cost)
+                player[this.layer].totalBPUsed = Decimal.add(player[this.layer].totalBPUsed, this.cost)
             },
             effect() { 
-                let ret = Decimal.lt(player.p.buyables[15], 1) 
+                let ret = Decimal.lt(player[this.layer].buyables[15], 1) 
                     ? D(0)
-                    : player.p.buyables[15].log2().add(1).floor()
+                    : player[this.layer].buyables[15].log2().add(1).floor()
                 return ret;
             },
             effectDisplay() { return `-${format(this.effect())}, next at ${format(this.effect().pow_base(2))}` },
@@ -3160,11 +3460,11 @@ addLayer('p', {
             unlocked() { return inChallenge('q', 13) },
             currencyDisplayName: 'Branch Points',
             canAfford() {
-                return tmp.p.totalBP.sub(player.p.totalBPUsed).gte(this.cost)
+                return tmp[this.layer].totalBP.sub(player[this.layer].totalBPUsed).gte(this.cost)
                     && (hasUpgrade(this.layer, 231))
             },
             pay() {
-                player.p.totalBPUsed = Decimal.add(player.p.totalBPUsed, this.cost)
+                player[this.layer].totalBPUsed = Decimal.add(player[this.layer].totalBPUsed, this.cost)
             },
             style: {
                 "min-width": "135px",
@@ -3179,11 +3479,11 @@ addLayer('p', {
             unlocked() { return inChallenge('q', 13) },
             currencyDisplayName: 'Branch Points',
             canAfford() {
-                return tmp.p.totalBP.sub(player.p.totalBPUsed).gte(this.cost)
+                return tmp[this.layer].totalBP.sub(player[this.layer].totalBPUsed).gte(this.cost)
                     && (hasUpgrade(this.layer, 232) || hasUpgrade(this.layer, 233))
             },
             pay() {
-                player.p.totalBPUsed = Decimal.add(player.p.totalBPUsed, this.cost)
+                player[this.layer].totalBPUsed = Decimal.add(player[this.layer].totalBPUsed, this.cost)
             },
             branches: [251, 252, 253],
             style: {
@@ -3199,11 +3499,11 @@ addLayer('p', {
             unlocked() { return inChallenge('q', 13) },
             currencyDisplayName: 'Branch Points',
             canAfford() {
-                return tmp.p.totalBP.sub(player.p.totalBPUsed).gte(this.cost)
+                return tmp[this.layer].totalBP.sub(player[this.layer].totalBPUsed).gte(this.cost)
                     && hasUpgrade(this.layer, 234)
             },
             pay() {
-                player.p.totalBPUsed = Decimal.add(player.p.totalBPUsed, this.cost)
+                player[this.layer].totalBPUsed = Decimal.add(player[this.layer].totalBPUsed, this.cost)
             },
             effect() { 
                 let ret = challengeCompletions(this.layer, 21).add(challengeCompletions(this.layer, 22)).add(challengeCompletions(this.layer, 23)).add(challengeCompletions(this.layer, 24)).add(challengeCompletions(this.layer, 25))
@@ -3224,12 +3524,12 @@ addLayer('p', {
             unlocked() { return inChallenge('q', 13) },
             currencyDisplayName: 'Branch Points',
             canAfford() {
-                return tmp.p.totalBP.sub(player.p.totalBPUsed).gte(this.cost)
+                return tmp[this.layer].totalBP.sub(player[this.layer].totalBPUsed).gte(this.cost)
                     && hasUpgrade(this.layer, 242) && challengeCompletions(this.layer, 21).gte(1)
                     && !(hasUpgrade(this.layer, 252) || hasUpgrade(this.layer, 253))
             },
             pay() {
-                player.p.totalBPUsed = Decimal.add(player.p.totalBPUsed, this.cost)
+                player[this.layer].totalBPUsed = Decimal.add(player[this.layer].totalBPUsed, this.cost)
             },
             branches: [261],
             style: {
@@ -3245,12 +3545,12 @@ addLayer('p', {
             unlocked() { return inChallenge('q', 13) },
             currencyDisplayName: 'Branch Points',
             canAfford() {
-                return tmp.p.totalBP.sub(player.p.totalBPUsed).gte(this.cost)
+                return tmp[this.layer].totalBP.sub(player[this.layer].totalBPUsed).gte(this.cost)
                     && hasUpgrade(this.layer, 242) && challengeCompletions(this.layer, 21).gte(1)
                     && !(hasUpgrade(this.layer, 251) || hasUpgrade(this.layer, 253))
             },
             pay() {
-                player.p.totalBPUsed = Decimal.add(player.p.totalBPUsed, this.cost)
+                player[this.layer].totalBPUsed = Decimal.add(player[this.layer].totalBPUsed, this.cost)
             },
             branches: [262],
             style: {
@@ -3266,12 +3566,12 @@ addLayer('p', {
             unlocked() { return inChallenge('q', 13) },
             currencyDisplayName: 'Branch Points',
             canAfford() {
-                return tmp.p.totalBP.sub(player.p.totalBPUsed).gte(this.cost)
+                return tmp[this.layer].totalBP.sub(player[this.layer].totalBPUsed).gte(this.cost)
                     && hasUpgrade(this.layer, 242) && challengeCompletions(this.layer, 21).gte(1)
                     && !(hasUpgrade(this.layer, 251) || hasUpgrade(this.layer, 252))
             },
             pay() {
-                player.p.totalBPUsed = Decimal.add(player.p.totalBPUsed, this.cost)
+                player[this.layer].totalBPUsed = Decimal.add(player[this.layer].totalBPUsed, this.cost)
             },
             branches: [263],
             style: {
@@ -3287,11 +3587,11 @@ addLayer('p', {
             unlocked() { return inChallenge('q', 13) },
             currencyDisplayName: 'Branch Points',
             canAfford() {
-                return tmp.p.totalBP.sub(player.p.totalBPUsed).gte(this.cost)
+                return tmp[this.layer].totalBP.sub(player[this.layer].totalBPUsed).gte(this.cost)
                     && hasUpgrade(this.layer, 251)
             },
             pay() {
-                player.p.totalBPUsed = Decimal.add(player.p.totalBPUsed, this.cost)
+                player[this.layer].totalBPUsed = Decimal.add(player[this.layer].totalBPUsed, this.cost)
             },
             branches: [272],
             style: {
@@ -3307,11 +3607,11 @@ addLayer('p', {
             unlocked() { return inChallenge('q', 13) },
             currencyDisplayName: 'Branch Points',
             canAfford() {
-                return tmp.p.totalBP.sub(player.p.totalBPUsed).gte(this.cost)
+                return tmp[this.layer].totalBP.sub(player[this.layer].totalBPUsed).gte(this.cost)
                     && hasUpgrade(this.layer, 252)
             },
             pay() {
-                player.p.totalBPUsed = Decimal.add(player.p.totalBPUsed, this.cost)
+                player[this.layer].totalBPUsed = Decimal.add(player[this.layer].totalBPUsed, this.cost)
             },
             branches: [273],
             style: {
@@ -3327,11 +3627,11 @@ addLayer('p', {
             unlocked() { return inChallenge('q', 13) },
             currencyDisplayName: 'Branch Points',
             canAfford() {
-                return tmp.p.totalBP.sub(player.p.totalBPUsed).gte(this.cost)
+                return tmp[this.layer].totalBP.sub(player[this.layer].totalBPUsed).gte(this.cost)
                     && hasUpgrade(this.layer, 253)
             },
             pay() {
-                player.p.totalBPUsed = Decimal.add(player.p.totalBPUsed, this.cost)
+                player[this.layer].totalBPUsed = Decimal.add(player[this.layer].totalBPUsed, this.cost)
             },
             branches: [274],
             style: {
@@ -3347,11 +3647,11 @@ addLayer('p', {
             unlocked() { return inChallenge('q', 13) },
             currencyDisplayName: 'Branch Points',
             canAfford() {
-                return tmp.p.totalBP.sub(player.p.totalBPUsed).gte(this.cost)
+                return tmp[this.layer].totalBP.sub(player[this.layer].totalBPUsed).gte(this.cost)
                     && hasUpgrade(this.layer, 272)
             },
             pay() {
-                player.p.totalBPUsed = Decimal.add(player.p.totalBPUsed, this.cost)
+                player[this.layer].totalBPUsed = Decimal.add(player[this.layer].totalBPUsed, this.cost)
             },
             style: {
                 "min-width": "135px",
@@ -3366,11 +3666,11 @@ addLayer('p', {
             unlocked() { return inChallenge('q', 13) },
             currencyDisplayName: 'Branch Points',
             canAfford() {
-                return tmp.p.totalBP.sub(player.p.totalBPUsed).gte(this.cost)
+                return tmp[this.layer].totalBP.sub(player[this.layer].totalBPUsed).gte(this.cost)
                     && hasUpgrade(this.layer, 261)
             },
             pay() {
-                player.p.totalBPUsed = Decimal.add(player.p.totalBPUsed, this.cost)
+                player[this.layer].totalBPUsed = Decimal.add(player[this.layer].totalBPUsed, this.cost)
             },
             branches: [271, 282],
             style: {
@@ -3386,11 +3686,11 @@ addLayer('p', {
             unlocked() { return inChallenge('q', 13) },
             currencyDisplayName: 'Branch Points',
             canAfford() {
-                return tmp.p.totalBP.sub(player.p.totalBPUsed).gte(this.cost)
+                return tmp[this.layer].totalBP.sub(player[this.layer].totalBPUsed).gte(this.cost)
                     && hasUpgrade(this.layer, 262)
             },
             pay() {
-                player.p.totalBPUsed = Decimal.add(player.p.totalBPUsed, this.cost)
+                player[this.layer].totalBPUsed = Decimal.add(player[this.layer].totalBPUsed, this.cost)
             },
             effect() { 
                 let ret = challengeCompletions(this.layer, 14).max(1).log10().mul(0.01).add(1)
@@ -3411,11 +3711,11 @@ addLayer('p', {
             unlocked() { return inChallenge('q', 13) },
             currencyDisplayName: 'Branch Points',
             canAfford() {
-                return tmp.p.totalBP.sub(player.p.totalBPUsed).gte(this.cost)
+                return tmp[this.layer].totalBP.sub(player[this.layer].totalBPUsed).gte(this.cost)
                     && hasUpgrade(this.layer, 263)
             },
             pay() {
-                player.p.totalBPUsed = Decimal.add(player.p.totalBPUsed, this.cost)
+                player[this.layer].totalBPUsed = Decimal.add(player[this.layer].totalBPUsed, this.cost)
             },
             branches: [275, 284],
             style: {
@@ -3431,12 +3731,12 @@ addLayer('p', {
             unlocked() { return inChallenge('q', 13) },
             currencyDisplayName: 'Branch Points',
             canAfford() {
-                return tmp.p.totalBP.sub(player.p.totalBPUsed).gte(this.cost)
+                return tmp[this.layer].totalBP.sub(player[this.layer].totalBPUsed).gte(this.cost)
                     && hasUpgrade(this.layer, 274)
                     && hasUpgrade(this.layer, 212)
             },
             pay() {
-                player.p.totalBPUsed = Decimal.add(player.p.totalBPUsed, this.cost)
+                player[this.layer].totalBPUsed = Decimal.add(player[this.layer].totalBPUsed, this.cost)
             },
             style: {
                 "min-width": "135px",
@@ -3451,11 +3751,11 @@ addLayer('p', {
             unlocked() { return inChallenge('q', 13) },
             currencyDisplayName: 'Branch Points',
             canAfford() {
-                return tmp.p.totalBP.sub(player.p.totalBPUsed).gte(this.cost)
+                return tmp[this.layer].totalBP.sub(player[this.layer].totalBPUsed).gte(this.cost)
                     && hasUpgrade(this.layer, 282) && hasUpgrade(this.layer, 211)
             },
             pay() {
-                player.p.totalBPUsed = Decimal.add(player.p.totalBPUsed, this.cost)
+                player[this.layer].totalBPUsed = Decimal.add(player[this.layer].totalBPUsed, this.cost)
             },
             style: {
                 "min-width": "135px",
@@ -3470,11 +3770,11 @@ addLayer('p', {
             unlocked() { return inChallenge('q', 13) },
             currencyDisplayName: 'Branch Points',
             canAfford() {
-                return tmp.p.totalBP.sub(player.p.totalBPUsed).gte(this.cost)
+                return tmp[this.layer].totalBP.sub(player[this.layer].totalBPUsed).gte(this.cost)
                     && hasUpgrade(this.layer, 272)
             },
             pay() {
-                player.p.totalBPUsed = Decimal.add(player.p.totalBPUsed, this.cost)
+                player[this.layer].totalBPUsed = Decimal.add(player[this.layer].totalBPUsed, this.cost)
             },
             branches: [291, 281],
             style: {
@@ -3490,11 +3790,11 @@ addLayer('p', {
             unlocked() { return inChallenge('q', 13) },
             currencyDisplayName: 'Branch Points',
             canAfford() {
-                return tmp.p.totalBP.sub(player.p.totalBPUsed).gte(this.cost)
+                return tmp[this.layer].totalBP.sub(player[this.layer].totalBPUsed).gte(this.cost)
                     && hasUpgrade(this.layer, 273)
             },
             pay() {
-                player.p.totalBPUsed = Decimal.add(player.p.totalBPUsed, this.cost)
+                player[this.layer].totalBPUsed = Decimal.add(player[this.layer].totalBPUsed, this.cost)
             },
             branches: [291],
             style: {
@@ -3510,11 +3810,11 @@ addLayer('p', {
             unlocked() { return inChallenge('q', 13) },
             currencyDisplayName: 'Branch Points',
             canAfford() {
-                return tmp.p.totalBP.sub(player.p.totalBPUsed).gte(this.cost)
+                return tmp[this.layer].totalBP.sub(player[this.layer].totalBPUsed).gte(this.cost)
                     && hasUpgrade(this.layer, 274)
             },
             pay() {
-                player.p.totalBPUsed = Decimal.add(player.p.totalBPUsed, this.cost)
+                player[this.layer].totalBPUsed = Decimal.add(player[this.layer].totalBPUsed, this.cost)
             },
             branches: [291],
             style: {
@@ -3531,11 +3831,11 @@ addLayer('p', {
             unlocked() { return inChallenge('q', 13) },
             currencyDisplayName: 'Branch Points',
             canAfford() {
-                return tmp.p.totalBP.sub(player.p.totalBPUsed).gte(this.cost)
+                return tmp[this.layer].totalBP.sub(player[this.layer].totalBPUsed).gte(this.cost)
                     && (hasUpgrade(this.layer, 282) || hasUpgrade(this.layer, 283) || hasUpgrade(this.layer, 284))
             },
             pay() {
-                player.p.totalBPUsed = Decimal.add(player.p.totalBPUsed, this.cost)
+                player[this.layer].totalBPUsed = Decimal.add(player[this.layer].totalBPUsed, this.cost)
             },
             branches: [301],
             style: {
@@ -3551,11 +3851,11 @@ addLayer('p', {
             unlocked() { return inChallenge('q', 13) },
             currencyDisplayName: 'Branch Points',
             canAfford() {
-                return tmp.p.totalBP.sub(player.p.totalBPUsed).gte(this.cost)
+                return tmp[this.layer].totalBP.sub(player[this.layer].totalBPUsed).gte(this.cost)
                     && (hasUpgrade(this.layer, 291) && challengeCompletions(this.layer, 24).gte(2))
             },
             pay() {
-                player.p.totalBPUsed = Decimal.add(player.p.totalBPUsed, this.cost)
+                player[this.layer].totalBPUsed = Decimal.add(player[this.layer].totalBPUsed, this.cost)
             },
             branches: [311],
             style: {
@@ -3566,22 +3866,178 @@ addLayer('p', {
         },
         311: {
             title: "(u12) The Finale of the Tree",
-            description: "Needs u11<br><br>Unlock Branch Challenge 5.",
+            description: "Needs u11 and u2-2<br><br>Unlock Branch Challenge 5.",
             cost: new Decimal(24),
             unlocked() { return inChallenge('q', 13) },
             currencyDisplayName: 'Branch Points',
             canAfford() {
-                return tmp.p.totalBP.sub(player.p.totalBPUsed).gte(this.cost)
-                    && (hasUpgrade(this.layer, 301))
+                return tmp[this.layer].totalBP.sub(player[this.layer].totalBPUsed).gte(this.cost)
+                    && hasUpgrade(this.layer, 301)
+                    && hasUpgrade(this.layer, 212)
             },
             pay() {
-                player.p.totalBPUsed = Decimal.add(player.p.totalBPUsed, this.cost)
+                player[this.layer].totalBPUsed = Decimal.add(player[this.layer].totalBPUsed, this.cost)
             },
             style: {
                 "min-width": "135px",
                 "min-height": "135px",
                 "margin": "5px",
             }
+        },
+        401: {
+            title: "This again",
+            description: "HSP gives a multiplier to prestige point gain.",
+            cost: new Decimal(1000),
+            unlocked() { return hasUpgrade(this.layer, 301) },
+            currencyInternalName: 'hsPoints',
+            currencyDisplayName: 'Hyper Scaling Points',
+            currencyLocation() {
+                return player[this.layer]
+            },
+            effect() { 
+                let ret = player[this.layer].hsPoints.max(0).add(1).pow(5)
+                return ret;
+            },
+            effectDisplay() { return `&times;${format(this.effect())}` }, 
+        },
+        402: {
+            title: "Just like the old times",
+            description: "Total HSP gives a multiplier to point gain.",
+            cost: new Decimal(10000),
+            unlocked() { return hasUpgrade(this.layer, 301) },
+            currencyInternalName: 'hsPoints',
+            currencyDisplayName: 'Hyper Scaling Points',
+            currencyLocation() {
+                return player[this.layer]
+            },
+            effect() { 
+                let ret = player[this.layer].hsTotal.max(0).add(1).pow(5000)
+                return ret;
+            },
+            effectDisplay() { return `&times;${format(this.effect())}` }, 
+        },
+        403: {
+            title: "Tree Points Mattering?!",
+            description: "Tree Points boost HSP gain.",
+            cost: new Decimal(100000),
+            unlocked() { return hasUpgrade(this.layer, 301) },
+            currencyInternalName: 'hsPoints',
+            currencyDisplayName: 'Hyper Scaling Points',
+            currencyLocation() {
+                return player[this.layer]
+            },
+            effect() { 
+                let ret = player[this.layer].treePoints.max(1e10).log10().div(10).pow(6)
+                return ret;
+            },
+            effectDisplay() { return `&times;${format(this.effect(), 2)}` }, 
+        },
+        404: {
+            title: "Branch to Hyper",
+            description: "Total Branch Points give a multiplier to HSP gain.",
+            cost: new Decimal(1e6),
+            unlocked() { return hasUpgrade(this.layer, 301) },
+            currencyInternalName: 'hsPoints',
+            currencyDisplayName: 'Hyper Scaling Points',
+            currencyLocation() {
+                return player[this.layer]
+            },
+            effect() { 
+                let ret = tmp[this.layer].totalBP.div(35).max(1).pow(4.5)
+                return ret;
+            },
+            effectDisplay() { return `&times;${format(this.effect(), 2)}` }, 
+        },
+        405: {
+            title: "Chaining Scaling",
+            description: "HSP raises Super Scaling Point gain.",
+            cost: new Decimal(1e10),
+            unlocked() { return hasUpgrade(this.layer, 301) },
+            currencyInternalName: 'hsPoints',
+            currencyDisplayName: 'Hyper Scaling Points',
+            currencyLocation() {
+                return player[this.layer]
+            },
+            effect() { 
+                let ret = player[this.layer].hsPoints.max(1e5).log10().mul(2).log10()
+                return ret;
+            },
+            effectDisplay() { return `^${format(this.effect(), 3)}` }, 
+        },
+        411: {
+            title: "Diverse Scaling",
+            description: "HSP intervals also decrease Rank scaling.",
+            cost: new Decimal(1e16),
+            unlocked() { return hasUpgrade(this.layer, 301) },
+            currencyInternalName: 'hsPoints',
+            currencyDisplayName: 'Hyper Scaling Points',
+            currencyLocation() {
+                return player[this.layer]
+            },
+            effect() { 
+                let ret = player[this.layer].hsBestGalaxies.pow_base(0.9995).recip()
+                return ret;
+            },
+            effectDisplay() { return `-${formatPerc(this.effect(), 3)}` }, 
+        },
+        412: {
+            title: "Self-Sustaining Scaling",
+            description: "Generate free Branch points based on HSP.",
+            cost: new Decimal(1e24),
+            unlocked() { return hasUpgrade(this.layer, 301) },
+            currencyInternalName: 'hsPoints',
+            currencyDisplayName: 'Hyper Scaling Points',
+            currencyLocation() {
+                return player[this.layer]
+            },
+            effect() { 
+                let ret = player[this.layer].hsPoints.max(1e12).log10().div(12).pow(5).sub(1).div(310)
+                return ret;
+            },
+            effectDisplay() { return `+${format(this.effect(), 3)}/s` }, 
+        },
+        413: {
+            title: "Diverse^2 Scaling",
+            description: "HSP intervals also decrease Prestige Buyable scaling.",
+            cost: new Decimal(1e30),
+            unlocked() { return hasUpgrade(this.layer, 301) },
+            currencyInternalName: 'hsPoints',
+            currencyDisplayName: 'Hyper Scaling Points',
+            currencyLocation() {
+                return player[this.layer]
+            },
+            effect() { 
+                let ret = player[this.layer].hsBestGalaxies.pow_base(0.9995).recip()
+                return ret;
+            },
+            effectDisplay() { return `-${formatPerc(this.effect(), 3)}` }, 
+        },
+        414: {
+            title: "We just need one more of this",
+            description: "u2-1 and u2-2 no longer disable each other. These upgrades are slightly nerfed if both are bought.",
+            cost: new Decimal(1e40),
+            unlocked() { return hasUpgrade(this.layer, 301) },
+            currencyInternalName: 'hsPoints',
+            currencyDisplayName: 'Hyper Scaling Points',
+            currencyLocation() {
+                return player[this.layer]
+            }
+        },
+        415: {
+            title: "Over time...",
+            description: "HSP gain is increased over time in Q.",
+            cost: new Decimal(1e50),
+            unlocked() { return hasUpgrade(this.layer, 301) },
+            currencyInternalName: 'hsPoints',
+            currencyDisplayName: 'Hyper Scaling Points',
+            currencyLocation() {
+                return player[this.layer]
+            },
+            effect() { 
+                let ret = player.q.timeInQ.div(30).add(1).pow(12)
+                return ret;
+            },
+            effectDisplay() { return `&times;${format(this.effect())}` }, 
         },
     }
 })
