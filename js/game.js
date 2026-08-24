@@ -383,12 +383,6 @@ function pointGradualSoftcap(type, num, start, pow, inv) {
 }
 
 function gameLoop(diff) {
-	if (PAUSE_EVERYTHING > 0) {
-		diff = 0
-		console.log(`pausing generation for ${PAUSE_EVERYTHING} ticks`)
-		PAUSE_EVERYTHING -= 1
-	}
-
 	if (isEndgame() || tmp.gameEnded){
 		tmp.gameEnded = true
 		clearParticles()
@@ -476,6 +470,7 @@ function gameLoop(diff) {
 	}
 
 	// cap lesser tier softcaps before higher tier softcaps
+	tmp.reductionFactors.sc2.start = tmp.reductionFactors.sc2.start.min(tmp.reductionFactors.sc3.start)
 	tmp.reductionFactors.sc1.start = tmp.reductionFactors.sc1.start.min(tmp.reductionFactors.sc2.start)
 	// end
 
@@ -579,6 +574,10 @@ function gameLoop(diff) {
         player.points = pointGradualSoftcap(3, player.points, tmp.reductionFactors.sc3.start, tmp.reductionFactors.sc3.exp, true)
     }
 
+	if (inChallenge('q', 14)) {
+		player.points = player.points.min('e2e10')
+	}
+
 	player.calcPointGen = diff != 0 ? player.points.sub(previous).div(inChallenge('p', 23) ? 1 : diff) : D(0)
 
     player.bestPoints = Decimal.max(player.bestPoints, player.points)
@@ -649,16 +648,25 @@ var interval = setInterval(function() {
 		diff = 0
 	}
 
-	let trueDiff = diff
-	if (player.offTime !== undefined) {
-		if (player.offTime.remain > modInfo.offlineLimit * 3600) player.offTime.remain = modInfo.offlineLimit * 3600
-		if (player.offTime.remain > 0) {
-			let offlineDiff = Math.max(player.offTime.remain / 10, diff)
-			player.offTime.remain -= offlineDiff
-			diff += offlineDiff
-		}
-		if (!options.offlineProd || player.offTime.remain <= 0) player.offTime = undefined
+	if (PAUSE_EVERYTHING > 0) {
+		diff = 0
+		console.log(`pausing generation for ${PAUSE_EVERYTHING} ticks`)
+		PAUSE_EVERYTHING -= 1
 	}
+
+	let trueDiff = diff
+	if (PAUSE_EVERYTHING === 0) {
+		if (player.offTime !== undefined) {
+			if (player.offTime.remain > modInfo.offlineLimit * 3600) player.offTime.remain = modInfo.offlineLimit * 3600
+			if (player.offTime.remain > 0) {
+				let offlineDiff = Math.max(player.offTime.remain / 10, diff)
+				player.offTime.remain -= offlineDiff
+				diff += offlineDiff
+			}
+			if (!options.offlineProd || player.offTime.remain <= 0) player.offTime = undefined
+		}
+	}
+
 	if (player.devSpeed) diff *= player.devSpeed
 	player.time = now
 	if (needCanvasUpdate){ resizeCanvas();

@@ -5,7 +5,7 @@ let modInfo = {
     id: "tearonq_another_game_lmao",
     author: "TearonQ",
     pointsName: "points",
-    modFiles: ["layers/quaternions.js", "layers/prestige.js", "tree.js"],
+    modFiles: ["layers/infinity.js", "layers/quaternions.js", "layers/prestige.js", "tree.js"],
 
     discordName: "My stupid fcking server",
     discordLink: "https://discord.gg/JJKRfR3gH9",

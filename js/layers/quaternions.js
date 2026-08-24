@@ -15,6 +15,8 @@ addLayer('q', {
         points: D(0),
         bestPointsInQ: D(0),
         timeInQ: D(0),
+        // temporary
+        bestTimeInQ: D(0),
         allocated: [D(0), D(0), D(0), D(0)],
         allocGen: [D(0), D(0), D(0), D(0)],
     }},
@@ -28,6 +30,7 @@ addLayer('q', {
     type: "custom", // normal: cost to gain currency depends on amount gained. static: cost depends on how much you already have
     update(diff) {
         player[this.layer].timeInQ = player[this.layer].timeInQ.add(player.globalTS.mul(diff))
+        player[this.layer].bestTimeInQ = player[this.layer].bestTimeInQ.add(player.globalTS.mul(diff))
 
         for (let i = 0; i < player[this.layer].allocated.length; i++) {
             player[this.layer].allocGen[i] = player[this.layer].allocGen[i].add(tmp[this.layer].generationGain[i].mul(player.globalTS).mul(diff))
@@ -182,6 +185,9 @@ addLayer('q', {
         setBuyableAmount('p', 73, D(0))
         
         const SAFE_UPGRADES = [11, 12, 13, 14, 15, 21, 22, 23, 24, 31, 41, 42, 43, 44, 45]
+        if (challengeCompletions(this.layer, 14).gte(1)) {
+            SAFE_UPGRADES.push(421, 422, 423, 424, 425)
+        }
         
         player.p.upgrades = player.p.upgrades.filter((value) => { return SAFE_UPGRADES.includes(value) });
         player.p.totalBPUsed = D(0)
@@ -195,7 +201,7 @@ addLayer('q', {
         player.p.hsTotal = D(0)
         player.p.hsBest = D(0)
         player.p.hsBestGalaxies = D(0)
-        player.p.hsChalBest = D('e3000')
+        player.p.hsChalBest = inChallenge('q', 13) ? D('e3000') : D('e3e5')
         setBuyableAmount('p', 81, D(0))
         setBuyableAmount('p', 82, D(0))
         setBuyableAmount('p', 83, D(0))
@@ -426,10 +432,10 @@ addLayer('q', {
         14: {
             unlocked() { return challengeCompletions(this.layer, 13).gte(1) },
             name: "Full Loss",
-            challengeDescription: "All prior challenges combined with several changes.",
+            challengeDescription: "All prior challenges combined with several changes. This challenge is overall faster. Hardcaps at e20.000 B points.",
             goalDescription: `Get ${format('e2e10')} Points.`,
             canComplete() { return player.points.gte('e2e10') },
-            rewardDescription: `Unlock a new layer above and aside from this.`,
+            rewardDescription: `Unlock a new layer above and aside from this. Reunlock Trees and they do not reset upon Quaternions, but they are weaker outside of Dimension Loss. The final 5 Hyper Scaling upgrades are kept.`,
             getDepths() {
                 let i = inChallenge(this.layer, 14, true) ? D(1) : D(0)
                 return i

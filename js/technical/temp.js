@@ -223,11 +223,15 @@ function pad(num, length) {
 }
 
 function sumHarmonicSeries(x) {
-    x = D(x).add(1)
-	return Decimal.ln(x)
-        .sub(Decimal.div(0.5, x))
-        .sub(Decimal.div(1, Decimal.pow(x, 2).mul(12)))
-        .add(Decimal.div(1, Decimal.pow(x, 4).mul(120)))
+    let i = D(x).add(1)
+	i = Decimal.ln(i)
+        .sub(Decimal.div(0.5, i))
+        .sub(Decimal.div(1, Decimal.pow(i, 2).mul(12)))
+        .add(Decimal.div(1, Decimal.pow(i, 4).mul(120)))
 		.add(0.5772156649015329)
-		.sub(x.sub(1).recip());
+		.sub(i.sub(1).recip());
+	if (Decimal.isNaN(i)) {
+		throw new Error(`sumHarmonicSeries INVALID INPUT! ${x} returned NaN.`)
+	}
+	return i
 }
