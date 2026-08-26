@@ -613,6 +613,7 @@ function loadVue() {
 	app = new Vue({
 		el: "#app",
 		data: {
+			PAUSE_EVERYTHING,
 			player,
 			tmp,
 			options,

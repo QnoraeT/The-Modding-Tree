@@ -5,7 +5,7 @@ let modInfo = {
     id: "tearonq_another_game_lmao",
     author: "TearonQ",
     pointsName: "points",
-    modFiles: ["layers/infinity.js", "layers/quaternions.js", "layers/prestige.js", "tree.js"],
+    modFiles: ["layers/luck.js", "layers/quaternions.js", "layers/prestige.js", "tree.js"],
 
     discordName: "My stupid fcking server",
     discordLink: "https://discord.gg/JJKRfR3gH9",
@@ -28,7 +28,7 @@ let winText = `Congratulations! You have reached the end and beaten this game, b
 
 // If you add new functions anywhere inside of a layer, and those functions have an effect when called, add them here.
 // (The ones here are examples, all official functions are already taken care of)
-var doNotCallTheseFunctionsEveryTick = ["blowUpEverything", "scaleModifEffective", "scaleModifCost", "scaleModifTarEff", "scaleModifTarCost"]
+var doNotCallTheseFunctionsEveryTick = ["blowUpEverything", "scaleModifEffective", "scaleModifCost", "scaleModifTarEff", "scaleModifTarCost", "rollLol"]
 
 function getStartPoints(){
     return new Decimal(modInfo.initialStartPoints)
@@ -44,30 +44,35 @@ function getPointGen() {
     if(!canGenPoints()) { return new Decimal(0) }
     let gain = new Decimal(1)
     gain = gain.mul(tmp.p.buyables[11].effect)
-    gain = gain.mul(tmp.p.effect)
-
-    gain = gain.mul(tmp.p.buyables[22].effect.pps)
-    gain = gain.mul(tmp.p.sspEff)
-    if (hasUpgrade('p', 42)) {
-        gain = gain.mul(upgradeEffect('p', 42))
-    }
-    if (hasUpgrade('p', 221)) {
-        gain = gain.mul(upgradeEffect('p', 221))
-    }
-    if (hasUpgrade('p', 224)) {
-        gain = gain.mul(upgradeEffect('p', 224))
-    }
-    if (hasUpgrade('p', 402)) {
-        gain = gain.mul(upgradeEffect('p', 402))
-    }
-    gain = gain.mul(tmp.p.bpEffect)
-    gain = gain.mul(tmp.q.generationEff[0])
-    gain = gain.mul(tmp.q.buyables[11].effect)
+    if (!(inChallenge('p', 12) && challengeCompletions('p', 12).gte(14))) {
+        gain = gain.mul(tmp.p.effect)
     
-    gain = gain.pow(tmp.p.buyables[14].effect)
-    gain = gain.pow(tmp.p.buyables[15].effect)
-    gain = gain.pow(tmp.p.energyEff)
-    gain = gain.pow(challengeCompletions('p', 25).pow_base(1.02))
+        gain = gain.mul(tmp.p.buyables[22].effect.pps)
+        gain = gain.mul(tmp.p.sspEff)
+        if (hasUpgrade('p', 42)) {
+            gain = gain.mul(upgradeEffect('p', 42))
+        }
+        if (hasUpgrade('p', 221)) {
+            gain = gain.mul(upgradeEffect('p', 221))
+        }
+        if (hasUpgrade('p', 224)) {
+            gain = gain.mul(upgradeEffect('p', 224))
+        }
+        if (hasUpgrade('p', 402)) {
+            gain = gain.mul(upgradeEffect('p', 402))
+        }
+        gain = gain.mul(tmp.p.bpEffect)
+        gain = gain.mul(tmp.q.generationEff[0])
+        gain = gain.mul(tmp.q.buyables[11].effect)
+        
+        gain = gain.pow(tmp.p.buyables[14].effect)
+        gain = gain.pow(tmp.p.buyables[15].effect)
+        gain = gain.pow(tmp.p.energyEff)
+        gain = gain.pow(challengeCompletions('p', 25).pow_base(1.02))
+        if (hasUpgrade('l', 11)) {
+            gain = gain.pow(upgradeEffect('l', 11))
+        }
+    }
     
     if (inChallenge('p', 12) && challengeCompletions('p', 12).gte(7)) { 
         gain = gain.root(challengeCompletions('p', 12).sub(5))

@@ -116,6 +116,7 @@ var systemComponents = {
 		<h2  class="overlayThing" id="points">{{format(player.points)}}</h2>
 		<span v-if="player.points.lt('1e1e6')"  class="overlayThing"> {{modInfo.pointsName}}</span>
 		<br>
+		<span v-if="PAUSE_EVERYTHING >= 1" class="overlayThing">Generation is being paused for {{ PAUSE_EVERYTHING }} ticks!<br></span>
 		<span class="overlayThing">Your points are naturally slowing down by /{{ format(tmp.reductionFactors.dilate.eff, 2) }}!<br></span>
 		<span v-if="player.points.pow(1.25).gte(tmp.reductionFactors.sc1.start)" class="overlayThing">Your points past {{ format(tmp.reductionFactors.sc1.start) }} are being slowed down by /{{ format(tmp.reductionFactors.sc1.eff, 2) }}!<br></span>
 		<span v-if="player.points.pow(1.25).gte(tmp.reductionFactors.sc2.start)" class="overlayThing">Your points past {{ format(tmp.reductionFactors.sc2.start) }} are being slowed down by /{{ format(tmp.reductionFactors.sc2.eff, 2) }}!<br></span>

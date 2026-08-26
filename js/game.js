@@ -650,7 +650,6 @@ var interval = setInterval(function() {
 
 	if (PAUSE_EVERYTHING > 0) {
 		diff = 0
-		console.log(`pausing generation for ${PAUSE_EVERYTHING} ticks`)
 		PAUSE_EVERYTHING -= 1
 	}
 

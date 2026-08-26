@@ -452,7 +452,7 @@ addLayer('q', {
                 tmp[this.layer].doReset(false)
                 updateTemp()
             }
-        },
+        }
     },
     buyables: (() => {
         const upgrades = {
@@ -614,7 +614,6 @@ addLayer('q', {
                 }
                 if (Decimal.isNaN(x)) {
                     throw new Error(`NaN detected as input in upgrade type ${upgrade.type} #${upgrade.num} effect!`)
-                    return upgrade.preEffect(D(0), true)
                 }
 
                 let eff = upgrade.preEffect(D(x), false)
@@ -643,7 +642,7 @@ addLayer('q', {
                 if (upgrade.unavail()) { return D(-1e-12) }
 
                 if (upgrade.type === 0) {
-                    x = player.q.points;
+                    x = player[upgrade.layer].points;
                 }
                 
                 if (x.lt(upgrade.costD.main[0])) { return D(-1e-12) }
@@ -652,21 +651,21 @@ addLayer('q', {
                 i = D(x)
                 j = upgrade.costD.main
                 if (Decimal.isNaN(i)) {
-                    throw new Error(`[Layer: q, Type: buyable, ID: ${upgrade.id}] NaN detected in target resource!`)
+                    throw new Error(`[Layer: ${upgrade.layer}, Type: buyable, ID: ${upgrade.id}] NaN detected in target resource!`)
                 }
                 i = upgrade.scaleModifTarCost(i)
 
                 if (Decimal.isNaN(i)) {
                     console.info(`PROBLEM FUNCTION:`)
                     console.info(upgrade.scaleModifTarCost)
-                    throw new Error(`[Layer: q, Type: buyable, ID: ${upgrade.id}]NaN detected in target of id${upgrade.id} after modifier target cost!`)
+                    throw new Error(`[Layer: ${upgrade.layer}, Type: buyable, ID: ${upgrade.id}]NaN detected in target of id${upgrade.id} after modifier target cost!`)
                 }
                 i = i.layeradd10(-upgrade.costD.exp)
 
                 if (Decimal.isNaN(i)) {
                     // it's likely only NaN because the value is too low and the amount of logs would make it NaN
                     // or something earlier up has caused crap to happen, make it default into a 0 value
-                    console.warn(`[Layer: q, Type: buyable, ID: ${upgrade.id}] NaN detected (set to 0) after layeradd10 in target of id${upgrade.id} before scaling!`)
+                    console.warn(`[Layer: ${upgrade.layer}, Type: buyable, ID: ${upgrade.id}] NaN detected (set to 0) after layeradd10 in target of id${upgrade.id} before scaling!`)
                     return D(0)
                 }
 
@@ -689,19 +688,19 @@ addLayer('q', {
 
                 if (Decimal.isNaN(i)) {
                     // no clue what's happening
-                    console.warn(`[Layer: q, Type: buyable, ID: ${upgrade.id}] NaN detected (set to 0) after layeradd10 in target of id${upgrade.id} after main scaling! (main scaling causing NaN?)`)
+                    console.warn(`[Layer: ${upgrade.layer}, Type: buyable, ID: ${upgrade.id}] NaN detected (set to 0) after layeradd10 in target of id${upgrade.id} after main scaling! (main scaling causing NaN?)`)
                     return D(0)
                 }
 
                 if (Decimal.isNaN(i)) {
-                    console.warn(`[Layer: q, Type: buyable, ID: ${upgrade.id}] NaN detected (set to 0) after layeradd10 in target of id${upgrade.id} after modifers before scaleModifTarEff! (modifiers causing NaN?)`)
+                    console.warn(`[Layer: ${upgrade.layer}, Type: buyable, ID: ${upgrade.id}] NaN detected (set to 0) after layeradd10 in target of id${upgrade.id} after modifers before scaleModifTarEff! (modifiers causing NaN?)`)
                     return D(0)
                 }
 
                 i = upgrade.scaleModifTarEff(i)
 
                 if (Decimal.isNaN(i)) {
-                    console.warn(`[Layer: q, Type: buyable, ID: ${upgrade.id}] NaN detected (set to 0) after layeradd10 in target of id${upgrade.id} after scaleModifTarEff! (scaleModifTarEff causing NaN?)`)
+                    console.warn(`[Layer: ${upgrade.layer}, Type: buyable, ID: ${upgrade.id}] NaN detected (set to 0) after layeradd10 in target of id${upgrade.id} after scaleModifTarEff! (scaleModifTarEff causing NaN?)`)
                     return D(0)
                 }
                 return i
@@ -720,7 +719,7 @@ addLayer('q', {
             upgrade.display = () => {
                 // console.log(`%cbuyable id ${upgrade.id} detected ${shiftDown?'yes':'no'} shift`, `color: ${shiftDown?'#00FF00':'#FF0000'}`)
                 let txt;
-                txt = `You have ${format(player.q.buyables[upgrade.id], 0)} ${["Quaternion"][upgrade.type]} Buyable ${upgrade.num}.<br>`
+                txt = `You have ${format(player[upgrade.layer].buyables[upgrade.id], 0)} ${["Quaternion"][upgrade.type]} Buyable ${upgrade.num}.<br>`
                 if (upgrade.stupidHack()) {
                     txt += `Effect Base: `
                     txt += upgrade.dispEffBase()
@@ -753,13 +752,13 @@ addLayer('q', {
             upgrade.canAfford = () => {
                 let resource;
                 if (upgrade.type === 0) {
-                    resource = player.q.points;
+                    resource = player[upgrade.layer].points;
                 }
                 return resource.gte(upgrade.cost());
             }
             upgrade.buy = () => {
                 if (upgrade.type === 0) {
-                    player.q.points = player.q.points.sub(upgrade.cost());
+                    player[upgrade.layer].points = player[upgrade.layer].points.sub(upgrade.cost());
                 }
                 addBuyables(upgrade.layer, upgrade.id, 1);
             };
