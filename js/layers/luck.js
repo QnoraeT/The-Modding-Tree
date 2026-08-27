@@ -2,39 +2,84 @@
 
 const PET_DATA = {
     line: {
+        number: 1,
         name: "Line",
         chance: 0.1,
         colors: {
             fill: gRC(3.5, 1.0, 1.0),
+            cannotEquip: gRC(3.5, 0.2, 0.2),
             base: gRC(3.5, 0.2, 1.0),
             text: gRC(3.5, 1.0, 0.2),
         },
-        effect(lv) {
-
+        passiveEffs(lv) {
+            let eff = D(lv).sub(1)
+            eff = eff.mul(0.02).add(1)
+            return eff
+        },
+        passiveEffsDesc(eff) {
+            return `Raise luck by ^${format(eff, 2)}.`
+        },
+        activeEffs(lv) {
+            let eff = D(lv).sub(1)
+            eff = eff.mul(0.5).add(1)
+            return eff
+        },
+        activeEffsDesc(eff) {
+            return `Multiply luck by &times;${format(eff, 2)}`
         }
     },
     circle: {
+        number: 2,
         name: "Circle",
         chance: 0.04,
         colors: {
             fill: gRC(2.0, 1.0, 1.0),
+            cannotEquip: gRC(2.0, 0.2, 0.2),
             base: gRC(2.0, 0.2, 1.0),
             text: gRC(2.0, 1.0, 0.2),
         },
-        effect(lv) {
-
+        passiveEffs(lv) {
+            let eff = D(lv).sub(1)
+            eff = eff.pow_base(1.1)
+            return eff
+        },
+        passiveEffsDesc(eff) {
+            return `Raise point gain by ^${format(eff, 2)}`
+        },
+        activeEffs(lv) {
+            let eff = D(lv).sub(1)
+            eff = eff.pow_base(1.5)
+            return eff
+        },
+        activeEffsDesc(eff) {
+            return `Multiply Point Buyable 5 clicks by &times;${format(eff, 2)}`
         }
     },
     triangle: {
+        number: 3,
         name: "Triangle",
         chance: 0.01,
         colors: {
             fill: gRC(1.0, 1.0, 1.0),
+            cannotEquip: gRC(1.0, 0.2, 0.2),
             base: gRC(1.0, 0.2, 1.0),
             text: gRC(1.0, 1.0, 0.2),
         },
-        effect(lv) {
-
+        passiveEffs(lv) {
+            let eff = D(lv).sub(1)
+            eff = eff.pow_base(1.1)
+            return eff
+        },
+        passiveEffsDesc(eff) {
+            return `Hyper Scaling Interval is decreased by ^${format(eff.recip(), 2)}`
+        },
+        activeEffs(lv) {
+            let eff = D(lv).sub(1)
+            eff = eff.mul(0.025).add(1)
+            return eff
+        },
+        activeEffsDesc(eff) {
+            return `Hyper Scaling Points are increased by ^${format(eff, 3)}`
         }
     },
 }
@@ -48,7 +93,7 @@ addLayer('l', {
     hotkeys: [
         {key: 'l', description: "L: Reset for luck essence", onPress(){if (canReset(this.layer)) doReset(this.layer)}},
     ],
-    layerShown(){ return hasChallenge('q', 14) || Decimal.gt(player[this.layer].best, 0) },
+    layerShown(){ return challengeCompletions('p', 14).gte(1) || Decimal.gt(player[this.layer].best, 0) },
     startData() { return {
         unlocked: false,
         points: D(0),
@@ -220,6 +265,54 @@ addLayer('l', {
             }
         }
         return obj
+    },
+    petPassiveEffs() {
+        const obj = {}
+        for (let pet in player[this.layer].pets) {
+            if (PET_DATA[pet] != undefined) {
+                obj[pet] = PET_DATA[pet].passiveEffs(tmp[this.layer].petLevels[pet])
+            } else {
+                obj[pet] = 1
+            }
+        }
+        return obj
+    },
+    petActiveEffs() {
+        const obj = {}
+        for (let pet in player[this.layer].pets) {
+            if (PET_DATA[pet] != undefined) {
+                obj[pet] = PET_DATA[pet].activeEffs(tmp[this.layer].petLevels[pet])
+            } else {
+                obj[pet] = 1
+            }
+        }
+        return obj
+    },
+    petPassiveEffDesc() {
+        const obj = {}
+        for (let pet in player[this.layer].pets) {
+            if (PET_DATA[pet] != undefined) {
+                obj[pet] = PET_DATA[pet].passiveEffsDesc(tmp[this.layer].petPassiveEffs[pet])
+            } else {
+                obj[pet] = 1
+            }
+        }
+        return obj
+    },
+    petActiveEffDesc() {
+        const obj = {}
+        for (let pet in player[this.layer].pets) {
+            if (PET_DATA[pet] != undefined) {
+                obj[pet] = PET_DATA[pet].activeEffsDesc(tmp[this.layer].petActiveEffs[pet])
+            } else {
+                obj[pet] = 1
+            }
+        }
+        return obj
+    },
+    // doesn't need to be Decimal because there's way less than 1.8e308 pets
+    petEquipCap() {
+        return 1
     },
     clickables: {
         11: {
@@ -701,7 +794,7 @@ addLayer('l', {
                 dispEffBase() {
                     const currEffect = this.effect(player[this.layer].buyables[33])
                     const nextEffect = this.effect(player[this.layer].buyables[33].add(1))
-                    return `Raise Luck Energy's luck and RP effect base by ^${format(nextEffect.div(currEffect), 2)}. This multiplies luck and Roll Points by &times;${format(
+                    return `Raise Luck Energy's luck and RP effect base by +^${format(nextEffect.sub(currEffect), 2)}. This multiplies luck and Roll Points by &times;${format(
                         player[this.layer].totalEnergy.max(1).log10().div(10).add(1).pow(2).pow(nextEffect).add(player[this.layer].totalEnergy.div(1e24).max(1).pow(0.2).sub(1).min(1e7).mul(player[this.layer].totalEnergy.max(1e59).log10().div(59)))
                         .div(player[this.layer].totalEnergy.max(1).log10().div(10).add(1).pow(2).pow(currEffect).add(player[this.layer].totalEnergy.div(1e24).max(1).pow(0.2).sub(1).min(1e7).mul(player[this.layer].totalEnergy.max(1e59).log10().div(59))))
                         , 2)}.`
@@ -941,31 +1034,95 @@ addLayer('l', {
                     width: 500,
                     height: 40,
                     progress() {
-                        return tmp['l'].petLevels[pet].mod(1);
+                        return tmp[this.layer].petLevels[pet].mod(1);
                     },
                     display() {
-                        let currXP = player['l'].pets[pet];
-                        if (tmp['l'].petLevels[pet].gt(1)) {
-                            currXP = currXP.sub(tmp['l'].petLevels[pet].floor().sub(1).pow_base(1.01).sub(1).div(0.01).pow_base(2).sub(1).mul(10));
+                        let currXP = player[this.layer].pets[pet];
+                        if (tmp[this.layer].petLevels[pet].gt(1)) {
+                            currXP = currXP.sub(tmp[this.layer].petLevels[pet].floor().sub(1).pow_base(1.01).sub(1).div(0.01).pow_base(2).sub(1).mul(10));
                         }
 
-                        let nextXP = tmp['l'].petLevels[pet].gt(1)
-                            ? tmp['l'].petLevels[pet].floor().pow_base(1.01).sub(1).div(0.01).pow_base(2).sub(1).mul(10)
+                        let nextXP = tmp[this.layer].petLevels[pet].gt(1)
+                            ? tmp[this.layer].petLevels[pet].floor().pow_base(1.01).sub(1).div(0.01).pow_base(2).sub(1).mul(10)
                             : D(10);
-                        if (tmp['l'].petLevels[pet].gt(1)) {
-                            nextXP = nextXP.sub(tmp['l'].petLevels[pet].floor().sub(1).pow_base(1.01).sub(1).div(0.01).pow_base(2).sub(1).mul(10));
+                        if (tmp[this.layer].petLevels[pet].gt(1)) {
+                            nextXP = nextXP.sub(tmp[this.layer].petLevels[pet].floor().sub(1).pow_base(1.01).sub(1).div(0.01).pow_base(2).sub(1).mul(10));
                         }
-                        return `${(PET_DATA[pet] ?? { name: "Undefined" }).name} (${(PET_DATA[pet] ?? { chance: "Undefined" }).chance * 100}%) | Lv. ${format(tmp['l'].petLevels[pet].floor())} - ${format(currXP.round())} / ${format(nextXP.round())}`;
+                        return `${(PET_DATA[pet] ?? { name: "Undefined" }).name} (${(PET_DATA[pet] ?? { chance: "Undefined" }).chance * 100}%) | Lv. ${format(tmp[this.layer].petLevels[pet].floor())} - ${format(currXP.round())} / ${format(nextXP.round())}`;
                     },
                     fillStyle: {'background-color' : (PET_DATA[pet] ?? { colors: { fill: "#808080" } }).colors.fill},
                     baseStyle: {'background-color' : (PET_DATA[pet] ?? { colors: { base: "#000000" } }).colors.base},
                     textStyle: {'color': (PET_DATA[pet] ?? { colors: { text: "#ffffff" } }).colors.text},
                     unlocked() {
-                        return tmp['l'].petUnlocked[pet];
+                        return tmp[this.layer].petUnlocked[pet];
                     }
                 }
             }
             return obj;
+        })()
+    },
+    clickables: {
+        11: {
+            title: "Test your luck.",
+            display() {
+                return `${player[this.layer].cooldownRand.gt(0) ? ('You are on cooldown for ' + format(player[this.layer].cooldownRand, 1) + 's!<br>') : ''}Your last roll is ${format(player[this.layer].lastRand, 1)}. (1/${format(player[this.layer].lastRand.root(tmp[this.layer].luckPow).div(tmp[this.layer].luckMult), 1)})<br>Your best roll is ${format(player[this.layer].maxRand, 1)}. (1/${format(player[this.layer].maxRand.root(tmp[this.layer].luckPow).div(tmp[this.layer].luckMult), 1)})<br>You have rolled ${format(player[this.layer].totalRolls)} times.`
+            },
+            canClick() {
+                return player[this.layer].cooldownRand.lte(0) && player[this.layer].best.gt(0)
+            },
+            onClick() {
+                player[this.layer].cooldownRand = D(1)
+                player[this.layer].lastRand = tmp[this.layer].rollLol()
+                player[this.layer].rollPoints = player[this.layer].rollPoints.add(tmp[this.layer].rollPointGain)
+                player[this.layer].totalRolls = player[this.layer].totalRolls.add(1)
+
+                if (hasUpgrade('l', 13)) {
+                    let loss = player.p.buyable5Clicks.max(1e12).mul(0.1)
+                    player.p.buyable5Clicks = player.p.buyable5Clicks.sub(loss)
+                }
+            },
+            style: {
+                "min-width": "225px",
+                "min-height": "150px",
+                "margin": "5px",
+            }
+        },
+        ...(() => {
+            const obj = {}
+            for (let pet in PET_DATA) {
+                obj[PET_DATA[pet].number * 10 + 1001] = {
+                    title: `Equip ${PET_DATA[pet].name}.`,
+                    unlocked() {
+                        return tmp[this.layer].petUnlocked[pet];
+                    },
+                    display() {
+                        return `Currently: ${player[this.layer].petEquipped.includes(pet) ? 'Equipped' : 'Unequipped'}`
+                    },
+                    canClick() {
+                        return player[this.layer].petEquipped.includes(pet) || player[this.layer].petEquipped.length < tmp[this.layer].petEquipCap
+                    },
+                    onClick() {
+                        if (player[this.layer].petEquipped.includes(pet)) {
+                            player[this.layer].petEquipped.splice(player[this.layer].petEquipped.indexOf(pet), 1)
+                        } else {
+                            player[this.layer].petEquipped.push(pet)
+                        }
+                    },
+                    style() {
+                        return {
+                            "background-color": player[this.layer].petEquipped.includes(pet) 
+                                ? PET_DATA[pet].colors.fill
+                                : player[this.layer].petEquipped.length >= tmp[this.layer].petEquipCap
+                                    ? PET_DATA[pet].colors.cannotEquip
+                                    : PET_DATA[pet].colors.base,
+                            "color": player[this.layer].petEquipped.includes(pet)
+                                ? PET_DATA[pet].colors.base
+                                : PET_DATA[pet].colors.text
+                        }
+                    }
+                }
+            }
+            return obj
         })()
     },
     tabFormat: {
@@ -1007,9 +1164,30 @@ addLayer('l', {
                 "main-display",
                 ["prestige-button", ""],
                 "blank",
-                ["bar", "lineXP"],
-                ["bar", "circleXP"],
-                ["bar", "triangleXP"],
+                ["display-text",
+                function() { return `You can equip <h2 style="color: #FFFFFF; font-size: 26px; text-shadow: #FFFFFF 0px 0px 10px;">${format(player[this.layer].petEquipped.length)} / ${format(tmp[this.layer].petEquipCap)}</h2> pets.` }],
+                "blank",
+                ...(() => {
+                    const arr = []
+                    for (let pet in PET_DATA) {
+                        arr.push(
+                            ["row", 
+                                [
+                                    ["clickables", [PET_DATA[pet].number + 100]], 
+                                    ["column", [
+                                        ["bar", pet + "XP"],
+                                        "blank",
+                                        ["display-text",
+                                        function() { return `(${player[this.layer].petEquipped.includes(pet) ? 'Active' : 'Inactive'}) ${tmp[this.layer].petActiveEffDesc[pet]}` }],
+                                        ["display-text",
+                                        function() { return `(Passive) ${tmp[this.layer].petPassiveEffDesc[pet]}` }],
+                                    ]]
+                                ]
+                            ]
+                        )
+                    }
+                    return arr
+                })()
             ],
             unlocked(){
                 return challengeCompletions('p', 12).gte(14)
