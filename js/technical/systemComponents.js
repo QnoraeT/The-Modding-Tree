@@ -102,6 +102,7 @@ var systemComponents = {
 			`
 	},
 
+	// i have to do ( ?? object_lmao) because then it shows errors at the first frame, even though it doesn't effect the game
 	'overlay-head': {
 		template: `			
 		<div class="overlayThing" style="padding-bottom:7px; width: 90%; z-index: 1000; position: relative">
@@ -117,10 +118,10 @@ var systemComponents = {
 		<span v-if="player.points.lt('1e1e6')"  class="overlayThing"> {{modInfo.pointsName}}</span>
 		<br>
 		<span v-if="PAUSE_EVERYTHING >= 1" class="overlayThing">Generation is being paused for {{ PAUSE_EVERYTHING }} ticks!<br></span>
-		<span class="overlayThing">Your points are naturally slowing down by /{{ format(tmp.reductionFactors.dilate.eff, 2) }}!<br></span>
-		<span v-if="player.points.pow(1.25).gte(tmp.reductionFactors.sc1.start)" class="overlayThing">Your points past {{ format(tmp.reductionFactors.sc1.start) }} are being slowed down by /{{ format(tmp.reductionFactors.sc1.eff, 2) }}!<br></span>
-		<span v-if="player.points.pow(1.25).gte(tmp.reductionFactors.sc2.start)" class="overlayThing">Your points past {{ format(tmp.reductionFactors.sc2.start) }} are being slowed down by /{{ format(tmp.reductionFactors.sc2.eff, 2) }}!<br></span>
-		<span v-if="player.points.log10().pow(1.25).gte(tmp.reductionFactors.sc3.start.log10())" class="overlayThing">Your points past {{ format(tmp.reductionFactors.sc3.start) }} are being slowed down by /{{ format(tmp.reductionFactors.sc3.eff, 2) }}!<br></span>
+		<span class="overlayThing">Your points are naturally slowing down by /{{ format((tmp.reductionFactors ?? { dilate: { eff: D(1) } } ).dilate.eff, 2) }}!<br></span>
+		<span v-if="player.points.pow(1.25).gte((tmp.reductionFactors ?? { sc1: { start: D(Infinity), eff: D(1) } }).sc1.start)" class="overlayThing">Your points past {{ format((tmp.reductionFactors ?? { sc1: { start: D(Infinity), eff: D(1) } }).sc1.start) }} are being slowed down by /{{ format((tmp.reductionFactors ?? { sc1: { start: D(Infinity), eff: D(1) } }).sc1.eff, 2) }}!<br></span>
+		<span v-if="player.points.pow(1.25).gte((tmp.reductionFactors ?? { sc2: { start: D(Infinity), eff: D(1) } }).sc2.start)" class="overlayThing">Your points past {{ format((tmp.reductionFactors ?? { sc2: { start: D(Infinity), eff: D(1) } }).sc2.start) }} are being slowed down by /{{ format((tmp.reductionFactors ?? { sc2: { start: D(Infinity), eff: D(1) } }).sc2.eff, 2) }}!<br></span>
+		<span v-if="player.points.log10().pow(1.25).gte((tmp.reductionFactors ?? { sc3: { start: D(Infinity), eff: D(1) } }).sc3.start.log10())" class="overlayThing">Your points past {{ format((tmp.reductionFactors ?? { sc3: { start: D(Infinity), eff: D(1) } }).sc3.start) }} are being slowed down by /{{ format((tmp.reductionFactors ?? { sc3: { start: D(Infinity), eff: D(1) } }).sc3.eff, 2) }}!<br></span>
 		<span v-if="canGenPoints()"  class="overlayThing">({{tmp.other.oompsMag != 0 ? format(tmp.other.oomps) + " OOM" + (tmp.other.oompsMag < 0 ? "^OOM" : tmp.other.oompsMag > 1 ? "^" + tmp.other.oompsMag : "") + "s" : format(player.calcPointGen, 3)}}/sec)</span>
 		<div v-for="thing in tmp.displayThings" class="overlayThing"><span v-if="thing" v-html="thing"></span></div>
 	</div>

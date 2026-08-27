@@ -482,6 +482,7 @@ addLayer('p', {
             i = i.mul(25)
         }
         i = i.mul([1, 1.5, 3, 9, 45, 360][challengeCompletions(this.layer, 23).toNumber()])
+        i = i.mul(tmp.l.buyables[22].effect)
 
         return i
     },
@@ -811,8 +812,8 @@ addLayer('p', {
 
                     j = D(2)
                     j = j.add(tmp[this.layer].buyables[12].effect)
-                    j = j.mul(tmp[this.layer].buyables[13].effect.base)
                     if (hasUpgrade(this.layer, 14)) { j = j.add(upgradeEffect(this.layer, 14)) }
+                    j = j.mul(tmp[this.layer].buyables[13].effect.base)
                     if (inChallenge(this.layer, 12) && challengeCompletions(this.layer, 12).gte(9)) { j = j.sub(1).div(3).add(1) }
 
                     i = Decimal.pow(j, i)
@@ -1118,7 +1119,7 @@ addLayer('p', {
                 dispEffBase() {
                     const currEffect = this.effect(player[this.layer].buyables[15])
                     const nextEffect = this.effect(player[this.layer].buyables[15].add(1))
-                    return `^${format(nextEffect.div(currEffect), 4)} point gain.`
+                    return `+^${format(nextEffect.sub(currEffect), 4)} point gain.`
                 },
                 scaleModifEffective(x) {
                     return x
@@ -1796,6 +1797,9 @@ addLayer('p', {
                     if (hasUpgrade('p', 411)) {
                         x = x.div(upgradeEffect('p', 411))
                     }
+                    if (challengeCompletions('p', 12).gte(12)) {
+                        x = x.mul(0.95)
+                    }
                     return x
                 },
                 scaleModifCost(x) {
@@ -1805,6 +1809,9 @@ addLayer('p', {
                     return x
                 },
                 scaleModifTarEff(x) {
+                    if (challengeCompletions('p', 12).gte(12)) {
+                        x = x.div(0.95)
+                    }
                     if (hasUpgrade('p', 411)) {
                         x = x.mul(upgradeEffect('p', 411))
                     }
@@ -1837,6 +1844,9 @@ addLayer('p', {
                     return `Check Tier Milestones...`
                 },
                 scaleModifEffective(x) {
+                    if (challengeCompletions('p', 12).gte(13)) {
+                        x = x.mul(0.95)
+                    }
                     return x
                 },
                 scaleModifCost(x) {
@@ -1846,6 +1856,9 @@ addLayer('p', {
                     return x
                 },
                 scaleModifTarEff(x) {
+                    if (challengeCompletions('p', 12).gte(13)) {
+                        x = x.div(0.95)
+                    }
                     return x
                 },
                 scaleModifTarCost(x) {
@@ -1916,6 +1929,9 @@ addLayer('p', {
                             if (hasUpgrade('l', 14)) {
                                 j = j.add(upgradeEffect('l', 14))
                             }
+                            if (hasUpgrade(this.layer, 61)) {
+                                j = j.mul(upgradeEffect(this.layer, 61))
+                            }
                             
                             eff = Decimal.pow(j, eff.sub(1).max(0))
 
@@ -1976,7 +1992,9 @@ addLayer('p', {
 
                     i = {
                         mult: Decimal.pow(j, i),
-                        free: sumHarmonicSeries(i.max(0).add(1))
+                        free: hasUpgrade(this.layer, 63) && i.gte(20)
+                            ? i.sub(12).mul(0.4)
+                            : sumHarmonicSeries(i.max(0).add(1))
                     }
                     return i;
                 },
@@ -2091,12 +2109,18 @@ addLayer('p', {
                     return `Multiply Hyper Scaling Point gain by &times;${format(nextEffect.div(currEffect), 2)}.`
                 },
                 scaleModifEffective(x) {
+                    if (challengeCompletions('p', 12).gte(14)) {
+                        x = x.mul(0.95)
+                    }
                     return x
                 },
                 scaleModifCost(x) {
                     return x
                 },
                 scaleModifTarEff(x) {
+                    if (challengeCompletions('p', 12).gte(14)) {
+                        x = x.div(0.95)
+                    }
                     return x
                 },
                 scaleModifTarCost(x) {
@@ -2133,12 +2157,18 @@ addLayer('p', {
                     return `Reduce the HSP interval by ^${format(nextEffect.div(currEffect), 3)}.`
                 },
                 scaleModifEffective(x) {
+                    if (challengeCompletions('p', 12).gte(14)) {
+                        x = x.mul(0.95)
+                    }
                     return x
                 },
                 scaleModifCost(x) {
                     return x
                 },
                 scaleModifTarEff(x) {
+                    if (challengeCompletions('p', 12).gte(14)) {
+                        x = x.div(0.95)
+                    }
                     return x
                 },
                 scaleModifTarCost(x) {
@@ -2175,12 +2205,18 @@ addLayer('p', {
                     return `Point to HSP generation speed is raised by +^${format(nextEffect.sub(currEffect), 2)}.  (&times;${format(player.p.hsChalBest.log10().div(inChallenge('q', 13) ? 3000 : 3e5).pow(inChallenge('q', 13) ? 4 : 12).pow(nextEffect.sub(currEffect)), 1)} to HSP gain)`
                 },
                 scaleModifEffective(x) {
+                    if (challengeCompletions('p', 12).gte(14)) {
+                        x = x.mul(0.95)
+                    }
                     return x
                 },
                 scaleModifCost(x) {
                     return x
                 },
                 scaleModifTarEff(x) {
+                    if (challengeCompletions('p', 12).gte(14)) {
+                        x = x.div(0.95)
+                    }
                     return x
                 },
                 scaleModifTarCost(x) {
@@ -2796,7 +2832,7 @@ addLayer('p', {
                         return `PB2's base is increased by +${format(0.07, 3)}, scales ${formatPerc(1/(1-0.1), 2)} slower, and PB1's effect is dilated by ^${format(1.005, 3)}`
                     case 10:
                         if (hasUpgrade('l', 26)) {
-                            return `PB2 is boosted by ^${format(2, 1)}. Super Scaling Points increase Hyper Scaling Point gain. (^${format(player[this.layer].ssPoints.max('e100').log10().log10().log2().sub(1).div(50).add(1), 3)})`
+                            return `PB2 is boosted by ^${format(2, 1)}. Super Scaling Points increase Hyper Scaling Point gain. (^${format(player[this.layer].ssPoints.max('e100').log10().log10().log2().sub(1).div(50).add(1), 3)}) Unlock Luck Buyables.`
                         }
                         return `Maxed out lol`
                     case 11:
@@ -2828,7 +2864,7 @@ addLayer('p', {
                 }
                 return [
                     D(1e6), D(1e8), D(1e10), D(1e12), D(1e14), D(1e14), D(1e16), D(1e13), D(1e18), D(1e18),
-                    D('ee12'), D('ee16'), D('ee20'), D('ee25'), D('ee36'), D('ee45'), D('ee54'), D('ee63'), D('ee81'), D('ee100')
+                    D('ee12'), D('ee14'), D('e4e14'), D('e2e15'), D('ee36'), D('ee45'), D('ee54'), D('ee63'), D('ee81'), D('ee100')
                 ][challengeCompletions(this.layer, 12).min(lim).toNumber()]
             },
             goalDescription() {
@@ -3439,8 +3475,12 @@ addLayer('p', {
             currencyLocation() {
                 return player[this.layer]
             },
-            effect() { 
-                return D(0.1)
+            effect() {
+                let i = D(0.1)
+                if (hasUpgrade(this.layer, 62)) {
+                    i = i.add(0.05)
+                }
+                return i
             },
             effectDisplay() { return `^${format(this.effect(), 2)}` }, 
         },

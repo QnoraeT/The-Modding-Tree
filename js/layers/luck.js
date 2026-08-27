@@ -1,5 +1,44 @@
 "use strict";
 
+const PET_DATA = {
+    line: {
+        name: "Line",
+        chance: 0.1,
+        colors: {
+            fill: gRC(3.5, 1.0, 1.0),
+            base: gRC(3.5, 0.2, 1.0),
+            text: gRC(3.5, 1.0, 0.2),
+        },
+        effect(lv) {
+
+        }
+    },
+    circle: {
+        name: "Circle",
+        chance: 0.04,
+        colors: {
+            fill: gRC(2.0, 1.0, 1.0),
+            base: gRC(2.0, 0.2, 1.0),
+            text: gRC(2.0, 1.0, 0.2),
+        },
+        effect(lv) {
+
+        }
+    },
+    triangle: {
+        name: "Triangle",
+        chance: 0.01,
+        colors: {
+            fill: gRC(1.0, 1.0, 1.0),
+            base: gRC(1.0, 0.2, 1.0),
+            text: gRC(1.0, 1.0, 0.2),
+        },
+        effect(lv) {
+
+        }
+    },
+}
+
 addLayer('l', {
     name: "luck essence", // This is optional, only used in a few places, If absent it just uses the layer id.
     symbol: 'L', // This appears on the layer's node. Default is the id with the first letter capitalized
@@ -22,7 +61,19 @@ addLayer('l', {
         rollPoints: D(0),
         energy: D(0),
         totalEnergy: D(0),
-        dimensionAccu: [D(0), D(0), D(0), D(0), D(0), D(0), D(0), D(0)]
+        dimensionAccu: [D(0), D(0), D(0), D(0), D(0), D(0), D(0), D(0)],
+        pets: {
+            line: D(0),
+            circle: D(0),
+            triangle: D(0),
+            square: D(0),
+            pentagon: D(0),
+            hexagon: D(0),
+            sphere: D(0),
+            cube: D(0),
+            pyramid: D(0)
+        },
+        petEquipped: []
     }},
     color: "#ffff00",
     requires: D('e9e15'), // Can be a function that takes requirement increases into account
@@ -99,6 +150,7 @@ addLayer('l', {
     luckMult() {
         let i = D(1)
         i = i.mul(tmp[this.layer].energyEff.normal)
+        i = i.mul(tmp[this.layer].buyables[23].effect)
         return i
     },
     luckPow() {
@@ -125,6 +177,7 @@ addLayer('l', {
         if (hasUpgrade('l', 22)) {
             i = i.mul(player[this.layer].rollPoints.max(10).log10().pow(upgradeEffect('l', 22)))
         }
+        i = i.mul(tmp[this.layer].buyables[21].effect)
         return i
     },
     energyPS() {
@@ -133,10 +186,40 @@ addLayer('l', {
     energyEff() {
         let i = player[this.layer].totalEnergy
         i = {
-            normal: i.max(1).log10().div(10).add(1).pow(2).add(i.div(1e24).max(1).pow(0.2).sub(1).min(1e7).mul(i.max(1e59).log10().div(59))),
+            normal: i.max(1).log10().div(10).add(1).pow(2).pow(tmp[this.layer].buyables[33].effect).add(i.div(1e24).max(1).pow(0.2).sub(1).min(1e7).mul(i.max(1e59).log10().div(59))),
             prest: i.max(1).log2().add(1).add(i.pow(0.1))
         }
         return i
+    },
+    petLevels() {
+        const obj = {}
+        for (let pet in player[this.layer].pets) {
+            // pet level formula: smoothExp(smoothExp(lv.sub(2), 1.01), 2).mul(10)
+            // a.k.a. lv.sub(2).pow_base(1.01).sub(1).div(0.01).pow_base(2).sub(1).mul(10)
+            // Lv1: 0
+            // Lv2: 10
+            // Lv3: ~20
+            // Lv4: ~40, etc.
+            obj[pet] = player[this.layer].pets[pet].ceil().add(0.49).lt(10)
+                ? D(1)
+                : player[this.layer].pets[pet].ceil().add(0.49).div(10).add(1).log2().mul(0.01).add(1).log(1.01).add(1)
+        }
+        return obj
+    },
+    petUnlocked() {
+        const obj = {}
+        for (let pet in player[this.layer].pets) {
+            obj[pet] = false
+
+            switch (pet) {
+                case "line":
+                case "circle":
+                case "triangle":
+                    obj[pet] = challengeCompletions('p', 12).gte(14)
+                    break;
+            }
+        }
+        return obj
     },
     clickables: {
         11: {
@@ -275,6 +358,7 @@ addLayer('l', {
             },
             effect() { 
                 let ret = D(1)
+                ret = ret.add(tmp[this.layer].buyables[31].effect)
                 return ret;
             },
             effectDisplay() { return `&times;log10(x)<sup>${format(this.effect(), 2)}</sup>` }, 
@@ -291,6 +375,7 @@ addLayer('l', {
             },
             effect() { 
                 let ret = D(5)
+                ret = ret.add(tmp[this.layer].buyables[32].effect)
                 return ret;
             },
             effectDisplay() { return `+${format(this.effect(), 1)}&times;log10(x)` }, 
@@ -358,18 +443,18 @@ addLayer('l', {
                             return x
                         },
                         preEffect(x, override) {
-                            let i = D(x)
+                            let eff = D(x)
 
                             let j = D(2)
                             
-                            i = Decimal.pow(j, i.sub(1).max(0))
+                            eff = Decimal.pow(j, eff.sub(1).max(0))
                             if (hasUpgrade('l', 22)) {
-                                i = i.mul(i.max(10).log10().pow(upgradeEffect('l', 22)))
+                                eff = eff.mul(eff.max(10).log10().pow(upgradeEffect('l', 22)))
                             }
                             if (hasUpgrade('l', 24)) {
-                                i = i.mul(upgradeEffect('l', 24))
+                                eff = eff.mul(upgradeEffect('l', 24))
                             }
-                            return i;
+                            return eff;
                         },
                         dispEffect() {
                             const currEffect = this.effect(player[this.layer].buyables[11 + i])
@@ -396,6 +481,244 @@ addLayer('l', {
                 }
                 return obj
             })(),
+            21: {
+                type: 1,
+                num: 1,
+                costD: {type: 0, exp: 0, main: [D(1e40), D(5), D(1.01)]},
+                unlocked() { return challengeCompletions('p', 12).gte(11) },
+                unavail() {
+                    let x = false
+                    return x
+                },
+                preEffect(x, override) {
+                    let eff = D(x)
+
+                    let j = D(2)
+                    
+                    eff = Decimal.pow(j, eff)
+                    return eff;
+                },
+                dispEffect() {
+                    const currEffect = this.effect(player[this.layer].buyables[21])
+                    return `Roll Points are increased by &times;${format(currEffect, 1)}.`
+                },
+                dispEffBase() {
+                    const currEffect = this.effect(player[this.layer].buyables[21])
+                    const nextEffect = this.effect(player[this.layer].buyables[21].add(1))
+                    return `Roll Points are increased by &times;${format(nextEffect.div(currEffect), 1)}.` 
+                },
+                scaleModifEffective(x) {
+                    return x
+                },
+                scaleModifCost(x) {
+                    return x
+                },
+                scaleModifTarEff(x) {
+                    return x
+                },
+                scaleModifTarCost(x) {
+                    return x
+                },
+            },
+            22: {
+                type: 1,
+                num: 2,
+                costD: {type: 0, exp: 0, main: [D(1e45), D(8), D(1.04)]},
+                unlocked() { return challengeCompletions('p', 12).gte(11) },
+                unavail() {
+                    let x = false
+                    return x
+                },
+                preEffect(x, override) {
+                    let eff = D(x)
+
+                    let j = D(1.5)
+                    
+                    eff = Decimal.pow(j, eff)
+                    return eff;
+                },
+                dispEffect() {
+                    const currEffect = this.effect(player[this.layer].buyables[22])
+                    return `Point Buyable 5 clicks are increased by &times;${format(currEffect, 1)}.`
+                },
+                dispEffBase() {
+                    const currEffect = this.effect(player[this.layer].buyables[22])
+                    const nextEffect = this.effect(player[this.layer].buyables[22].add(1))
+                    return `Point Buyable 5 clicks are increased by &times;${format(nextEffect.div(currEffect), 1)}.` 
+                },
+                scaleModifEffective(x) {
+                    return x
+                },
+                scaleModifCost(x) {
+                    return x
+                },
+                scaleModifTarEff(x) {
+                    return x
+                },
+                scaleModifTarCost(x) {
+                    return x
+                },
+            },
+            23: {
+                type: 1,
+                num: 3,
+                costD: {type: 0, exp: 1, main: [D(50), D(1.04), D(1.001)]},
+                unlocked() { return challengeCompletions('p', 12).gte(11) },
+                unavail() {
+                    let x = false
+                    return x
+                },
+                preEffect(x, override) {
+                    let eff = D(x)
+
+                    let j = D(1.6)
+                    
+                    eff = Decimal.pow(j, eff)
+                    return eff;
+                },
+                dispEffect() {
+                    const currEffect = this.effect(player[this.layer].buyables[23])
+                    return `Luck is increased by &times;${format(currEffect, 1)}.`
+                },
+                dispEffBase() {
+                    const currEffect = this.effect(player[this.layer].buyables[23])
+                    const nextEffect = this.effect(player[this.layer].buyables[23].add(1))
+                    return `Luck is increased by &times;${format(nextEffect.div(currEffect), 1)}.` 
+                },
+                scaleModifEffective(x) {
+                    return x
+                },
+                scaleModifCost(x) {
+                    return x
+                },
+                scaleModifTarEff(x) {
+                    return x
+                },
+                scaleModifTarCost(x) {
+                    return x
+                },
+            },
+            31: {
+                type: 1,
+                num: 4,
+                costD: {type: 1, exp: 0, main: [D(1e63), D(1000), D(1.25)]},
+                unlocked() { return challengeCompletions('p', 12).gte(11) },
+                unavail() {
+                    let x = false
+                    return x
+                },
+                preEffect(x, override) {
+                    let eff = D(x)
+
+                    let j = D(0.25)
+                    
+                    eff = Decimal.mul(j, eff)
+                    return eff;
+                },
+                dispEffect() {
+                    const currEffect = this.effect(player[this.layer].buyables[31])
+                    return `Add +${format(currEffect, 2)} to Self-Synergy's effect.`
+                },
+                dispEffBase() {
+                    const currEffect = this.effect(player[this.layer].buyables[31])
+                    const nextEffect = this.effect(player[this.layer].buyables[31].add(1))
+                    return `Add +${format(nextEffect.sub(currEffect), 2)} to Self-Synergy's effect.` 
+                },
+                scaleModifEffective(x) {
+                    return x
+                },
+                scaleModifCost(x) {
+                    return x
+                },
+                scaleModifTarEff(x) {
+                    return x
+                },
+                scaleModifTarCost(x) {
+                    return x
+                },
+            },
+            32: {
+                type: 1,
+                num: 5,
+                costD: {type: 1, exp: 0, main: [D(1e93), D(1000), D(1.5)]},
+                unlocked() { return challengeCompletions('p', 12).gte(11) },
+                unavail() {
+                    let x = false
+                    return x
+                },
+                preEffect(x, override) {
+                    let eff = D(x)
+
+                    let j = D(1)
+                    
+                    eff = Decimal.mul(j, eff)
+                    return eff;
+                },
+                dispEffect() {
+                    const currEffect = this.effect(player[this.layer].buyables[32])
+                    return `Add +${format(currEffect, 1)} to Cross Contamination's effect.`
+                },
+                dispEffBase() {
+                    const currEffect = this.effect(player[this.layer].buyables[32])
+                    const nextEffect = this.effect(player[this.layer].buyables[32].add(1))
+                    return `Add +${format(nextEffect.sub(currEffect), 1)} to Cross Contamination's effect.` 
+                },
+                scaleModifEffective(x) {
+                    return x
+                },
+                scaleModifCost(x) {
+                    return x
+                },
+                scaleModifTarEff(x) {
+                    return x
+                },
+                scaleModifTarCost(x) {
+                    return x
+                },
+            },
+            33: {
+                type: 1,
+                num: 6,
+                costD: {type: 1, exp: 0, main: [D(1e123), D(1000), D(1.75)]},
+                unlocked() { return challengeCompletions('p', 12).gte(11) },
+                unavail() {
+                    let x = false
+                    return x
+                },
+                preEffect(x, override) {
+                    let eff = D(x)
+
+                    eff = sumHarmonicSeries(eff.add(1).max(1)).add(1)
+                    return eff;
+                },
+                dispEffect() {
+                    const currEffect = this.effect(player[this.layer].buyables[33])
+                    return `Raise Luck Energy's luck and RP effect base by ^${format(currEffect, 2)}. This multiplies luck and Roll Points by &times;${format(
+                        player[this.layer].totalEnergy.max(1).log10().div(10).add(1).pow(2).pow(currEffect).add(player[this.layer].totalEnergy.div(1e24).max(1).pow(0.2).sub(1).min(1e7).mul(player[this.layer].totalEnergy.max(1e59).log10().div(59)))
+                        .div(player[this.layer].totalEnergy.max(1).log10().div(10).add(1).pow(2).add(player[this.layer].totalEnergy.div(1e24).max(1).pow(0.2).sub(1).min(1e7).mul(player[this.layer].totalEnergy.max(1e59).log10().div(59))))
+                        , 2)}.`
+                },
+                dispEffBase() {
+                    const currEffect = this.effect(player[this.layer].buyables[33])
+                    const nextEffect = this.effect(player[this.layer].buyables[33].add(1))
+                    return `Raise Luck Energy's luck and RP effect base by ^${format(nextEffect.div(currEffect), 2)}. This multiplies luck and Roll Points by &times;${format(
+                        player[this.layer].totalEnergy.max(1).log10().div(10).add(1).pow(2).pow(nextEffect).add(player[this.layer].totalEnergy.div(1e24).max(1).pow(0.2).sub(1).min(1e7).mul(player[this.layer].totalEnergy.max(1e59).log10().div(59)))
+                        .div(player[this.layer].totalEnergy.max(1).log10().div(10).add(1).pow(2).pow(currEffect).add(player[this.layer].totalEnergy.div(1e24).max(1).pow(0.2).sub(1).min(1e7).mul(player[this.layer].totalEnergy.max(1e59).log10().div(59))))
+                        , 2)}.`
+                },
+                scaleModifEffective(x) {
+                    return x
+                },
+                scaleModifCost(x) {
+                    return x
+                },
+                scaleModifTarEff(x) {
+                    return x
+                },
+                scaleModifTarCost(x) {
+                    return x
+                },
+            },
         };
 
         // ! NOTE!! this.layer doesn't work in the custom buyable script TwT
@@ -441,6 +764,9 @@ addLayer('l', {
                     } else {
                         x = player[upgrade.layer].energy;
                     }
+                }
+                if (upgrade.type === 1) {
+                    x = player[upgrade.layer].rollPoints;
                 }
                 
                 if (x.lt(upgrade.costD.main[0])) { return D(-1e-12) }
@@ -508,6 +834,9 @@ addLayer('l', {
                 if (upgrade.type === 0) {
                     return `Luck Dimension ${upgrade.num}`
                 }
+                if (upgrade.type === 1) {
+                    return `Luck Buyable ${upgrade.num}`
+                }
             },
 
             upgrade.stupidHack = () => {
@@ -517,7 +846,12 @@ addLayer('l', {
             upgrade.display = () => {
                 // console.log(`%cbuyable id ${upgrade.id} detected ${shiftDown?'yes':'no'} shift`, `color: ${shiftDown?'#00FF00':'#FF0000'}`)
                 let txt;
-                txt = `Amount: ${format(player[upgrade.layer].dimensionAccu[upgrade.num - 1])} (${format(player[upgrade.layer].buyables[upgrade.id])}), Mult: &times;${format(upgrade.effect(player[upgrade.layer].buyables[upgrade.id]))}<br>`
+                if (upgrade.type === 0) {
+                    txt = `Amount: ${format(player[upgrade.layer].dimensionAccu[upgrade.num - 1])} (${format(player[upgrade.layer].buyables[upgrade.id])}), Mult: &times;${format(upgrade.effect(player[upgrade.layer].buyables[upgrade.id]))}<br>`
+                }
+                if (upgrade.type === 1) {
+                    txt = `You have ${format(player[upgrade.layer].buyables[upgrade.id], 0)} Luck Buyable ${upgrade.num}.<br>`
+                }
 
                 if (upgrade.stupidHack()) {
                     txt += `Effect Base: `
@@ -557,6 +891,9 @@ addLayer('l', {
                             txt += `Luck Energy`
                         }
                     }
+                    if (upgrade.type === 1) {
+                        txt += `Roll Points`
+                    }
                 }
                 return txt
             }
@@ -569,6 +906,9 @@ addLayer('l', {
                         resource = player[upgrade.layer].energy;
                     }
                 }
+                if (upgrade.type === 1) {
+                    resource = player[upgrade.layer].rollPoints;
+                }
 
                 return resource.gte(upgrade.cost());
             }
@@ -580,6 +920,9 @@ addLayer('l', {
                         player[upgrade.layer].energy = player[upgrade.layer].energy.sub(upgrade.cost());
                     }
                 }
+                if (upgrade.type === 1) {
+                    player[upgrade.layer].rollPoints = player[upgrade.layer].rollPoints.sub(upgrade.cost());
+                }
 
                 addBuyables(upgrade.layer, upgrade.id, 1);
             };
@@ -589,6 +932,42 @@ addLayer('l', {
         }
         return upgrades;
     })(),
+    bars: {
+        ...(() => {
+            const obj = {}
+            for (let pet in PET_DATA) {
+                obj[pet + 'XP'] = {
+                    direction: RIGHT,
+                    width: 500,
+                    height: 40,
+                    progress() {
+                        return tmp['l'].petLevels[pet].mod(1);
+                    },
+                    display() {
+                        let currXP = player['l'].pets[pet];
+                        if (tmp['l'].petLevels[pet].gt(1)) {
+                            currXP = currXP.sub(tmp['l'].petLevels[pet].floor().sub(1).pow_base(1.01).sub(1).div(0.01).pow_base(2).sub(1).mul(10));
+                        }
+
+                        let nextXP = tmp['l'].petLevels[pet].gt(1)
+                            ? tmp['l'].petLevels[pet].floor().pow_base(1.01).sub(1).div(0.01).pow_base(2).sub(1).mul(10)
+                            : D(10);
+                        if (tmp['l'].petLevels[pet].gt(1)) {
+                            nextXP = nextXP.sub(tmp['l'].petLevels[pet].floor().sub(1).pow_base(1.01).sub(1).div(0.01).pow_base(2).sub(1).mul(10));
+                        }
+                        return `${(PET_DATA[pet] ?? { name: "Undefined" }).name} (${(PET_DATA[pet] ?? { chance: "Undefined" }).chance * 100}%) | Lv. ${format(tmp['l'].petLevels[pet].floor())} - ${format(currXP.round())} / ${format(nextXP.round())}`;
+                    },
+                    fillStyle: {'background-color' : (PET_DATA[pet] ?? { colors: { fill: "#808080" } }).colors.fill},
+                    baseStyle: {'background-color' : (PET_DATA[pet] ?? { colors: { base: "#000000" } }).colors.base},
+                    textStyle: {'color': (PET_DATA[pet] ?? { colors: { text: "#ffffff" } }).colors.text},
+                    unlocked() {
+                        return tmp['l'].petUnlocked[pet];
+                    }
+                }
+            }
+            return obj;
+        })()
+    },
     tabFormat: {
         // ! NOTE!! IN tabFormat, this.layer DOESN'T WORK !!!
         "Main": {
@@ -601,6 +980,7 @@ addLayer('l', {
                 ["clickables", [1]],
                 "blank",
                 ["upgrades", [1, 2]],
+                ["buyables", [2, 3]]
             ],
             unlocked(){
                 return true
@@ -620,6 +1000,19 @@ addLayer('l', {
             ],
             unlocked(){
                 return hasUpgrade('l', 15)
+            },
+        },
+        "Pets": {
+            content: [
+                "main-display",
+                ["prestige-button", ""],
+                "blank",
+                ["bar", "lineXP"],
+                ["bar", "circleXP"],
+                ["bar", "triangleXP"],
+            ],
+            unlocked(){
+                return challengeCompletions('p', 12).gte(14)
             },
         }
     }
