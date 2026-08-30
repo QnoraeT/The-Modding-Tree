@@ -613,10 +613,13 @@ addLayer('q', {
                     return upgrade.preEffect(D(0), true)
                 }
                 if (Decimal.isNaN(x)) {
-                    throw new Error(`NaN detected as input in upgrade type ${upgrade.type} #${upgrade.num} effect!`)
+                    throw new Error(`[Layer: ${upgrade.layer}, Type: buyable, ID: ${upgrade.id}] NaN detected as input in upgrade type ${upgrade.type} #${upgrade.num} effect!`)
                 }
 
                 let eff = upgrade.preEffect(D(x), false)
+                if (Decimal.isNaN(x)) {
+                    throw new Error(`[Layer: ${upgrade.layer}, Type: buyable, ID: ${upgrade.id}] NaN detected as effect in upgrade type ${upgrade.type} #${upgrade.num} effect!`)
+                }
                 return eff
             }
 

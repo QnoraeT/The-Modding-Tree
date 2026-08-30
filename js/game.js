@@ -469,6 +469,13 @@ function gameLoop(diff) {
 		tmp.reductionFactors.sc2.exp = tmp.reductionFactors.sc2.exp.root(player.p.buyables[51].sub(7).pow_base(1/(inChallenge('q', 11) ? 0.96 : 0.98)));
 	}
 
+	if (challengeCompletions('p', 12).gte(18)) {
+		tmp.reductionFactors.sc2.start = D(Infinity)
+		tmp.reductionFactors.sc1.start = D(Infinity)
+		tmp.reductionFactors.sc2.exp = D(1)
+		tmp.reductionFactors.sc1.exp = D(1)
+	}
+
 	// cap lesser tier softcaps before higher tier softcaps
 	tmp.reductionFactors.sc2.start = tmp.reductionFactors.sc2.start.min(tmp.reductionFactors.sc3.start)
 	tmp.reductionFactors.sc1.start = tmp.reductionFactors.sc1.start.min(tmp.reductionFactors.sc2.start)

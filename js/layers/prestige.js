@@ -287,6 +287,9 @@ addLayer('p', {
             i = i.mul(upgradeEffect(this.layer, 415))
         }
         i = i.pow(challengeCompletions('p', 25).pow_base(1.02))
+        if (player.l.petEquipped.includes('triangle')) {
+            i = i.pow(tmp.l.petActiveEffs.triangle)
+        }
         return i
     },
     hspGalaxyInterval() {
@@ -297,6 +300,7 @@ addLayer('p', {
         // 1 / Math.log10(2)
         let i = D(3.321928094887362)
         i = i.div(tmp[this.layer].buyables[82].effect)
+        i = i.mul(tmp.l.petPassiveEffs.triangle)
         return i
     },
     hspGalaxies() {
@@ -483,6 +487,9 @@ addLayer('p', {
         }
         i = i.mul([1, 1.5, 3, 9, 45, 360][challengeCompletions(this.layer, 23).toNumber()])
         i = i.mul(tmp.l.buyables[22].effect)
+        if (player.l.petEquipped.includes('circle')) {
+            i = i.mul(tmp.l.petActiveEffs.circle)
+        }
 
         return i
     },
@@ -614,7 +621,7 @@ addLayer('p', {
                 function() { return `You have <h2 style="color: #8000FF; font-size: 26px; text-shadow: #8000FF 0px 0px 10px;">${format(player[this.layer].energy)}</h2> Prestige Energy, which raises point gain by ^${format(tmp[this.layer].energyEff, 3)}. [softcaps at ^4.000] (${format(player[this.layer].energyPS, 3)}/sec)` }],
                 "blank",
                 ["upgrades", [5, 6]],
-                ["buyables", [6]],
+                ["buyables", [6, 9]],
             ],
             unlocked(){
                 return inChallenge('q', 12) || challengeCompletions('q', 13).gte(1)
@@ -808,6 +815,7 @@ addLayer('p', {
                         }
                         if (challengeCompletions(this.layer, 12).gte(5)) { i = i.mul(inChallenge('q', 13) ? 1.05 : 1.001) }
                         if (hasUpgrade(this.layer, 251)) { i = i.mul(inChallenge('q', 14) ? 1.05 : 1.001) }
+                        i = i.mul(tmp.l.buyables[43].effect)
                     }
 
                     j = D(2)
@@ -884,6 +892,7 @@ addLayer('p', {
                             i = i.add(player[this.layer].buyables[32].mul(0.4))
                         }
                         if (hasUpgrade(this.layer, 251)) { i = i.mul(inChallenge('q', 13) ? 1.05 : 1.001) }
+                        i = i.mul(tmp.l.buyables[43].effect)
                     }
 
                     j = D(0.25)
@@ -952,6 +961,7 @@ addLayer('p', {
                         }
                         if (challengeCompletions(this.layer, 12).gte(2)) { i = i.mul(1.2) }
                         if (hasUpgrade(this.layer, 251)) { i = i.mul(inChallenge('q', 13) ? 1.05 : 1.001) }
+                        i = i.mul(tmp.l.buyables[43].effect)
 
                         if (inChallenge(this.layer, 41)) {
                             i = i.pow(0.5)
@@ -1023,6 +1033,7 @@ addLayer('p', {
                             i = i.add(2)
                         }
                         if (hasUpgrade(this.layer, 251)) { i = i.mul(inChallenge('q', 13) ? 1.05 : 1.001) }
+                        i = i.mul(tmp.l.buyables[43].effect)
                     }
 
                     j = D(1.01)
@@ -1050,12 +1061,14 @@ addLayer('p', {
                     if (x.gte(100)) {
                         x = x.div(100).sub(1).exp().mul(100)
                     }
+                    x = x.div(tmp.l.petPassiveEffs.square)
                     return x
                 },
                 scaleModifCost(x) {
                     return x
                 },
                 scaleModifTarEff(x) {
+                    x = x.mul(tmp.l.petPassiveEffs.square)
                     if (x.gte(100)) {
                         x = x.div(100).ln().add(1).mul(100)
                     }
@@ -1080,6 +1093,7 @@ addLayer('p', {
 
                     if (!override) {
                         if (hasUpgrade(this.layer, 251)) { i = i.mul(inChallenge('q', 13) ? 1.05 : 1.001) }
+                        i = i.mul(tmp.l.buyables[43].effect)
                     }
 
                     if (hasUpgrade(this.layer, 212)) {
@@ -1122,6 +1136,9 @@ addLayer('p', {
                     return `+^${format(nextEffect.sub(currEffect), 4)} point gain.`
                 },
                 scaleModifEffective(x) {
+                    if (player.l.petEquipped.includes('square')) {
+                        x = x.div(tmp.l.petActiveEffs.square)
+                    }
                     return x
                 },
                 scaleModifCost(x) {
@@ -1131,6 +1148,9 @@ addLayer('p', {
                     return x
                 },
                 scaleModifTarEff(x) {
+                    if (player.l.petEquipped.includes('square')) {
+                        x = x.mul(tmp.l.petActiveEffs.square)
+                    }
                     return x
                 },
                 scaleModifTarCost(x) {
@@ -1183,6 +1203,7 @@ addLayer('p', {
                         if (challengeCompletions(this.layer, 22).gte(1)) {
                             i = i.mul(inChallenge('q', 13) ? 1.1 : 1.002)
                         }
+                        i = i.mul(tmp.l.buyables[43].effect)
                     }
 
                     j = D(2.2)
@@ -1254,6 +1275,7 @@ addLayer('p', {
                         if (challengeCompletions(this.layer, 22).gte(1)) {
                             i = i.mul(inChallenge('q', 13) ? 1.1 : 1.002)
                         }
+                        i = i.mul(tmp.l.buyables[43].effect)
                     }
                     
                     j = D(0.75); // less = it slows down less
@@ -1330,6 +1352,7 @@ addLayer('p', {
                         if (challengeCompletions(this.layer, 22).gte(2)) {
                             i = i.mul(inChallenge('q', 13) ? 1.1 : 1.002)
                         }
+                        i = i.mul(tmp.l.buyables[43].effect)
                     }
 
                     i = {
@@ -1406,6 +1429,7 @@ addLayer('p', {
                         if (challengeCompletions(this.layer, 22).gte(2)) {
                             i = i.mul(inChallenge('q', 13) ? 1.1 : 1.002)
                         }
+                        i = i.mul(tmp.l.buyables[43].effect)
                     }
                     
                     if (Decimal.lt(i, 1)) { return {ppe: D(1), up1c: D(1)}; }
@@ -1473,6 +1497,7 @@ addLayer('p', {
                         if (challengeCompletions(this.layer, 22).gte(3)) {
                             i = i.mul(inChallenge('q', 13) ? 1.1 : 1.002)
                         }
+                        i = i.mul(tmp.l.buyables[43].effect)
                     }
 
                     i = {
@@ -1539,6 +1564,7 @@ addLayer('p', {
                         if (challengeCompletions(this.layer, 22).gte(3)) {
                             i = i.mul(inChallenge('q', 13) ? 1.1 : 1.002)
                         }
+                        i = i.mul(tmp.l.buyables[43].effect)
                     }
 
                     i = {
@@ -1604,12 +1630,20 @@ addLayer('p', {
                         if (challengeCompletions(this.layer, 22).gte(4)) {
                             i = i.mul(inChallenge('q', 13) ? 1.1 : 1.002)
                         }
+                        i = i.mul(tmp.l.buyables[43].effect)
                     }
                     
                     if (Decimal.lt(i, 1)) { return {ess: D(1), ppss: D(0)}; }
-                    i = {
-                        ess: i.mul(0.01).add(1).ln().add(1).sqrt(),
-                        ppss: sumHarmonicSeries(i).mul(0.25)
+                    if (challengeCompletions('p', 12).gte(19)) {
+                        i = {
+                            ess: i.mul(0.01).add(1).ln().add(1).pow(2/3),
+                            ppss: i
+                        }
+                    } else {
+                        i = {
+                            ess: i.mul(0.01).add(1).ln().add(1).sqrt(),
+                            ppss: sumHarmonicSeries(i).mul(0.25)
+                        }
                     }
                     return i
                 },
@@ -1670,11 +1704,19 @@ addLayer('p', {
                         if (challengeCompletions(this.layer, 22).gte(4)) {
                             i = i.mul(inChallenge('q', 13) ? 1.1 : 1.002)
                         }
+                        i = i.mul(tmp.l.buyables[43].effect)
                     }
 
-                    i = {
-                        pp: i.add(1).pow(2).mul(0.05).add(0.95),
-                        up2c: i.mul(0.05).add(1).ln().add(1).recip()
+                    if (challengeCompletions('p', 12).gte(19)) {
+                        i = {
+                            pp: i.pow10(),
+                            up2c: i.mul(0.05).add(1).ln().add(1).pow(2).recip()
+                        }
+                    } else {
+                        i = {
+                            pp: i.add(1).pow(2).mul(0.05).add(0.95),
+                            up2c: i.mul(0.05).add(1).ln().add(1).recip()
+                        }
                     }
 
                     if (hasUpgrade(this.layer, 283)) {
@@ -1738,6 +1780,7 @@ addLayer('p', {
                         if (challengeCompletions(this.layer, 22).gte(5)) {
                             i = i.mul(inChallenge('q', 13) ? 1.1 : 1.002)
                         }
+                        i = i.mul(tmp.l.buyables[43].effect)
                     }
 
                     let j = D(0.2)
@@ -1746,6 +1789,9 @@ addLayer('p', {
                     }
                     
                     i = Decimal.mul(i, j)
+                    if (challengeCompletions(this.layer, 12).gte(20)) {
+                        i = i.pow(1.01)
+                    }
                     return i;
                 },
                 dispEffect() {
@@ -1940,6 +1986,8 @@ addLayer('p', {
                                 eff = eff.mul(upgradeEffect('l', 12))
                             }
                             eff = eff.mul(tmp.l.energyEff.prest)
+
+                            eff = eff.max(1).log10().pow(tmp[this.layer].buyables[91].effect.dimDilate).pow10()
                             return eff;
                         },
                         dispEffect() {
@@ -1952,12 +2000,24 @@ addLayer('p', {
                             return `This dimension's multiplier is increased by &times;${format(nextEffect.div(currEffect), 1)}.` 
                         },
                         scaleModifEffective(x) {
+                            if (hasUpgrade(this.layer, 64)) {
+                                x = x.div(tmp[this.layer].hspGalaxyTotalEffect)
+                            }
+                            if (challengeCompletions('p', 12).gte(17)) {
+                                x = x.mul(0.95)
+                            }
                             return x
                         },
                         scaleModifCost(x) {
                             return x
                         },
                         scaleModifTarEff(x) {
+                            if (challengeCompletions('p', 12).gte(17)) {
+                                x = x.div(0.95)
+                            }
+                            if (hasUpgrade(this.layer, 64)) {
+                                x = x.mul(tmp[this.layer].hspGalaxyTotalEffect)
+                            }
                             return x
                         },
                         scaleModifTarCost(x) {
@@ -1996,6 +2056,7 @@ addLayer('p', {
                             ? i.sub(12).mul(0.4)
                             : sumHarmonicSeries(i.max(0).add(1))
                     }
+                    i.mult = i.mult.max(1).log10().pow(tmp[this.layer].buyables[91].effect.enhancerDilate).pow10()
                     return i;
                 },
                 dispEffect() {
@@ -2223,6 +2284,50 @@ addLayer('p', {
                     return x
                 },
             },
+            91: {
+                type: 3,
+                num: 10,
+                costD: {type: 0, exp: 0, main: [D(160), D(1.25), D(1.001)]},
+                unlocked() { return hasUpgrade(this.layer, 65) || player[this.layer].buyables[91].gte(1) },
+                unavail() {
+                    let x = false
+                    return x
+                },
+                preEffect(x, override) {
+                    let i = D(x)
+
+                    if (!override) {
+
+                    }
+
+                    i = {
+                        dimDilate: i.mul(0.005).add(1),
+                        enhancerDilate: i.mul(0.15).add(1)
+                    }
+                    return i
+                },
+                dispEffect() {
+                    const currEffect = this.effect(player[this.layer].buyables[91])
+                    return `Reset previous dimension progress to dilate multiplier from buying dimensions by ^${format(currEffect.dimDilate, 3)} and increase Prestige Enhancer's mult by ^${format(currEffect.enhancerDilate, 2)} to the exponent.` 
+                },
+                dispEffBase() {
+                    const currEffect = this.effect(player[this.layer].buyables[91])
+                    const nextEffect = this.effect(player[this.layer].buyables[91].add(1))
+                    return `Reset previous dimension progress to dilate multiplier from buying dimensions by +^${format(nextEffect.dimDilate.sub(currEffect.dimDilate), 3)} and increase Prestige Enhancer's mult by +^${format(nextEffect.enhancerDilate.sub(currEffect.enhancerDilate))} to the exponent.`
+                },
+                scaleModifEffective(x) {
+                    return x
+                },
+                scaleModifCost(x) {
+                    return x
+                },
+                scaleModifTarEff(x) {
+                    return x
+                },
+                scaleModifTarCost(x) {
+                    return x
+                },
+            },
         };
 
         // ! NOTE!! this.layer doesn't work in the custom buyable script TwT
@@ -2244,10 +2349,13 @@ addLayer('p', {
                     return upgrade.preEffect(D(0), true)
                 }
                 if (Decimal.isNaN(x)) {
-                    throw new Error(`NaN detected as input in upgrade type ${upgrade.type} #${upgrade.num} effect!`)
+                    throw new Error(`[Layer: ${upgrade.layer}, Type: buyable, ID: ${upgrade.id}] NaN detected as input in upgrade type ${upgrade.type} #${upgrade.num} effect!`)
                 }
 
                 let eff = upgrade.preEffect(D(x), false)
+                if (Decimal.isNaN(x)) {
+                    throw new Error(`[Layer: ${upgrade.layer}, Type: buyable, ID: ${upgrade.id}] NaN detected as effect in upgrade type ${upgrade.type} #${upgrade.num} effect!`)
+                }
                 return eff
             }
 
@@ -2323,7 +2431,11 @@ addLayer('p', {
                     if (upgrade.num === 1) {
                         x = player[upgrade.layer].points
                     } else {
-                        x = player[upgrade.layer].energy;
+                        if (upgrade.num === 10) {
+                            x = player[upgrade.layer].buyables[68]
+                        } else {
+                            x = player[upgrade.layer].energy;
+                        }
                     }
                 }
                 if (upgrade.type === 4) {
@@ -2432,6 +2544,9 @@ addLayer('p', {
                     return `${[null, "Rank", "Tier", "Tetr"][upgrade.num]}s` 
                 }
                 if (upgrade.type === 3) {
+                    if (upgrade.num === 10) {
+                        return `Prestige Galaxy`
+                    }
                     if (upgrade.num === 9) {
                         return `Prestige Enhancer`
                     }
@@ -2464,6 +2579,9 @@ addLayer('p', {
                     if (upgrade.num === 9) {
                         txt = `Enhancer #${format(player[upgrade.layer].buyables[upgrade.id].add(1))}<br><br>`
                     }                     
+                    if (upgrade.num === 10) {
+                        txt = `Galaxy #${format(player[upgrade.layer].buyables[upgrade.id].add(1))}<br><br>`
+                    }
                 } else if (upgrade.type === 2) {
                     txt = `${[null, "Rank", "Tier", "Tetr"][upgrade.num]} ${format(player[upgrade.layer].buyables[upgrade.id])}<br>` 
                 } else {
@@ -2529,7 +2647,11 @@ addLayer('p', {
                         if (upgrade.num === 1) {
                             txt += `Prestige Points`
                         } else {
-                            txt += `Prestige Energy`
+                            if (upgrade.num === 10) {
+                                txt += `Prestige Dimension 8`
+                            } else {
+                                txt += `Prestige Energy`
+                            }
                         }
                     }
                     if (upgrade.type === 4) {
@@ -2572,7 +2694,11 @@ addLayer('p', {
                     if (upgrade.num === 1) {
                         resource = player[upgrade.layer].points
                     } else {
-                        resource = player[upgrade.layer].energy;
+                        if (upgrade.num === 10) {
+                            resource = player[upgrade.layer].buyables[68]
+                        } else {
+                            resource = player[upgrade.layer].energy;
+                        }
                     }
                 }
                 if (upgrade.type === 4) {
@@ -2624,7 +2750,18 @@ addLayer('p', {
                             }
                             player[upgrade.layer].energy = D(0)
                         } else {
-                            player[upgrade.layer].energy = player[upgrade.layer].energy.sub(upgrade.cost());
+                            if (upgrade.num === 10) {
+                                for (let i = 0; i < 8; i++) {
+                                    player[upgrade.layer].dimensionAccu[i] = D(0)
+                                    setBuyableAmount(upgrade.layer, 61 + i, D(0))
+                                }
+                                
+                                // const UNSAFE_UPGRADES = [51, 52, 53, 54, 55, 61, 62, 63, 64, 65]
+                                // player[upgrade.layer].upgrades = player[upgrade.layer].upgrades.filter((upg) => { return !UNSAFE_UPGRADES.includes(upg) })
+                                player[upgrade.layer].energy = D(0)
+                            } else {
+                                player[upgrade.layer].energy = player[upgrade.layer].energy.sub(upgrade.cost());
+                            }
                         }
                     }
                 }
@@ -2844,15 +2981,17 @@ addLayer('p', {
                     case 14:
                         return `PB2 is boosted by ^${format(4, 1)}. Hyper Scaling's challenge effect scales better.`
                     case 15:
-                        return `PB2 is boosted by ^${format(4.5, 1)}. Luck is multiplied and raised by ^${format(1.1, 2)}. Luck Energy gain and effect to prestige dimensions are raised ^${format(1.1, 2)}.`
+                        return `PB2 is boosted by ^${format(4.5, 1)}. Luck is raised by ^${format(1.04, 2)}. Luck Energy gain and effect to prestige dimensions are increased by ^${format(1.1, 2)}.`
                     case 16:
-                        return `PB2 is boosted by ^${format(5, 1)}. Luck is multiplied and raised by ^${format(1.1, 2)}. Prestige Dimension cost scaling is 5% slower.`
+                        return `PB2 is boosted by ^${format(5, 1)}. Luck is raised by ^${format(1.04, 2)}. Prestige Dimension cost scaling is 5% slower.`
                     case 17:
-                        return `PB2 is boosted by ^${format(5.5, 1)}. Luck is multiplied and raised by ^${format(1.1, 2)}. Point's 1st and 2nd softcap start ^2 and ^3 to exponent later, respectively.`
+                        return `PB2 is boosted by ^${format(5.5, 1)}. Luck is raised by ^${format(1.04, 2)}. Point's 1st and 2nd softcap are removed. Unlock 2 new pets.`
                     case 18:
-                        return `PB2 is boosted by ^${format(6, 1)}. Luck is multiplied and raised by ^${format(1.1, 2)}. Prestige Buyable 7 and 8 are vastly improved.`
+                        return `PB2 is boosted by ^${format(6, 1)}. Luck is raised by ^${format(1.04, 2)}. Prestige Buyable 7 and 8 are vastly improved.`
                     case 19:
-                        return `PB2 is boosted by ^${format(6.5, 1)}. Luck is multiplied and raised by ^${format(1.25, 2)}. Prestige Buyable 9's effect is raised to the ^${format(1.04, 2)}.`
+                        return `PB2 is boosted by ^${format(6.5, 1)}. Luck is raised by ^${format(1.1, 2)}. Prestige Buyable 9's effect is raised to the ^${format(1.01, 2)}. Unlock more Quaternion features.`
+                    case 20:
+                        return `Maxed out lol`
                     default:
                         throw new Error(`challenge 12 reward desc sucks lmao ${challengeCompletions(this.layer, 12).toNumber()} out of bounds?`)
                 }
@@ -2864,7 +3003,7 @@ addLayer('p', {
                 }
                 return [
                     D(1e6), D(1e8), D(1e10), D(1e12), D(1e14), D(1e14), D(1e16), D(1e13), D(1e18), D(1e18),
-                    D('ee12'), D('ee14'), D('e4e14'), D('e2e15'), D('ee36'), D('ee45'), D('ee54'), D('ee63'), D('ee81'), D('ee100')
+                    D('ee12'), D('ee14'), D('e4e14'), D('e2e15'), D('ee18'), D('ee22'), D('ee24'), D('e5e25'), D('ee27'), D('e2e29')
                 ][challengeCompletions(this.layer, 12).min(lim).toNumber()]
             },
             goalDescription() {
@@ -3265,7 +3404,11 @@ addLayer('p', {
                     : i.max('e3e5').log('e3e5')
 
                 if (i.gte(10)) {
-                    i = i.log10().mul(10)
+                    if (challengeCompletions('p', 12).gte(15)) {
+                        i = i.div(10).ln().add(1).mul(10)
+                    } else {
+                        i = i.log10().mul(10)
+                    }
                 }
                 return i
             },
