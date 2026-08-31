@@ -62,7 +62,9 @@ function getPointGen() {
             gain = gain.mul(upgradeEffect('p', 402))
         }
         gain = gain.mul(tmp.p.bpEffect)
-        gain = gain.mul(tmp.q.generationEff[0])
+        if (!hasUpgrade('q', 11)) {
+            gain = gain.mul(tmp.q.generationEff[0])
+        }
         gain = gain.mul(tmp.q.buyables[11].effect)
         
         gain = gain.pow(tmp.p.buyables[14].effect)
@@ -71,6 +73,9 @@ function getPointGen() {
         gain = gain.pow(challengeCompletions('p', 25).pow_base(1.02))
         if (hasUpgrade('l', 11)) {
             gain = gain.pow(upgradeEffect('l', 11))
+        }
+        if (hasUpgrade('q', 11)) {
+            gain = gain.pow(tmp.q.generationEff[0])
         }
         gain = gain.pow(tmp.l.petPassiveEffs.circle)
         if (player.l.petEquipped.includes('pentagon') && (inChallenge('p', 31) || inChallenge('p', 41))) {
