@@ -475,7 +475,7 @@ addLayer('q', {
                 type: 0,
                 num: 1,
                 get costD() {
-                    const obj = {type: 0, exp: 0, main: [D(1e12), D(10), D(1.05)]}
+                    const obj = {type: 0, exp: 0, main: [D(1e12), D(5), D(1.04)]}
 
                     return obj
                 },
@@ -525,7 +525,7 @@ addLayer('q', {
                 type: 0,
                 num: 2,
                 get costD() {
-                    const obj = {type: 0, exp: 0, main: [D(1e16), D(20), D(1.2)]}
+                    const obj = {type: 0, exp: 0, main: [D(2e15), D(20), D(1.2)]}
 
                     return obj
                 },

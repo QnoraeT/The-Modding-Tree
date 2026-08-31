@@ -162,7 +162,7 @@ addLayer('l', {
     hotkeys: [
         {key: 'l', description: "L: Reset for luck essence", onPress(){if (canReset('l')) doReset('l')}},
     ],
-    layerShown(){ return challengeCompletions('p', 14).gte(1) || Decimal.gt(player.l.best, 0) },
+    layerShown(){ return challengeCompletions('q', 14).gte(1) || Decimal.gt(player.l.best, 0) },
     startData() { return {
         unlocked: false,
         points: D(0),
@@ -501,7 +501,7 @@ addLayer('l', {
                 return player.l
             },
             effect() { 
-                let ret = player.p.buyable5Clicks.div(1e12).log(1.1).max(0).floor().mul(0.005).add(1)
+                let ret = player.p.buyable5Clicks.div(1e12).max(1).log(1.1).max(0).floor().mul(0.005).add(1)
                 return ret;
             },
             effectDisplay() { return `^${format(this.effect(), 3)}` }, 

@@ -643,7 +643,9 @@ addLayer('p', {
             content: [
                 "main-display",
                 ["display-text",
-                function() { return `You have <h2 style="color: #8000FF; font-size: 26px; text-shadow: #8000FF 0px 0px 10px;">${format(player.p.energy)}</h2> Prestige Energy, which raises point gain by ^${format(tmp.p.energyEff, 3)}. [softcaps at ^4.000] (${format(player.p.energyPS, 3)}/sec)` }],
+                function() { return `You have <h2 style="color: #8000FF; font-size: 26px; text-shadow: #8000FF 0px 0px 10px;">${format(player.p.energy)}</h2> Prestige Energy, which raises point gain by ^${format(tmp.p.energyEff, 3)}. [softcaps at ^4.000] (${format(tmp.p.energyPS, 3)}/sec)` }],
+                ["display-text",
+                function() { return `Your total Prestige Energy is ${format(player.p.totalEnergy)}.` }],
                 "blank",
                 ["upgrades", [5, 6]],
                 ["buyables", [6, 9]],
@@ -1954,7 +1956,7 @@ addLayer('p', {
                                 main: [
                                     [D(1e60), D(100),  D(1e5), D(1e9), D(1e15), D(1e21), D(1e30), D(1e45)][i],
                                     [D(100) , D(10),   D(100), D(1e3), D(1e4),  D(1e6),  D(1e8),  D(1e12)][i],
-                                    [D(1.05), D(1.05), D(1.1), D(1.2), D(1.5),  D(2),    D(5),    D(10)][i]
+                                    [D(1.04), D(1.05), D(1.1), D(1.2), D(1.5),  D(2),    D(5),    D(10)][i]
                                 ]
                             }
 
