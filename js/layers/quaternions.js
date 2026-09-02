@@ -32,8 +32,24 @@ addLayer('q', {
         player.q.timeInQ = player.q.timeInQ.add(player.globalTS.mul(diff))
         player.q.bestTimeInQ = player.q.bestTimeInQ.add(player.globalTS.mul(diff))
 
-        for (let i = 0; i < player.q.allocated.length; i++) {
-            player.q.allocGen[i] = player.q.allocGen[i].add(tmp.q.generationGain[i].mul(player.globalTS).mul(diff))
+        if (hasUpgrade('q', 17)) {
+            let gen = tmp.q.getResetGain.mul(player.globalTS).mul(diff)
+
+            player.q.points = player.q.points.add(gen)
+            player.q.total = player.q.total.add(gen)
+            player.q.best = player.q.best.max(player.q.points)
+
+            for (let i = 0; i < player.q.allocated.length; i++) {
+                player.q.allocated[i] = Decimal.max(player.q.allocated[i], player.q.points)
+            }
+        }
+
+        for (let i = 0; i < player.q.allocGen.length; i++) {
+            if (hasUpgrade('q', 17)) {
+                player.q.allocGen[i] = player.q.allocGen[i].max(1).mul(tmp.q.generationGain[i].max(1).log10().mul(player.globalTS).mul(diff).pow10())
+            } else {
+                player.q.allocGen[i] = player.q.allocGen[i].add(tmp.q.generationGain[i].mul(player.globalTS).mul(diff))
+            }
         }
 
         if (hasUpgrade('q', 12)) {
@@ -255,6 +271,9 @@ addLayer('q', {
                 onClick() {
                     player.q.points = player.q.points.sub(1)
                     player.q.allocated[i] = player.q.allocated[i].add(1)
+                },
+                unlocked() {
+                    return !hasUpgrade('q', 17)
                 }
             }
             obj[i + 21] = {
@@ -271,6 +290,9 @@ addLayer('q', {
                     if (player.q.points.lt('ee12')) {
                         player.q.points = player.q.points.sub(used)
                     }
+                },
+                unlocked() {
+                    return !hasUpgrade('q', 17)
                 }
             }
             obj[i + 31] = {
@@ -284,6 +306,9 @@ addLayer('q', {
                 onClick() {
                     player.q.allocated[i] = player.q.allocated[i].add(player.q.points)
                     player.q.points = D(0)
+                },
+                unlocked() {
+                    return !hasUpgrade('q', 17)
                 }
             }
         }
@@ -354,7 +379,7 @@ addLayer('q', {
             effectDescription: "PP Challenge 4 can be bulk-completed.",
             done() { return player.q.total.gte(1e24) },
             unlocked() { return hasMilestone('q', 9) }
-        },
+        }
     },
     challenges: {
         11: {
@@ -823,11 +848,11 @@ addLayer('q', {
         },
         15: {
             title: "Dimension Hopper",
-            description: "(everything beyond is unimplemented lol) Luck Essence raises prestige dimension multipliers at a reduced rate.",
-            cost: new Decimal('ee19'),
+            description: "Luck Buyables 1-8 are autobought. Luck Essence raises prestige dimension multipliers at a reduced rate.",
+            cost: new Decimal('ee20'),
             unlocked() { return challengeCompletions('p', 12).gte(20) },
             effect() { 
-                let ret = player.l.points.max(1).log10().div(2).add(1)
+                let ret = player.l.points.max(1).log10().div(10).add(1)
                 return ret;
             },
             effectDisplay() { return `^${format(this.effect(), 3)}` }, 
@@ -835,24 +860,24 @@ addLayer('q', {
         16: {
             title: "No more of that,",
             description: "Gain Super Scaling Points as if you were in the challenge without the debuffs. Point gain from Pentagon applies at ^0.5 rate outside of Super Scaling.",
-            cost: new Decimal('ee20'),
+            cost: new Decimal('e2.5e25'),
             unlocked() { return challengeCompletions('p', 12).gte(20) },
         },
         17: {
             title: "... and no more of that.",
             description: "Buyable 5 clicks never reset. Quaternions are auto-generated at 100% rate and are auto-allocated. Charges increase multiplicatively instead of additively.",
-            cost: new Decimal('e2e20'),
+            cost: new Decimal('e1.25e26'),
             unlocked() { return challengeCompletions('p', 12).gte(20) },
         },
         21: {
             title: "Chip it away",
-            description: "PP Buyables 2 and 3's exponential scaling is reduced by 4% per quaternion upgrade past the 1st row.",
-            cost: new Decimal('ee22'),
+            description: "PP Buyables 2 and 3's exponential scaling is reduced by 25% per quaternion upgrade past the 1st row.",
+            cost: new Decimal('e1e27'),
             unlocked() { return challengeCompletions('p', 12).gte(20) },
             effect() { 
                 // add 1 if the upg is id >21
                 let ret = player.q.upgrades.reduce((total, upg) => { return total + (upg >= 21 ? 1 : 0); }, 0)
-                ret = Decimal.pow(1.04, ret)
+                ret = Decimal.pow(1.25, ret)
                 return ret;
             },
             effectDisplay() { return `-${formatPerc(this.effect(), 2)}` }, 
@@ -860,7 +885,7 @@ addLayer('q', {
         22: {
             title: "Oh, this too",
             description: "Hyper Scaling intervals are reduced by ^0.95 per quaternion upgrade on this or after this.",
-            cost: new Decimal('ee23'),
+            cost: new Decimal('e5e27'),
             unlocked() { return challengeCompletions('p', 12).gte(20) },
             effect() { 
                 // add 1 if the upg is id >22
@@ -872,8 +897,8 @@ addLayer('q', {
         },
         23: {
             title: "And this one",
-            description: "Point Buyable 4's exponential scaling is reduced by 2% per quaternion upgrade on this or after this.",
-            cost: new Decimal('ee24'),
+            description: "Point Buyable 4's exponential scaling is reduced by 2% per quaternion upgrade on this or after this. Tiers are auto-bought and no longer reset.",
+            cost: new Decimal('e2e28'),
             unlocked() { return challengeCompletions('p', 12).gte(20) },
             effect() { 
                 // add 1 if the upg is id >23
@@ -886,13 +911,13 @@ addLayer('q', {
         24: {
             title: "Oh, I forgot to automate this",
             description: "Crippled Points challenge now auto-completes outside of the challenge. The u8-2 tree upgrade is also squared.",
-            cost: new Decimal('ee25'),
+            cost: new Decimal('ee33'),
             unlocked() { return challengeCompletions('p', 12).gte(20) },
         },
         25: {
             title: "Maybe a few simple ones?",
             description: "Luck is raised ^1.1",
-            cost: new Decimal('ee26'),
+            cost: new Decimal('ee36'),
             unlocked() { return challengeCompletions('p', 12).gte(20) },
         },
         26: {
@@ -902,13 +927,13 @@ addLayer('q', {
                     ? "Wait fuck, I forgot to specify, now every Buyable 5's effect is raised ^1.1"
                     : "Buyable 5's effect is raised ^1.1"
             },
-            cost: new Decimal('ee27'),
+            cost: new Decimal('ee39'),
             unlocked() { return challengeCompletions('p', 12).gte(20) },
         },
         27: {
             title: "Luck Buyable 3 didn't need to have this scaling",
             description: "Remove Luck Buyable 3's *quadratic* scaling",
-            cost: new Decimal('ee28'),
+            cost: new Decimal('ee42'),
             unlocked() { return challengeCompletions('p', 12).gte(20) },
         },
     },

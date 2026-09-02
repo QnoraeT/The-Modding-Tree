@@ -491,22 +491,7 @@ function gameLoop(diff) {
 
     if (player.points.gte(tmp.reductionFactors.sc3.start)) {
 		tmp.reductionFactors.sc3.eff = pointGradualSoftcap(3, player.points, tmp.reductionFactors.sc3.start, tmp.reductionFactors.sc3.exp, false)
-		tmp.reductionFactors.sc3.eff = pointGradualSoftcap(0, tmp.reductionFactors.sc3.eff, tmp.reductionFactors.sc2.start, tmp.reductionFactors.sc2.exp, false)
-		tmp.reductionFactors.sc3.eff = pointGradualSoftcap(0, tmp.reductionFactors.sc3.eff, tmp.reductionFactors.sc1.start, tmp.reductionFactors.sc1.exp, false)
-		let r = tmp.reductionFactors.sc3.eff
-		tmp.reductionFactors.sc3.eff = pointGradualSoftcap(1, tmp.reductionFactors.sc3.eff, D(10), tmp.reductionFactors.dilate.exp, false)
-		if (Decimal.eq_tolerance(tmp.reductionFactors.sc3.eff, tmp.reductionFactors.sc3.eff.add(finalPointGen))) {
-			tmp.reductionFactors.sc3.eff = tmp.reductionFactors.sc3.eff.div(r)
-		} else {
-			tmp.reductionFactors.sc3.eff = pointGradualSoftcap(1, tmp.reductionFactors.sc3.eff.add(finalPointGen), D(10), tmp.reductionFactors.dilate.exp, true)
-			tmp.reductionFactors.sc3.eff = pointGradualSoftcap(0, tmp.reductionFactors.sc3.eff, tmp.reductionFactors.sc1.start, tmp.reductionFactors.sc1.exp, true)
-			tmp.reductionFactors.sc3.eff = pointGradualSoftcap(0, tmp.reductionFactors.sc3.eff, tmp.reductionFactors.sc2.start, tmp.reductionFactors.sc2.exp, true)
-			tmp.reductionFactors.sc3.eff = pointGradualSoftcap(3, tmp.reductionFactors.sc3.eff, tmp.reductionFactors.sc3.start, tmp.reductionFactors.sc3.exp, true)
-			tmp.reductionFactors.sc3.eff = tmp.reductionFactors.sc3.eff.sub(player.points).div(finalPointGen).recip()
-			tmp.reductionFactors.sc3.eff = tmp.reductionFactors.sc3.eff.div(tmp.reductionFactors.dilate.eff)
-			tmp.reductionFactors.sc3.eff = tmp.reductionFactors.sc3.eff.div(tmp.reductionFactors.sc1.eff)
-			tmp.reductionFactors.sc3.eff = tmp.reductionFactors.sc3.eff.div(tmp.reductionFactors.sc2.eff)
-		}
+		tmp.reductionFactors.sc3.eff = tmp.reductionFactors.sc3.eff.log(player.points)
 
         player.points = pointGradualSoftcap(3, player.points, tmp.reductionFactors.sc3.start, tmp.reductionFactors.sc3.exp, false)
     } else {

@@ -78,8 +78,12 @@ function getPointGen() {
             gain = gain.pow(tmp.q.generationEff[0])
         }
         gain = gain.pow(tmp.l.petPassiveEffs.circle)
-        if (player.l.petEquipped.includes('pentagon') && (inChallenge('p', 31) || inChallenge('p', 41))) {
-            gain = gain.pow(tmp.l.petActiveEffs.pentagon)
+        if (player.l.petEquipped.includes('pentagon') && (inChallenge('p', 31) || inChallenge('p', 41) || hasUpgrade('q', 16))) {
+            gain = gain.pow(tmp.l.petActiveEffs.pentagon.pow(
+                (inChallenge('p', 31) || inChallenge('p', 41))
+                    ? 1
+                    : 0.5
+            ))
         }
     }
     

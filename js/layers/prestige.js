@@ -101,7 +101,7 @@ addLayer('p', {
             player.p.bestEssence = Decimal.max(player.p.essence, player.p.bestEssence);
         }
 
-        if (inChallenge('p', 31)) {
+        if (inChallenge('p', 31) || hasUpgrade('q', 16)) {
             player.p.ssChalBest = Decimal.max(player.p.ssChalBest, player.points)
             if (hasUpgrade('p', 31)) {
                 player.p.ssPoints = player.p.ssPoints.add(tmp.p.sspGen.mul(diff))
@@ -196,6 +196,10 @@ addLayer('p', {
             tmp.p.buyables[51].buyMax()
         }
         
+        if (hasUpgrade('q', 23)) {
+            tmp.p.buyables[52].buyMax()
+        }
+        
         if (hasUpgrade('p', 425)) {
             tmp.p.buyables[71].buyMax()
             tmp.p.buyables[72].buyMax()
@@ -246,7 +250,7 @@ addLayer('p', {
         return i
     },
     sspGen() {
-        if (!inChallenge('p', 31)) {
+        if (!(inChallenge('p', 31) || hasUpgrade('q', 16))) {
             return D(0)
         }
 
@@ -316,6 +320,9 @@ addLayer('p', {
         let i = D(3.321928094887362)
         i = i.div(tmp.p.buyables[82].effect)
         i = i.mul(tmp.l.petPassiveEffs.triangle)
+        if (hasUpgrade('q', 22)) {
+            i = i.div(upgradeEffect('q', 22))
+        }
         return i
     },
     hspGalaxies() {
@@ -528,10 +535,12 @@ addLayer('p', {
         player.points = D(0)
 
         player.p.timeInP = D(0)
-        if (hasUpgrade('p', 223)) {
-            player.p.buyable5Clicks = player.p.buyable5Clicks.mul(0.8)
-        } else {
-            player.p.buyable5Clicks = D(0)
+        if (!hasUpgrade('q', 17)) {
+            if (hasUpgrade('p', 223)) {
+                player.p.buyable5Clicks = player.p.buyable5Clicks.mul(0.8)
+            } else {
+                player.p.buyable5Clicks = D(0)
+            }
         }
         player.p.challenge21Clicks = D(0)
 
@@ -1089,7 +1098,11 @@ addLayer('p', {
                 },
                 scaleModifEffective(x) {
                     if (x.gte(100)) {
-                        x = x.div(100).sub(1).exp().mul(100)
+                        let pow = D(1)
+                        if (hasUpgrade('q', 23)) {
+                            pow = pow.mul(upgradeEffect('q', 23))
+                        }
+                        x = x.div(100).root(pow).sub(1).mul(pow).exp().mul(100)
                     }
                     x = x.div(tmp.l.petPassiveEffs.square)
                     return x
@@ -1100,7 +1113,11 @@ addLayer('p', {
                 scaleModifTarEff(x) {
                     x = x.mul(tmp.l.petPassiveEffs.square)
                     if (x.gte(100)) {
-                        x = x.div(100).ln().add(1).mul(100)
+                        let pow = D(1)
+                        if (hasUpgrade('q', 23)) {
+                            pow = pow.mul(upgradeEffect('q', 23))
+                        }
+                        x = x.div(100).ln().div(pow).add(1).pow(pow).mul(100)
                     }
                     return x
                 },
@@ -1330,7 +1347,11 @@ addLayer('p', {
                 },
                 scaleModifEffective(x) {
                     if (x.gte(10000)) {
-                        x = x.div(10000).sub(1).exp().mul(10000)
+                        let pow = D(1)
+                        if (hasUpgrade('q', 21)) {
+                            pow = pow.mul(upgradeEffect('q', 21))
+                        }
+                        x = x.div(10000).root(pow).sub(1).mul(pow).exp().mul(10000)
                     }
                     return x
                 },
@@ -1339,7 +1360,11 @@ addLayer('p', {
                 },
                 scaleModifTarEff(x) {
                     if (x.gte(10000)) {
-                        x = x.div(10000).ln().add(1).mul(10000)
+                        let pow = D(1)
+                        if (hasUpgrade('q', 21)) {
+                            pow = pow.mul(upgradeEffect('q', 21))
+                        }
+                        x = x.div(10000).ln().div(pow).add(1).pow(pow).mul(10000)
                     }
                     return x
                 },
@@ -1402,7 +1427,11 @@ addLayer('p', {
                 },
                 scaleModifEffective(x) {
                     if (x.gte(1e6)) {
-                        x = x.div(1e6).sub(1).exp().mul(1e6)
+                        let pow = D(1)
+                        if (hasUpgrade('q', 21)) {
+                            pow = pow.mul(upgradeEffect('q', 21))
+                        }
+                        x = x.div(1e6).root(pow).sub(1).mul(pow).exp().mul(1e6)
                     }
                     return x
                 },
@@ -1411,7 +1440,11 @@ addLayer('p', {
                 },
                 scaleModifTarEff(x) {
                     if (x.gte(1e6)) {
-                        x = x.div(1e6).ln().add(1).mul(1e6)
+                        let pow = D(1)
+                        if (hasUpgrade('q', 21)) {
+                            pow = pow.mul(upgradeEffect('q', 21))
+                        }
+                        x = x.div(1e6).ln().div(pow).add(1).pow(pow).mul(1e6)
                     }
                     return x
                 },
@@ -2017,6 +2050,10 @@ addLayer('p', {
                             }
                             eff = eff.mul(tmp.l.energyEff.prest)
 
+                            if (hasUpgrade('q', 15)) {
+                                eff = eff.pow(upgradeEffect('q', 15))
+                            }
+
                             eff = eff.max(1).log10().pow(tmp.p.buyables[91].effect.dimDilate).pow10()
                             return eff;
                         },
@@ -2343,15 +2380,21 @@ addLayer('p', {
                 dispEffBase() {
                     const currEffect = this.effect(player.p.buyables[91])
                     const nextEffect = this.effect(player.p.buyables[91].add(1))
-                    return `Reset previous dimension progress to dilate multiplier from buying dimensions by +^${format(nextEffect.dimDilate.sub(currEffect.dimDilate), 3)} and increase Prestige Enhancer's mult by +^${format(nextEffect.enhancerDilate.sub(currEffect.enhancerDilate))} to the exponent.`
+                    return `Reset previous dimension progress to dilate multiplier from buying dimensions by +^${format(nextEffect.dimDilate.sub(currEffect.dimDilate), 3)} and increase Prestige Enhancer's mult by +^${format(nextEffect.enhancerDilate.sub(currEffect.enhancerDilate), 2)} to the exponent.`
                 },
                 scaleModifEffective(x) {
+                    if (x.gte(9)) {
+                        x = x.div(9).pow(2).sub(1).exp().mul(9)
+                    }
                     return x
                 },
                 scaleModifCost(x) {
                     return x
                 },
                 scaleModifTarEff(x) {
+                    if (x.gte(9)) {
+                        x = x.div(9).ln().add(1).root(2).mul(9)
+                    }
                     return x
                 },
                 scaleModifTarCost(x) {
@@ -2483,7 +2526,7 @@ addLayer('p', {
                     x = player[upgrade.layer].hsPoints
                 }
                 
-                if (x.lt(upgrade.costD.main[0])) { return D(-1e-12) }
+                if (x.lt(upgrade.costD.main[0].layeradd10(upgrade.costD.exp))) { return D(-1e-12) }
 
                 let i, j;
                 i = D(x)
@@ -2506,6 +2549,8 @@ addLayer('p', {
                     console.warn(`[Layer: p, Type: buyable, ID: ${upgrade.id}] NaN detected (set to 0) after layeradd10 in target of id${upgrade.id} before scaling!`)
                     return D(0)
                 }
+
+
 
                 // currency less than base cost, we don't need to do anything except for accounting for possible free levels via cost reduction
                 if (i.lt(j[0])) {
@@ -2560,6 +2605,7 @@ addLayer('p', {
                     console.warn(`[Layer: p, Type: buyable, ID: ${upgrade.id}] NaN detected (set to 0) after layeradd10 in target of id${upgrade.id} after scaleModifTarEff! (scaleModifTarEff causing NaN?)`)
                     return D(0)
                 }
+
                 return i
             }
 
@@ -2655,6 +2701,12 @@ addLayer('p', {
                             txt += `<br>`
                         }
                         txt += `<br>Scales exponentially after ${format(1e6)} purchases.`
+                    }
+                    if (upgrade.type === 3 && upgrade.num === 10) {
+                        if (!hasExtra) {
+                            txt += `<br>`
+                        }
+                        txt += `<br>Scales exponentially after ${format(10)} purchases.`
                     }
                 } else {
                     txt += `Effect: `
@@ -4528,7 +4580,7 @@ addLayer('p', {
         },
         411: {
             title: "Diverse Scaling",
-            description: "HSP intervals also decrease Rank scaling.",
+            description: "HSP intervals also decrease Rank scaling. Capped at -95%",
             cost: new Decimal(1e16),
             unlocked() { return hasUpgrade('p', 301) },
             currencyInternalName: 'hsPoints',
@@ -4538,6 +4590,7 @@ addLayer('p', {
             },
             effect() { 
                 let ret = player.p.hsBestGalaxies.pow_base(0.9995).recip()
+                ret = ret.min(20)
                 return ret;
             },
             effectDisplay() { return `-${formatPerc(this.effect(), 3)}` }, 

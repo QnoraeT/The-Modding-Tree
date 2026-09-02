@@ -228,6 +228,17 @@ addLayer('l', {
                 tmp.l.buyables[11 + i].buyMax()
             }
         }
+
+        if (hasUpgrade('q', 15)) {
+            tmp.l.buyables[21].buyMax()
+            tmp.l.buyables[22].buyMax()
+            tmp.l.buyables[23].buyMax()
+            tmp.l.buyables[31].buyMax()
+            tmp.l.buyables[32].buyMax()
+            tmp.l.buyables[33].buyMax()
+            tmp.l.buyables[41].buyMax()
+            tmp.l.buyables[42].buyMax()
+        }
     },
     effect(){
         let i = player.l.total.max(1).log10().add(1)
