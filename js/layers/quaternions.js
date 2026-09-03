@@ -92,7 +92,7 @@ addLayer('q', {
 
         if (challengeCompletions('q', 12).gte(1)) {
             for (let i = 0; i < player.q.allocated.length; i++) {
-                arr[i] = arr[i].pow(player.q.allocated[i].max(1e10).log10().log10())
+                arr[i] = arr[i].pow(player.q.allocated[i].max(1e10).log10().log10().pow(inChallenge('q', 13) ? 1 : 3))
             }
         }
 
@@ -600,7 +600,7 @@ addLayer('q', {
                 type: 0,
                 num: 3,
                 get costD() {
-                    const obj = {type: 1, exp: 1, main: [D(19), D(1.09), D(1.2)]}
+                    const obj = {type: 1, exp: 1, main: [D(19), D(1.085), D(1.15)]}
 
                     return obj
                 },

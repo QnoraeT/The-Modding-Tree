@@ -468,10 +468,10 @@ addLayer('p', {
                     : player.p.points.log10().div(2).root(1.5).sub(100).div(4).pow10().floor()
                 : D(0)
         } else {
-            i = Decimal.gte(player.p.points, 'e360')
+            i = Decimal.gte(player.p.points, 'e350')
                 ? hasUpgrade('p', 425)
-                    ? player.p.points.log10().mul(343/360).root(1.5).sub(49).pow10().floor()
-                    : player.p.points.log10().mul(10/9).root(2).sub(20).pow10().floor()
+                    ? player.p.points.log10().mul(343/350).root(1.5).sub(49).pow10().floor()
+                    : player.p.points.log10().mul(8/7).root(2).sub(20).pow10().floor()
                 : D(0)
         }
 
@@ -485,8 +485,8 @@ addLayer('p', {
                 : i.log10().mul(4).add(100).pow(1.5).mul(2).pow10()
         } else {
             i = hasUpgrade('p', 425)
-                ? i.log10().add(49).pow(1.5).div(343/360).pow10()
-                : i.log10().add(20).pow(2).div(10/9).pow10()
+                ? i.log10().add(49).pow(1.5).div(343/350).pow10()
+                : i.log10().add(20).pow(2).div(8/7).pow10()
         }
 
         return i;
@@ -850,7 +850,7 @@ addLayer('p', {
                             i = i.add(player.p.buyables[31].mul(0.4))
                         }
                         if (challengeCompletions('p', 12).gte(5)) { i = i.mul(inChallenge('q', 13) ? 1.05 : 1.001) }
-                        if (hasUpgrade('p', 251)) { i = i.mul(inChallenge('q', 14) ? 1.05 : 1.001) }
+                        if (hasUpgrade('p', 251)) { i = i.mul(inChallenge('q', 13) ? 1.05 : 1.001) }
                         i = i.mul(tmp.l.buyables[43].effect)
                     }
 
@@ -2043,6 +2043,7 @@ addLayer('p', {
                             }
                             
                             eff = Decimal.pow(j, eff.sub(1).max(0))
+                            eff = eff.pow(tmp.p.buyables[91].effect.dimDilate)
 
                             eff = eff.mul(tmp.p.buyables[69].effect.mult ?? D(1))
                             if (hasUpgrade('l', 12)) {
@@ -2054,7 +2055,6 @@ addLayer('p', {
                                 eff = eff.pow(upgradeEffect('q', 15))
                             }
 
-                            eff = eff.max(1).log10().pow(tmp.p.buyables[91].effect.dimDilate).pow10()
                             return eff;
                         },
                         dispEffect() {
@@ -2118,22 +2118,22 @@ addLayer('p', {
                     }
 
                     i = {
-                        mult: Decimal.pow(j, i),
+                        mult: sumFactorial(i, j, 0.5),
                         free: hasUpgrade('p', 63) && i.gte(20)
                             ? i.sub(12).mul(0.4)
                             : sumHarmonicSeries(i.max(0).add(1))
                     }
-                    i.mult = i.mult.max(1).log10().pow(tmp.p.buyables[91].effect.enhancerDilate).pow10()
+                    i.mult = i.mult.pow(tmp.p.buyables[91].effect.enhancerDilate)
                     return i;
                 },
                 dispEffect() {
                     const currEffect = this.effect(player.p.buyables[69])
-                    return `Reset dimension progress for a ${format(currEffect.mult, 1)}&times; mult to dimensions, and every OoM of a dimension bought adds ${format(currEffect.free, 2)} free levels to their respective Prestige Essence buyable. (for PD6, it is ln()'d)`
+                    return `Reset dimension progress for a ${format(currEffect.mult, 2)}&times; mult to dimensions, and every OoM of a dimension bought adds ${format(currEffect.free, 2)} free levels to their respective Prestige Essence buyable. (for PD6, it is ln()'d)`
                 },
                 dispEffBase() {
                     const currEffect = this.effect(player.p.buyables[69])
                     const nextEffect = this.effect(player.p.buyables[69].add(1))
-                    return `Reset dimension progress for a ${format(nextEffect.mult.div(currEffect.mult), 1)}&times; mult to dimensions, and every OoM of a dimension bought adds ${format(nextEffect.free.sub(currEffect.free), 3)} free levels to their respective Prestige Essence buyable. (for PD6, it is ln()'d)`
+                    return `Reset dimension progress for a ${format(nextEffect.mult.div(currEffect.mult), 2)}&times; mult to dimensions, and every OoM of a dimension bought adds ${format(nextEffect.free.sub(currEffect.free), 3)} free levels to their respective Prestige Essence buyable. (for PD6, it is ln()'d)`
                 },
                 scaleModifEffective(x) {
                     return x
@@ -2354,7 +2354,7 @@ addLayer('p', {
             91: {
                 type: 3,
                 num: 10,
-                costD: {type: 0, exp: 0, main: [D(160), D(1.25), D(1.001)]},
+                costD: {type: 0, exp: 0, main: [D(160), D(1.25), D(1.01)]},
                 unlocked() { return hasUpgrade('p', 65) || player.p.buyables[91].gte(1) },
                 unavail() {
                     let x = false
@@ -2368,33 +2368,27 @@ addLayer('p', {
                     }
 
                     i = {
-                        dimDilate: i.mul(0.005).add(1),
-                        enhancerDilate: i.mul(0.15).add(1)
+                        dimDilate: i.pow_base(1.025),
+                        enhancerDilate: i.pow_base(1.1)
                     }
                     return i
                 },
                 dispEffect() {
                     const currEffect = this.effect(player.p.buyables[91])
-                    return `Reset previous dimension progress to dilate multiplier from buying dimensions by ^${format(currEffect.dimDilate, 3)} and increase Prestige Enhancer's mult by ^${format(currEffect.enhancerDilate, 2)} to the exponent.` 
+                    return `Reset previous dimension progress to raise multiplier from buying dimensions by ^${format(currEffect.dimDilate, 3)} and increase Prestige Enhancer's mult by ^${format(currEffect.enhancerDilate, 2)}.` 
                 },
                 dispEffBase() {
                     const currEffect = this.effect(player.p.buyables[91])
                     const nextEffect = this.effect(player.p.buyables[91].add(1))
-                    return `Reset previous dimension progress to dilate multiplier from buying dimensions by +^${format(nextEffect.dimDilate.sub(currEffect.dimDilate), 3)} and increase Prestige Enhancer's mult by +^${format(nextEffect.enhancerDilate.sub(currEffect.enhancerDilate), 2)} to the exponent.`
+                    return `Reset previous dimension progress to raise multiplier from buying dimensions by ^${format(nextEffect.dimDilate.div(currEffect.dimDilate), 3)} and increase Prestige Enhancer's mult by ^${format(nextEffect.enhancerDilate.div(currEffect.enhancerDilate), 2)}.`
                 },
                 scaleModifEffective(x) {
-                    if (x.gte(9)) {
-                        x = x.div(9).pow(2).sub(1).exp().mul(9)
-                    }
                     return x
                 },
                 scaleModifCost(x) {
                     return x
                 },
                 scaleModifTarEff(x) {
-                    if (x.gte(9)) {
-                        x = x.div(9).ln().add(1).root(2).mul(9)
-                    }
                     return x
                 },
                 scaleModifTarCost(x) {
@@ -2893,7 +2887,7 @@ addLayer('p', {
                 return `You will gain ${format(tmp.p.tpGain)} Tree Points on reset.<br>Next at ${format(tmp.p.tpNext)} Prestige Points.`
             },
             canClick() {
-                return player.p.points.gte('e360')
+                return tmp.p.tpGain.gte(1)
             },
             onClick() {
                 player.p.treePoints = Decimal.add(player.p.treePoints, tmp.p.tpGain)
@@ -3972,7 +3966,8 @@ addLayer('p', {
                 if (hasUpgrade('p', 241)) {
                     ret = ret.add(300).mul(20)
                 }
-                ret = inChallenge('q', 14)
+                ret = ret.mul(ret.div(ret.add(10)).add(1))
+                ret = inChallenge('q', 13)
                     ? ret.div(8).add(1).ln().mul(2).add(1).recip()
                     : ret.div(8).add(1).ln().mul(0.02).add(1).recip()
                 return ret;
@@ -4124,7 +4119,7 @@ addLayer('p', {
         251: {
             title: "(u6-1) Point Boost",
             description() {
-                return `Needs u5-c & BC1x1 completion<br>${!hasUpgrade('p', 421) ? '<b>Disables u6-2 and u6-3</b><br>' : ''}<br>Point Buyables are ${inChallenge('q', 14) ? 5 : 0.1}% more effective.`
+                return `Needs u5-c & BC1x1 completion<br>${!hasUpgrade('p', 421) ? '<b>Disables u6-2 and u6-3</b><br>' : ''}<br>Point Buyables are ${inChallenge('q', 13) ? 5 : 0.1}% more effective.`
             },
             cost: new Decimal(1),
             unlocked() { return inChallenge('q', 13) || challengeCompletions('q', 14).gte(1) },
@@ -4147,7 +4142,7 @@ addLayer('p', {
         252: {
             title: "(u6-2) prestige Boost",
             description() {
-                return `Needs u5-c & BC1x1 completion<br>${!hasUpgrade('p', 421) ? '<b>Disables u6-1 and u6-3</b><br>' : ''}<br>Prestige Buyables are ${inChallenge('q', 14) ? 5 : 0.1}% more effective.`
+                return `Needs u5-c & BC1x1 completion<br>${!hasUpgrade('p', 421) ? '<b>Disables u6-1 and u6-3</b><br>' : ''}<br>Prestige Buyables are ${inChallenge('q', 13) ? 5 : 0.1}% more effective.`
             },
             cost: new Decimal(1),
             unlocked() { return inChallenge('q', 13) || challengeCompletions('q', 14).gte(1) },
