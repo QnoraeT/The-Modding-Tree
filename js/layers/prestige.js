@@ -109,6 +109,11 @@ addLayer('p', {
             }
         }
 
+        if (inChallenge('q', 13)) {
+            player.p.hsChalBest = player.p.hsChalBest.max('e3000')
+        } else {
+            player.p.hsChalBest = player.p.hsChalBest.max('e3e5')
+        }
         if (inChallenge('p', 41)) {
             player.p.hsChalBest = Decimal.max(player.p.hsChalBest, player.points)
         }
@@ -1259,16 +1264,17 @@ addLayer('p', {
                         ppe: Decimal.pow(j, i.add(1).pow(1.333).log10().add(1).pow(0.9).sub(1).pow10().sub(1)), 
                         up3s: i.add(1).pow(0.7).sub(1).mul(0.03).add(1)
                     };
+                    i.up3s = i.up3s.min(20)
                     return i
                 },
                 dispEffect() {
                     const currEffect = this.effect(player.p.buyables[21])
-                    return `&times;${format(currEffect.ppe, 2)} Essence, -${formatPerc(currEffect.up3s)} Point Buyable 3 scaling.` 
+                    return `&times;${format(currEffect.ppe, 2)} Essence, -${formatPerc(currEffect.up3s)} Point Buyable 3 scaling. (Caps at -95%)` 
                 },
                 dispEffBase() {
                     const currEffect = this.effect(player.p.buyables[21])
                     const nextEffect = this.effect(player.p.buyables[21].add(1))
-                    return `&times;${format(nextEffect.ppe.div(currEffect.ppe), 2)} Essence, -${formatPerc(nextEffect.up3s.div(currEffect.up3s))} Point Buyable 3 scaling.` 
+                    return `&times;${format(nextEffect.ppe.div(currEffect.ppe), 2)} Essence, -${formatPerc(nextEffect.up3s.div(currEffect.up3s))} Point Buyable 3 scaling. (Caps at -95%)` 
                 },
                 scaleModifEffective(x) {
                     return x
@@ -2811,7 +2817,8 @@ addLayer('p', {
                     }
                     if (upgrade.num >= 2) {
                         setBuyableAmount(upgrade.layer, 51, D(0))
-                        player[upgrade.layer].milestones = []
+                        const UNSAFE_MILESTONES = [0, 1, 2, 3, 4, 5, 6, 7, 8]
+                        player[upgrade.layer].milestones = player[upgrade.layer].milestones.filter((mil) => { return !UNSAFE_MILESTONES.includes(mil) })
                     }
                     tmp.q.doReset(true)
                 }
@@ -3475,7 +3482,7 @@ addLayer('p', {
             challengeDescription: 'Strengthed Dilation and Super Scaling are applied. Point Buyable 3\'s effectiveness is raised ^0.5. This challenge does a Q. Reset.',
             rewardEffect() {
                 let i = player.p.hsChalBest
-                i = inChallenge('q', 14)
+                i = inChallenge('q', 13)
                     ? i.max('e3000').log('e3000').pow(3)
                     : i.max('e3e5').log('e3e5')
 
@@ -4575,7 +4582,7 @@ addLayer('p', {
         },
         411: {
             title: "Diverse Scaling",
-            description: "HSP intervals also decrease Rank scaling. Capped at -95%",
+            description: "HSP intervals also decrease Rank scaling. Capped at -75%",
             cost: new Decimal(1e16),
             unlocked() { return hasUpgrade('p', 301) },
             currencyInternalName: 'hsPoints',
@@ -4585,7 +4592,7 @@ addLayer('p', {
             },
             effect() { 
                 let ret = player.p.hsBestGalaxies.pow_base(0.9995).recip()
-                ret = ret.min(20)
+                ret = ret.min(4)
                 return ret;
             },
             effectDisplay() { return `-${formatPerc(this.effect(), 3)}` }, 

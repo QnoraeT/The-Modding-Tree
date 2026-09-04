@@ -230,7 +230,7 @@ addLayer('q', {
         player.p.hsTotal = D(0)
         player.p.hsBest = D(0)
         player.p.hsBestGalaxies = D(0)
-        player.p.hsChalBest = inChallenge('q', 13) ? D('e3000') : D('e3e5')
+        player.p.hsChalBest = D(0)
         setBuyableAmount('p', 81, D(0))
         setBuyableAmount('p', 82, D(0))
         setBuyableAmount('p', 83, D(0))
