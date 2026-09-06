@@ -2818,7 +2818,7 @@ addLayer('p', {
                     if (upgrade.num >= 2) {
                         setBuyableAmount(upgrade.layer, 51, D(0))
                         const UNSAFE_MILESTONES = [0, 1, 2, 3, 4, 5, 6, 7, 8]
-                        player[upgrade.layer].milestones = player[upgrade.layer].milestones.filter((mil) => { return !UNSAFE_MILESTONES.includes(mil) })
+                        player[upgrade.layer].milestones = player[upgrade.layer].milestones.filter((mil) => { return !UNSAFE_MILESTONES.includes(parseInt(mil)) })
                     }
                     tmp.q.doReset(true)
                 }
@@ -4600,7 +4600,7 @@ addLayer('p', {
         412: {
             title: "Self-Sustaining Scaling",
             description: "Generate free Branch points based on HSP.",
-            cost: new Decimal(1e24),
+            cost: new Decimal(1e23),
             unlocked() { return hasUpgrade('p', 301) },
             currencyInternalName: 'hsPoints',
             currencyDisplayName: 'Hyper Scaling Points',
@@ -4608,7 +4608,7 @@ addLayer('p', {
                 return player.p
             },
             effect() { 
-                let ret = player.p.hsPoints.max(1e12).log10().div(12).pow(5).sub(1).div(310)
+                let ret = player.p.hsPoints.max(1e12).log10().div(12).pow(5).sub(1).div(31)
                 return ret;
             },
             effectDisplay() { return `+${format(this.effect(), 3)}/s` }, 

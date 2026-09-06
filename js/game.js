@@ -416,7 +416,7 @@ function gameLoop(diff) {
 			dilate: {exp: D(1.25), eff: D(1)},
 			sc1:    {exp: D(2),    start: D(1e10), eff: D(1)},
 			sc2:    {exp: D(3),    start: D(1e33), eff: D(1)},
-			sc3:    {exp: D(2.5),  start: D(inChallenge('q', 13) ? 'ee6' : 'ee100'), eff: D(1)}
+			sc3:    {exp: D(2.5),  start: D('ee100'), eff: D(1)}
 		}
 	}
 
@@ -475,6 +475,8 @@ function gameLoop(diff) {
 		tmp.reductionFactors.sc2.exp = D(1)
 		tmp.reductionFactors.sc1.exp = D(1)
 	}
+
+	tmp.reductionFactors.sc3.start = D(inChallenge('q', 13) ? 'ee6' : 'ee100')
 
 	// cap lesser tier softcaps before higher tier softcaps
 	tmp.reductionFactors.sc2.start = tmp.reductionFactors.sc2.start.min(tmp.reductionFactors.sc3.start)
