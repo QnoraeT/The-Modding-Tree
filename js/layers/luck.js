@@ -173,6 +173,7 @@ addLayer('l', {
         lastRand: D(1),
         maxRand: D(1),
         rollPoints: D(0),
+        rollPointGen: D(0),
         energy: D(0),
         totalEnergy: D(0),
         dimensionAccu: [D(0), D(0), D(0), D(0), D(0), D(0), D(0), D(0)],
@@ -218,9 +219,12 @@ addLayer('l', {
             player.l.totalEnergy = player.l.totalEnergy.add(tmp.l.energyPS.mul(diff))
         }
 
+        let gen = player.l.rollPointGen.mul(player.globalTS)
+        player.l.rollPoints = player.l.rollPoints.add(gen.mul(diff))
+
         if (hasUpgrade('l', 16)) {
-            let gen = tmp.l.rollPointGain.mul(player.globalTS)
-            player.l.rollPoints = player.l.rollPoints.add(gen.mul(diff))
+            let gen2 = tmp.l.rollPointGain.mul(player.globalTS)
+            player.l.rollPointGain = player.l.rollPointGain.add(gen2.mul(diff))
         }
 
         if (hasUpgrade('q', 14)) {
@@ -255,7 +259,7 @@ addLayer('l', {
         return tmp.l.getResetGain.gte(1)
     },
     getResetGain() {
-        let i = player.points.lt(9e15) 
+        let i = player.points.lt('e9e15') 
             ? D(0) 
             : player.points.log10().div(9e15).log(1000).add(1).pow(2)
 
@@ -296,7 +300,7 @@ addLayer('l', {
         let i = D(1)
         i = i.mul(tmp.l.effect)
         if (hasUpgrade('l', 13)) {
-            i = i.mul(upgradeEffect('l', 13))
+            i = i.mul(upgradeEffect('l', 13).luck)
         }
         i = i.mul(tmp.l.petPassiveEffs.line)
         if (challengeCompletions('p', 12).gte(16)) {
@@ -318,7 +322,7 @@ addLayer('l', {
     },
     rollLol() {
         let i = new Decimal(Math.random())
-        i = i.max(1e-6) // too lucky to get NaNs
+        i = i.max(1e-6) // too lucky to get NaNs, 1/1,000,000 chance (go to sols rng for that lmao)
         i = i.recip()
 
         i = i.mul(tmp.l.luckMult)
@@ -327,8 +331,10 @@ addLayer('l', {
     },
     rollPointGain() {
         let i = player.l.maxRand
-        i = i.mul(player.l.totalRolls)
         i = i.mul(tmp.l.energyEff.normal)
+        if (hasUpgrade('l', 16)) {
+            i = i.mul(player.l.totalRolls)
+        }
         if (hasUpgrade('l', 22)) {
             i = i.mul(player.l.rollPoints.max(10).log10().pow(upgradeEffect('l', 22)))
         }
@@ -453,12 +459,12 @@ addLayer('l', {
             onClick() {
                 player.l.cooldownRand = D(1)
                 player.l.lastRand = tmp.l.rollLol()
-                player.l.rollPoints = player.l.rollPoints.add(tmp.l.rollPointGain)
+                player.l.rollPointGen = player.l.rollPointGen.add(tmp.l.rollPointGain)
                 player.l.totalRolls = player.l.totalRolls.add(1)
 
                 if (hasUpgrade('l', 13)) {
-                    let loss = player.p.buyable5Clicks.max(1e12).mul(0.1)
-                    player.p.buyable5Clicks = player.p.buyable5Clicks.sub(loss)
+                    let loss = player.p.buyable5Clicks.mul(0.1)
+                    player.p.buyable5Clicks = player.p.buyable5Clicks.sub(loss).max(0)
                 }
             },
             style: {
@@ -503,7 +509,7 @@ addLayer('l', {
         },
         13: {
             title: "\"Lose all your money...\"",
-            description: "Every roll, trade 10% or 1.000 T (whichever is higher) of your Point Buyable 5 clicks for extra luck.",
+            description: "Every roll, trade 10% of your Point Buyable 5 clicks for extra luck. Your highest luck boosts PB5 clicks.",
             cost: new Decimal(100000),
             unlocked() { return true },
             currencyInternalName: 'rollPoints',
@@ -512,10 +518,13 @@ addLayer('l', {
                 return player.l
             },
             effect() { 
-                let ret = player.p.buyable5Clicks.div(1e12).max(1).log(1.1).max(0).floor().mul(0.005).add(1)
+                let ret = {
+                    luck: player.p.buyable5Clicks.div(1e12).max(1).log(1.1).max(0).floor().mul(0.005).add(1),
+                    clicks: player.l.maxRand.max(10).log10()
+                }
                 return ret;
             },
-            effectDisplay() { return `^${format(this.effect(), 3)}` }, 
+            effectDisplay() { return `^${format(this.effect().luck, 3)} to luck, &times;${format(this.effect().clicks, 2)} to clicks` }, 
         },
         14: {
             title: "\"...you stupid beach!\"",
@@ -546,7 +555,7 @@ addLayer('l', {
         },
         16: {
             title: "Annoying Clicking",
-            description: "Gain Roll Points and Buyable 5 Clicks equivalent to physically clicking them 1 time per second.",
+            description: "Gain RPG and Buyable 5 Clicks equivalent to physically clicking them 1 time per second. Roll Point Gain is multiplied by amount of times rolled.",
             cost: new Decimal(1e39),
             unlocked() { return true },
             currencyInternalName: 'rollPoints',
@@ -554,6 +563,11 @@ addLayer('l', {
             currencyLocation() {
                 return player.l
             },
+            effect() { 
+                let ret = player.l.totalRolls
+                return ret;
+            },
+            effectDisplay() { return `&times;${format(this.effect())} to RP` }, 
         },
         21: {
             title: "Missing Upgrade",
@@ -1134,7 +1148,7 @@ addLayer('l', {
 
                 i = i.layeradd10(upgrade.costD.exp)
                 i = upgrade.scaleModifCost(i)
-                return i
+                return i.round()
             }
 
             upgrade.target = () => {
@@ -1369,7 +1383,7 @@ addLayer('l', {
             onClick() {
                 player.l.cooldownRand = D(1)
                 player.l.lastRand = tmp.l.rollLol()
-                player.l.rollPoints = player.l.rollPoints.add(tmp.l.rollPointGain)
+                player.l.rollPointGen = player.l.rollPointGen.add(tmp.l.rollPointGain)
                 player.l.totalRolls = player.l.totalRolls.add(1)
 
                 if (hasUpgrade('l', 13)) {
@@ -1467,7 +1481,7 @@ addLayer('l', {
                 ["prestige-button", ""],
                 "blank",
                 ["display-text",
-                function() { return `You have <h2 style="color: #FFFF00; font-size: 26px; text-shadow: #FFFF00 0px 0px 10px;">${format(player.l.rollPoints, 2)}</h2> Roll Points. (${format(tmp.l.rollPointGain, 1)}/roll)` }],
+                function() { return `You have <h2 style="color: #FFFF00; font-size: 26px; text-shadow: #FFFF00 0px 0px 10px;">${format(player.l.rollPoints, 2)}</h2> Roll Points. (${format(player.l.rollPointGen, 1)}/s, +${format(tmp.l.rollPointGain, 1)}/roll)` }],
                 ["clickables", [1]],
                 "blank",
                 ["upgrades", [1, 2]],

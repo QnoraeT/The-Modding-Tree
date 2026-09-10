@@ -569,7 +569,7 @@ function gameLoop(diff) {
     }
 
 	if (inChallenge('q', 14)) {
-		player.points = player.points.min('e2e10')
+		player.points = player.points.min('ee8')
 	}
 
 	player.calcPointGen = diff != 0 ? player.points.sub(previous).div(inChallenge('p', 23) ? 1 : diff) : D(0)

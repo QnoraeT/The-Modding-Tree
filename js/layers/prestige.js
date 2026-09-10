@@ -467,10 +467,10 @@ addLayer('p', {
     tpGain() {
         let i;
         if (inChallenge('q', 14)) {
-            i = Decimal.gte(player.p.points, 'e2000')
+            i = Decimal.gte(player.p.points, 'e600')
                 ? hasUpgrade('p', 425)
-                    ? player.p.points.log10().div(2).sub(1000).div(4).pow10().floor()
-                    : player.p.points.log10().div(2).root(1.5).sub(100).div(4).pow10().floor()
+                    ? player.p.points.log10().mul(5/3).sub(1000).div(3).pow10().floor()
+                    : player.p.points.log10().mul(5/3).root(1.5).sub(100).div(3).pow10().floor()
                 : D(0)
         } else {
             i = Decimal.gte(player.p.points, 'e350')
@@ -486,8 +486,8 @@ addLayer('p', {
         let i = tmp.p.tpGain.add(1)
         if (inChallenge('q', 14)) {
             i = hasUpgrade('p', 425)
-                ? i.log10().mul(4).add(1000).mul(2).pow10()
-                : i.log10().mul(4).add(100).pow(1.5).mul(2).pow10()
+                ? i.log10().mul(3).add(1000).div(5/3).pow10()
+                : i.log10().mul(3).add(100).pow(1.5).div(5/3).pow10()
         } else {
             i = hasUpgrade('p', 425)
                 ? i.log10().add(49).pow(1.5).div(343/350).pow10()
@@ -524,6 +524,9 @@ addLayer('p', {
         }
         i = i.mul([1, 1.5, 3, 9, 45, 360][challengeCompletions('p', 23).toNumber()])
         i = i.mul(tmp.l.buyables[22].effect)
+        if (hasUpgrade('l', 13)) {
+            i = i.mul(upgradeEffect('l', 13).clicks)
+        }
         if (player.l.petEquipped.includes('circle')) {
             i = i.mul(tmp.l.petActiveEffs.circle)
         }
@@ -633,9 +636,9 @@ addLayer('p', {
                 "blank",
                 ["challenges", [4]],
                 "blank",
-                ["upgrades", [40, 41, 42]],
-                "blank",
                 ["buyables", [8]],
+                "blank",
+                ["upgrades", [40, 41, 42]],
             ],
             unlocked(){
                 return hasUpgrade('p', 301)
@@ -1133,7 +1136,14 @@ addLayer('p', {
             15: {
                 type: 0,
                 num: 5,
-                costD: {type: 0, exp: 1, main: [D(1000), D(1.2), D(1.005)]},
+                get costD() {
+                    const obj = {type: 0, exp: 1, main: [D(1000), D(1.2), D(1.005)]}
+                    if (inChallenge('q', 14)) {
+                        obj.main[0] = D(200)
+                        obj.main[1] = D(1.1)
+                    }
+                    return obj
+                },
                 unlocked() { return hasUpgrade('p', 201) },
                 unavail() {
                     let x = false
@@ -1264,17 +1274,17 @@ addLayer('p', {
                         ppe: Decimal.pow(j, i.add(1).pow(1.333).log10().add(1).pow(0.9).sub(1).pow10().sub(1)), 
                         up3s: i.add(1).pow(0.7).sub(1).mul(0.03).add(1)
                     };
-                    i.up3s = i.up3s.min(20)
+                    i.up3s = i.up3s.min(25)
                     return i
                 },
                 dispEffect() {
                     const currEffect = this.effect(player.p.buyables[21])
-                    return `&times;${format(currEffect.ppe, 2)} Essence, -${formatPerc(currEffect.up3s)} Point Buyable 3 scaling. (Caps at -95%)` 
+                    return `&times;${format(currEffect.ppe, 2)} Essence, -${formatPerc(currEffect.up3s)} Point Buyable 3 scaling. (Caps at -96%)` 
                 },
                 dispEffBase() {
                     const currEffect = this.effect(player.p.buyables[21])
                     const nextEffect = this.effect(player.p.buyables[21].add(1))
-                    return `&times;${format(nextEffect.ppe.div(currEffect.ppe), 2)} Essence, -${formatPerc(nextEffect.up3s.div(currEffect.up3s))} Point Buyable 3 scaling. (Caps at -95%)` 
+                    return `&times;${format(nextEffect.ppe.div(currEffect.ppe), 2)} Essence, -${formatPerc(nextEffect.up3s.div(currEffect.up3s))} Point Buyable 3 scaling. (Caps at -96%)` 
                 },
                 scaleModifEffective(x) {
                     return x
@@ -1837,7 +1847,7 @@ addLayer('p', {
                     let i = D(x)
                     if (!override) {
                         if (hasUpgrade('p', 52)) {
-                            i = i.add((player.p.buyables[69] ?? D(0)).eq(0) ? D(0) : player.p.buyables[69   ].max(1).log10().add(1).mul(tmp.p.buyables[69].effect.free))
+                            i = i.add((player.p.buyables[69] ?? D(0)).eq(0) ? D(0) : player.p.buyables[69].max(1).log10().add(1).mul(tmp.p.buyables[69].effect.free))
                         }
                         i = i.mul(challengeCompletions('p', 21).mul(inChallenge('q', 13) ? 0.05 : 0.001).add(1))
                         if (inChallenge('p', 21)) {
@@ -2004,12 +2014,12 @@ addLayer('p', {
                                     obj.exp = 1
                                 }
                                 if (inChallenge('q', 14)) {
-                                    obj.main[0] = D(3000)
+                                    obj.main[0] = D(1000)
                                     obj.main[1] = D(1.01)
                                     obj.main[2] = D(1)
                                 } else if (!inChallenge('q', 12)) {
                                     obj.main[0] = D(7000)
-                                    obj.main[1] = D(1.05)
+                                    obj.main[1] = D(1.025)
                                     obj.main[2] = D(1.001)
                                     if (hasUpgrade('p', 54)) {
                                         obj.main[2] = D(1)
@@ -2476,7 +2486,7 @@ addLayer('p', {
 
                 i = i.layeradd10(upgrade.costD.exp)
                 i = upgrade.scaleModifCost(i)
-                return i
+                return i.round()
             }
 
             upgrade.target = () => {
@@ -2910,7 +2920,7 @@ addLayer('p', {
                 return true
             },
             onClick() {
-                const SAFE_UPGRADES = [11, 12, 13, 14, 15, 21, 22, 23, 24, 31, 41, 42, 43, 44, 45, 51, 52, 53, 401, 402, 403, 404, 405, 411, 412, 413, 414, 415]
+                const SAFE_UPGRADES = [11, 12, 13, 14, 15, 21, 22, 23, 24, 31, 41, 42, 43, 44, 45, 51, 52, 53, 401, 402, 403, 404, 405, 411, 412, 413, 414, 415, 421, 422, 423, 424, 425]
 
                 player.p.upgrades = player.p.upgrades.filter((value) => { return SAFE_UPGRADES.includes(value) });
                 player.p.totalBPUsed = D(0)
@@ -3690,6 +3700,10 @@ addLayer('p', {
             currencyLocation() {
                 return player.p
             },
+            effect() { 
+                return (player.p.buyables[69] ?? D(0)).eq(0) ? D(0) : player.p.buyables[69].max(1).log10().add(1).mul(tmp.p.buyables[69].effect.free)
+            },
+            effectDisplay() { return `+${format(this.effect(), 2)}` }, 
         },
         53: {
             title: "Wrap-Around",
@@ -4498,7 +4512,7 @@ addLayer('p', {
         },
         401: {
             title: "This again",
-            description: "HSP gives a multiplier to prestige point gain.",
+            description: "Total HSP gives a multiplier to prestige point gain.",
             cost: new Decimal(1000),
             unlocked() { return hasUpgrade('p', 301) },
             currencyInternalName: 'hsPoints',
@@ -4507,7 +4521,10 @@ addLayer('p', {
                 return player.p
             },
             effect() { 
-                let ret = player.p.hsPoints.max(0).add(1).pow(5)
+                let ret = player.p.hsTotal.max(0).add(1).pow(5)
+                if (!inChallenge('q', 13)) {
+                    ret = ret.pow(200)
+                }
                 return ret;
             },
             effectDisplay() { return `&times;${format(this.effect())}` }, 
@@ -4524,6 +4541,9 @@ addLayer('p', {
             },
             effect() { 
                 let ret = player.p.hsTotal.max(0).add(1).pow(5000)
+                if (!inChallenge('q', 13)) {
+                    ret = ret.pow(12)
+                }
                 return ret;
             },
             effectDisplay() { return `&times;${format(this.effect())}` }, 
@@ -4541,7 +4561,7 @@ addLayer('p', {
             effect() { 
                 let ret = inChallenge('q', 13)
                     ? player.p.treePoints.max(1e10).log10().div(10).pow(6)
-                    : player.p.treePoints.max('e4000').log10().log(4000).sub(1).mul(10).add(1).pow(4)
+                    : player.p.treePoints.max('e4000').log10().log(4000).sub(1).mul(20).add(1).pow(3)
                 return ret;
             },
             effectDisplay() { return `&times;${format(this.effect(), 2)}` }, 

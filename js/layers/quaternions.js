@@ -472,9 +472,9 @@ addLayer('q', {
         14: {
             unlocked() { return challengeCompletions('q', 13).gte(1) },
             name: "Full Loss",
-            challengeDescription: "All prior challenges combined with several changes. This challenge is overall faster. Hardcaps at e20.000 B points.",
-            goalDescription: `Get ${format('e2e10')} Points.`,
-            canComplete() { return player.points.gte('e2e10') },
+            challengeDescription: "All prior quaternion challenges combined with several changes. This challenge is overall faster. Hardcaps at e100.000 M points.",
+            goalDescription: `Get ${format('ee8')} Points.`,
+            canComplete() { return player.points.gte('ee8') },
             rewardDescription: `Unlock a new layer above and aside from this. Reunlock Trees and they do not reset upon Quaternions, but they are weaker outside of Dimension Loss. The final 5 Hyper Scaling upgrades are kept.`,
             getDepths() {
                 let i = inChallenge('q', 14, true) ? D(1) : D(0)
@@ -678,7 +678,7 @@ addLayer('q', {
 
                 i = i.layeradd10(upgrade.costD.exp)
                 i = upgrade.scaleModifCost(i)
-                return i
+                return i.round()
             }
 
             upgrade.target = () => {
