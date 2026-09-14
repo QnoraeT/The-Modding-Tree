@@ -1,5 +1,42 @@
 "use strict";
 
+const PET_FORMULAE = {
+    xp_to_level(pet, xp) {
+        if (xp.lt((PET_DATA[pet] ?? { baseXP: D(10) }).baseXP)) {
+            return xp.div(
+                (PET_DATA[pet] ?? { baseXP: D(10) }).baseXP
+            ).add(1)
+        }
+        xp = xp.div(
+            (PET_DATA[pet] ?? { baseXP: D(10) }).baseXP
+        ).add(1).log(
+            (PET_DATA[pet] ?? { baseSpd: D(2) }).baseSpd
+        ).mul(
+            (PET_DATA[pet] ?? { baseScale: D(1.01) }).baseScale.sub(1)
+        ).add(1).log(
+            (PET_DATA[pet] ?? { baseScale: D(1.01) }).baseScale
+        ).add(1)
+        return xp
+    },
+    level_to_xp(pet, lv) {
+        if (lv.lt(2)) {
+            return lv.sub(1).mul(
+                (PET_DATA[pet] ?? { baseXP: D(10) }).baseXP
+            )
+        }
+        lv = lv.sub(1).pow_base(
+            (PET_DATA[pet] ?? { baseScale: D(1.01) }).baseScale
+        ).sub(1).div(
+            (PET_DATA[pet] ?? { baseScale: D(1.01) }).baseScale.sub(1)
+        ).pow_base(
+            (PET_DATA[pet] ?? { baseSpd: D(2) }).baseSpd
+        ).sub(1).mul(
+            (PET_DATA[pet] ?? { baseXP: D(10) }).baseXP
+        )
+        return lv
+    }
+}
+
 const PET_DATA = {
     line: {
         number: 1,
@@ -365,9 +402,7 @@ addLayer('l', {
     petLevels() {
         const obj = {}
         for (let pet in player.l.pets) {
-            obj[pet] = player.l.pets[pet].lt((PET_DATA[pet] ?? { baseXP: D(10) }).baseXP)
-                ? player.l.pets[pet].div((PET_DATA[pet] ?? { baseXP: D(10) }).baseXP).add(1)
-                : player.l.pets[pet].div((PET_DATA[pet] ?? { baseXP: D(10) }).baseXP).add(1).log((PET_DATA[pet] ?? { baseSpd: D(2) }).baseSpd).mul((PET_DATA[pet] ?? { baseScale: D(1.01) }).baseScale.sub(1)).add(1).log((PET_DATA[pet] ?? { baseScale: D(1.01) }).baseScale).add(1)
+            obj[pet] = PET_FORMULAE.xp_to_level(pet, player.l.pets[pet])
         }
         return obj
     },
@@ -1337,14 +1372,12 @@ addLayer('l', {
                     display() {
                         let currXP = player.l.pets[pet];
                         if (tmp.l.petLevels[pet].gt(1)) {
-                            currXP = currXP.sub(tmp.l.petLevels[pet].floor().sub(1).pow_base((PET_DATA[pet] ?? { baseScale: D(1.01) }).baseScale).sub(1).div((PET_DATA[pet] ?? { baseScale: D(1.01) }).baseScale.sub(1)).pow_base((PET_DATA[pet] ?? { baseSpd: D(2) }).baseSpd).sub(1).mul((PET_DATA[pet] ?? { baseXP: D(10) }).baseXP));
+                            currXP = currXP.sub(PET_FORMULAE.level_to_xp(pet, tmp.l.petLevels[pet].floor()));
                         }
 
-                        let nextXP = tmp.l.petLevels[pet].gt(1)
-                            ? tmp.l.petLevels[pet].floor().pow_base((PET_DATA[pet] ?? { baseScale: D(1.01) }).baseScale).sub(1).div((PET_DATA[pet] ?? { baseScale: D(1.01) }).baseScale.sub(1)).pow_base((PET_DATA[pet] ?? { baseSpd: D(2) }).baseSpd).sub(1).mul((PET_DATA[pet] ?? { baseXP: D(10) }).baseXP)
-                            : D((PET_DATA[pet] ?? { baseXP: D(10) }).baseXP);
+                        let nextXP = PET_FORMULAE.level_to_xp(pet, tmp.l.petLevels[pet].floor().add(1))
                         if (tmp.l.petLevels[pet].gt(1)) {
-                            nextXP = nextXP.sub(tmp.l.petLevels[pet].floor().sub(1).pow_base((PET_DATA[pet] ?? { baseScale: D(1.01) }).baseScale).sub(1).div((PET_DATA[pet] ?? { baseScale: D(1.01) }).baseScale.sub(1)).pow_base((PET_DATA[pet] ?? { baseSpd: D(2) }).baseSpd).sub(1).mul((PET_DATA[pet] ?? { baseXP: D(10) }).baseXP));
+                            nextXP = nextXP.sub(PET_FORMULAE.level_to_xp(pet, tmp.l.petLevels[pet].floor()));
                         }
                         return `${(PET_DATA[pet] ?? { name: "Undefined" }).name} (1/${format(Decimal.div((PET_DATA[pet] ?? { chance: D(Infinity) }).chance, tmp.l.petLuckPow).pow10(), 1)}) | Lv. ${format(tmp.l.petLevels[pet].floor())} - ${format(currXP)} / ${format(nextXP)}`;
                     },
@@ -1403,25 +1436,27 @@ addLayer('l', {
                         // 0.125 for 0.5 chance = 3, 
                         // chance of getting how many
 
-                        gain = gain.mul(Decimal.log10(petLuck).neg().div(PET_DATA[pet].chance).mul(tmp.l.petLuckPow).floor())
-                        gain = gain.floor()
-                        player.l.pets[pet] = Decimal.add(player.l.pets[pet], gain)
+                        gain = gain.mul(Decimal.log10(petLuck).neg().div(PET_DATA[pet].chance).mul(tmp.l.petLuckPow).add(1e-7).floor())
                         
-
                         // console.log(`pet: ${pet} - petLuck: ${format(petLuck, 4)} - base chance: ${format(PET_DATA[pet].chance, 4)} - gain: ${format(Decimal.log(petLuck, PET_DATA[pet].chance).floor(), 2)}`)
-                        let currXP = player.l.pets[pet];
+                        let currXP = player.l.pets[pet].add(gain);
                         if (tmp.l.petLevels[pet].gt(1)) {
-                            currXP = currXP.sub(tmp.l.petLevels[pet].floor().sub(1).pow_base(1.01).sub(1).div(0.01).pow_base(2).sub(1).mul(10));
+                            currXP = currXP.sub(PET_FORMULAE.level_to_xp(pet, tmp.l.petLevels[pet].floor()));
+                        }
+                        
+                        let nextXP = PET_FORMULAE.level_to_xp(pet, tmp.l.petLevels[pet].floor().add(1))
+                        if (tmp.l.petLevels[pet].gt(1)) {
+                            nextXP = nextXP.sub(PET_FORMULAE.level_to_xp(pet, tmp.l.petLevels[pet].floor()));
+                        }
+                        
+                        if (currXP.gte(nextXP)) {
+                            let lv = PET_FORMULAE.xp_to_level(pet, player.l.pets[pet].add(gain))
+                            player.l.petsGained.push({ petType: pet, pet: `${PET_DATA[pet].name}${gain.gt(1) ? 's' : ''}. (Gained ${format(lv.floor().sub(tmp.l.petLevels[pet].floor()))} level${lv.floor().sub(tmp.l.petLevels[pet].floor()).eq(1) ? '' : 's'}!)`, gain: gain })
+                        } else {
+                            player.l.petsGained.push({ petType: pet, pet: `${PET_DATA[pet].name}${gain.gt(1) ? 's' : ''}. (${format(currXP.div(nextXP).mul(100), 1)}%, +${format(gain.div(nextXP).mul(100), 1)}%)`, gain: gain })
                         }
 
-                        let nextXP = tmp.l.petLevels[pet].gt(1)
-                            ? tmp.l.petLevels[pet].floor().pow_base(1.01).sub(1).div(0.01).pow_base(2).sub(1).mul(10)
-                            : D(10);
-                        if (tmp.l.petLevels[pet].gt(1)) {
-                            nextXP = nextXP.sub(tmp.l.petLevels[pet].floor().sub(1).pow_base(1.01).sub(1).div(0.01).pow_base(2).sub(1).mul(10));
-                        }
-
-                        player.l.petsGained.push({ petType: pet, pet: `${PET_DATA[pet].name}${gain.gt(1) ? 's' : ''}. (${format(currXP.div(nextXP).mul(100), 1)}%, +${format(gain.div(nextXP).mul(100), 1)}%)`, gain: gain })
+                        player.l.pets[pet] = Decimal.add(player.l.pets[pet], gain)
                     }
                 }
             },
