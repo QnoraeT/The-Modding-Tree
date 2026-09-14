@@ -83,7 +83,7 @@ addLayer('q', {
     generationEff() {
         const arr = []
         for (let i = 0; i < player.q.allocated.length; i++) {
-            arr.push(D(0))
+            arr.push(D(1))
         }
         arr[0] = player.q.allocGen[0].add(1).pow(2)
         arr[1] = player.q.allocGen[1].add(1).root(5)
@@ -97,12 +97,12 @@ addLayer('q', {
         }
 
         if (hasUpgrade('q', 11)) {
-            arr[0] = arr[0].max(10).log10().log10().div(80).add(1).pow(2)
-            arr[1] = arr[1].max(10).log10().log10().div(100).add(1).pow(1.6)
-            arr[2] = arr[2].max(10).log10().log10().div(120).add(1).pow(1.2)
+            arr[0] = arr[0].max(10).log10().log10().div(20).add(1).pow(2)
+            arr[1] = arr[1].max(10).log10().log10().div(30).add(1).pow(1.8)
+            arr[2] = arr[2].max(10).log10().log10().div(40).add(1).pow(1.4)
             arr[3] = arr[3].max(10).log10().log10().div(10).add(1).pow(2.5)
         }
-        
+
         return arr
     },
     getRequire() {
@@ -613,6 +613,9 @@ addLayer('q', {
                     let i = D(x), j
 
                     if (!override) {
+                        if (hasUpgrade('p', 284)) {
+                            i = i.add(player.q.buyables[21])
+                        }
                         if (hasUpgrade('p', 253)) { i = i.mul(1.05) }
                     }
 
@@ -629,6 +632,146 @@ addLayer('q', {
                     const currEffect = this.effect(player.q.buyables[13])
                     const nextEffect = this.effect(player.q.buyables[13].add(1))
                     return `^${format(nextEffect.div(currEffect), 3)} Point Buyable 2 effect.` 
+                },
+                scaleModifEffective(x) {
+                    return x
+                },
+                scaleModifCost(x) {
+                    return x
+                },
+                scaleModifTarEff(x) {
+                    return x
+                },
+                scaleModifTarCost(x) {
+                    return x
+                },
+            },
+            21: {
+                type: 0,
+                num: 4,
+                get costD() {
+                    const obj = {type: 0, exp: 2, main: [D(20), D(1.03), D(1.0025)]}
+
+                    return obj
+                },
+                unlocked() { return hasUpgrade('q', 27) },
+                unavail() {
+                    let x = false
+                    return x
+                },
+                preEffect(x, override) {
+                    let eff = D(x)
+                    if (!override) {
+                        if (hasUpgrade('p', 284)) {
+                            eff = eff.add(player.q.buyables[22])
+                        }
+                        if (hasUpgrade('p', 253)) { eff = eff.mul(1.05) }
+                    }
+
+                    let j = D(3)
+                    
+                    eff = sumFactorial(eff, j, 0.5)
+                    return eff;
+                },
+                dispEffect() {
+                    const currEffect = this.effect(player.q.buyables[21])
+                    return `Gain &times;${format(currEffect, 2)} more pets.`
+                },
+                dispEffBase() {
+                    const currEffect = this.effect(player.q.buyables[21])
+                    const nextEffect = this.effect(player.q.buyables[21].add(1))
+                    return `Gain &times;${format(nextEffect.div(currEffect), 2)} more pets.` 
+                },
+                scaleModifEffective(x) {
+                    return x
+                },
+                scaleModifCost(x) {
+                    return x
+                },
+                scaleModifTarEff(x) {
+                    return x
+                },
+                scaleModifTarCost(x) {
+                    return x
+                },
+            },
+            22: {
+                type: 0,
+                num: 5,
+                get costD() {
+                    const obj = {type: 0, exp: 2, main: [D(22), D(1.125), D(1.005)]}
+
+                    return obj
+                },
+                unlocked() { return hasUpgrade('q', 27) },
+                unavail() {
+                    let x = false
+                    return x
+                },
+                preEffect(x, override) {
+                    let eff = D(x)
+                    if (!override) {
+                        if (hasUpgrade('p', 284)) {
+                            eff = eff.add(player.q.buyables[23])
+                        }
+                        if (hasUpgrade('p', 253)) { eff = eff.mul(1.05) }
+                    }
+
+                    eff = eff.pow_base(1.02)
+                    return eff;
+                },
+                dispEffect() {
+                    const currEffect = this.effect(player.q.buyables[22])
+                    return `Rank scaling is reduced by -${formatPerc(currEffect, 2)}.`
+                },
+                dispEffBase() {
+                    const currEffect = this.effect(player.q.buyables[22])
+                    const nextEffect = this.effect(player.q.buyables[22].add(1))
+                    return `Rank scaling is reduced by -${formatPerc(nextEffect.div(currEffect), 2)}.` 
+                },
+                scaleModifEffective(x) {
+                    return x
+                },
+                scaleModifCost(x) {
+                    return x
+                },
+                scaleModifTarEff(x) {
+                    return x
+                },
+                scaleModifTarCost(x) {
+                    return x
+                },
+            },
+            23: {
+                type: 0,
+                num: 6,
+                get costD() {
+                    const obj = {type: 0, exp: 2, main: [D(30), D(1.15), D(1.01)]}
+
+                    return obj
+                },
+                unlocked() { return hasUpgrade('q', 27) },
+                unavail() {
+                    let x = false
+                    return x
+                },
+                preEffect(x, override) {
+                    let eff = D(x)
+                    if (!override) {
+                        if (hasUpgrade('p', 253)) { eff = eff.mul(1.05) }
+                    }
+
+                    eff = eff.pow_base(1.04)
+                    return eff;
+                },
+                dispEffect() {
+                    const currEffect = this.effect(player.q.buyables[23])
+                    return `Hyper Scaling Points and Roll Points are raised ^${format(currEffect, 2)}.`
+                },
+                dispEffBase() {
+                    const currEffect = this.effect(player.q.buyables[23])
+                    const nextEffect = this.effect(player.q.buyables[23].add(1))
+                    return `Hyper Scaling Points and Roll Points are raised ^${format(nextEffect.div(currEffect), 2)}.` 
                 },
                 scaleModifEffective(x) {
                     return x
@@ -815,19 +958,19 @@ addLayer('q', {
         11: {
             title: "It's about time that this is useful.",
             description: "Quaternion Energy now raises the resources it affects.",
-            cost: new Decimal('e5e15'),
+            cost: new Decimal('e2.5e13'),
             unlocked() { return challengeCompletions('p', 12).gte(20) },
         },
         12: {
             title: "Get this out of the way.",
-            description: "Automate Quaternion Buyables 1-3 and Point Buyable 5.",
-            cost: new Decimal('ee17'),
+            description: "Automate Quaternion Buyables 1-3 and Point Buyable 5. Luck Buyables 1-3 are slightly stronger.",
+            cost: new Decimal('ee14'),
             unlocked() { return challengeCompletions('p', 12).gte(20) },
         },
         13: {
             title: "Pet Boost",
             description: "You can equip 1 more pet and every quaternion upgrade increases pet gain by 2.5&times;.",
-            cost: new Decimal('e2e17'),
+            cost: new Decimal('e1.5e14'),
             unlocked() { return challengeCompletions('p', 12).gte(20) },
             effect() { 
                 let ret = Decimal.pow(2.5, player.q.upgrades.length)
@@ -838,7 +981,7 @@ addLayer('q', {
         14: {
             title: "Lucky Pets",
             description: "Automate Luck Dimensions, Luck Energy's effects are improved, and also boost pet luck.",
-            cost: new Decimal('ee18'),
+            cost: new Decimal('e5e14'),
             unlocked() { return challengeCompletions('p', 12).gte(20) },
             effect() { 
                 let ret = player.l.energy.max('e1000').log10().log(1000)
@@ -849,7 +992,7 @@ addLayer('q', {
         15: {
             title: "Dimension Hopper",
             description: "Luck Buyables 1-8 are autobought. Luck Essence raises prestige dimension multipliers at a reduced rate.",
-            cost: new Decimal('ee20'),
+            cost: new Decimal('e2e15'),
             unlocked() { return challengeCompletions('p', 12).gte(20) },
             effect() { 
                 let ret = player.l.points.max(1).log10().div(10).add(1)
@@ -860,19 +1003,19 @@ addLayer('q', {
         16: {
             title: "No more of that,",
             description: "Gain Super Scaling Points as if you were in the challenge without the debuffs. Point gain from Pentagon applies at ^0.5 rate outside of Super Scaling.",
-            cost: new Decimal('e2.5e25'),
+            cost: new Decimal('e5e15'),
             unlocked() { return challengeCompletions('p', 12).gte(20) },
         },
         17: {
             title: "... and no more of that.",
-            description: "Buyable 5 clicks never reset. Quaternions are auto-generated at 100% rate and are auto-allocated. Charges increase multiplicatively instead of additively.",
-            cost: new Decimal('e1.25e26'),
+            description: "PB5 clicks never reset. Quaternions are auto-generated at 100% rate and are auto-allocated. Charges increase multiplicatively instead of additively.",
+            cost: new Decimal('e1.25e16'),
             unlocked() { return challengeCompletions('p', 12).gte(20) },
         },
         21: {
             title: "Chip it away",
-            description: "PP Buyables 2 and 3's exponential scaling is reduced by 25% per quaternion upgrade past the 1st row.",
-            cost: new Decimal('e1e27'),
+            description: "(TODO: EFFECT NEEDS TO BE REPLACED) PP Buyables 2, 3, and 5's exponential scaling is reduced by 25% per quaternion upgrade past the 1st row.",
+            cost: new Decimal('e5e16'),
             unlocked() { return challengeCompletions('p', 12).gte(20) },
             effect() { 
                 // add 1 if the upg is id >21
@@ -885,7 +1028,7 @@ addLayer('q', {
         22: {
             title: "Oh, this too",
             description: "Hyper Scaling intervals are reduced by ^0.95 per quaternion upgrade on this or after this.",
-            cost: new Decimal('e5e27'),
+            cost: new Decimal('ee17'),
             unlocked() { return challengeCompletions('p', 12).gte(20) },
             effect() { 
                 // add 1 if the upg is id >22
@@ -898,7 +1041,7 @@ addLayer('q', {
         23: {
             title: "And this one",
             description: "Point Buyable 4's exponential scaling is reduced by 2% per quaternion upgrade on this or after this. Tiers are auto-bought and no longer reset.",
-            cost: new Decimal('e2e28'),
+            cost: new Decimal('e2e17'),
             unlocked() { return challengeCompletions('p', 12).gte(20) },
             effect() { 
                 // add 1 if the upg is id >23
@@ -911,29 +1054,29 @@ addLayer('q', {
         24: {
             title: "Oh, I forgot to automate this",
             description: "Crippled Points challenge now auto-completes outside of the challenge. The u8-2 tree upgrade is also squared.",
-            cost: new Decimal('ee33'),
+            cost: new Decimal('e4e17'),
             unlocked() { return challengeCompletions('p', 12).gte(20) },
         },
         25: {
             title: "Maybe a few simple ones?",
             description: "Luck is raised ^1.1",
-            cost: new Decimal('ee36'),
+            cost: new Decimal('e2e18'),
             unlocked() { return challengeCompletions('p', 12).gte(20) },
         },
         26: {
             title: "Just one more simple one",
             description() {
                 return hasUpgrade('q', 26)
-                    ? "Wait fuck, I forgot to specify, now every Buyable 5's effect is raised ^1.1"
+                    ? "I forgot to specify which Buyable 5 lmao (Point, Prestige, Luck Buyable 5 is raised ^1.1)"
                     : "Buyable 5's effect is raised ^1.1"
             },
-            cost: new Decimal('ee39'),
+            cost: new Decimal('ee19'),
             unlocked() { return challengeCompletions('p', 12).gte(20) },
         },
         27: {
             title: "Luck Buyable 3 didn't need to have this scaling",
-            description: "Remove Luck Buyable 3's *quadratic* scaling",
-            cost: new Decimal('ee42'),
+            description: "Remove Luck Buyable 3's *quadratic* scaling. Add 3 more quaternion buyables.",
+            cost: new Decimal('e5e19'),
             unlocked() { return challengeCompletions('p', 12).gte(20) },
         },
     },
@@ -993,7 +1136,7 @@ addLayer('q', {
                 ["display-text",
                 function() { return `You have ${format(player.p.total)} total prestige points.` }],
                 "blank",
-                ["buyables", [1]],
+                ["buyables", [1, 2]],
             ],
             unlocked(){
                 // for some reason 'q' turns into undefined

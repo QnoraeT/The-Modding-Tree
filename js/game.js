@@ -476,7 +476,7 @@ function gameLoop(diff) {
 		tmp.reductionFactors.sc1.exp = D(1)
 	}
 
-	tmp.reductionFactors.sc3.start = D(inChallenge('q', 13) ? 'ee6' : 'ee100')
+	tmp.reductionFactors.sc3.start = D(inChallenge('q', 13) ? 'ee6' : 'eeee300')
 
 	// cap lesser tier softcaps before higher tier softcaps
 	tmp.reductionFactors.sc2.start = tmp.reductionFactors.sc2.start.min(tmp.reductionFactors.sc3.start)

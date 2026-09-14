@@ -171,6 +171,10 @@ addLayer('p', {
             player.p.buyable5Clicks = player.p.buyable5Clicks.add(gen).max(0)
         }
 
+        if (hasUpgrade('q', 24)) {
+            player.p.challenges[14] = Decimal.max(player.p.challenges[14], tmp.p.challenges[14].target.ceil())
+        }
+
         if (hasUpgrade('p', 21)) {
             tmp.p.buyables[11].buyMax()
         }
@@ -871,7 +875,7 @@ addLayer('p', {
                     i = Decimal.pow(j, i)
 
                     if (challengeCompletions('p', 12).gte(8)) { i = i.log10().pow([1, 1.005, 1.010025, 1.015075125][challengeCompletions('p', 12).sub(7).max(0).min(3).toNumber()]).pow10() }
-                    if (inChallenge('p', 12) && challengeCompletions('p', 12).gte(20)) { 
+                    if (inChallenge('p', 12) && challengeCompletions('p', 12).gte(19)) { 
                         i = i.log10().pow(0.5).pow10()
                     }
                     return i
@@ -1182,6 +1186,10 @@ addLayer('p', {
 
                     i = Decimal.mul(j, i)
                     i = i.add(1)
+                    if (hasUpgrade('q', 26)) {
+                        i = i.pow(1.1)
+                    }
+
                     if (inChallenge('p', 23)) {
                         i = i.sub(1)
                     }
@@ -1345,11 +1353,8 @@ addLayer('p', {
                     if (Decimal.lt(i, 1)) { return {exp: D(0), pps: D(1)}; }
                     i = {
                         exp: i.ln().mul(j).add(1).root(j).mul(0.5),
-                        pps: player.p.essence.add(1).pow(i.mul(0.25).add(1).ln()).log10().pow(i.ln().mul(0.01).add(1)).pow10()
+                        pps: player.p.essence.add(1).pow(i.mul(0.25).add(1).ln())
                     };
-                    if (i.exp.gte(10)) {
-                        i.exp = i.exp.log10().mul(10)
-                    }
                     return i
                 },
                 dispEffect() {
@@ -1362,26 +1367,14 @@ addLayer('p', {
                     return `+${format(nextEffect.exp.sub(currEffect.exp), 2)} Essence exponent (&times;${format(player.p.total.add(1).mul(2).pow(nextEffect.exp.sub(currEffect.exp)).div(Decimal.pow(2, nextEffect.exp.sub(currEffect.exp))), 2)} Essence), Essence boosts points by ${format(nextEffect.pps.div(currEffect.pps), 2)}&times;.` 
                 },
                 scaleModifEffective(x) {
-                    if (x.gte(10000)) {
-                        let pow = D(1)
-                        if (hasUpgrade('q', 21)) {
-                            pow = pow.mul(upgradeEffect('q', 21))
-                        }
-                        x = x.div(10000).root(pow).sub(1).mul(pow).exp().mul(10000)
-                    }
+
                     return x
                 },
                 scaleModifCost(x) {
                     return x
                 },
                 scaleModifTarEff(x) {
-                    if (x.gte(10000)) {
-                        let pow = D(1)
-                        if (hasUpgrade('q', 21)) {
-                            pow = pow.mul(upgradeEffect('q', 21))
-                        }
-                        x = x.div(10000).ln().div(pow).add(1).pow(pow).mul(10000)
-                    }
+
                     return x
                 },
                 scaleModifTarCost(x) {
@@ -1442,26 +1435,14 @@ addLayer('p', {
                     return `PP Buyable 1 is ${format(nextEffect.peu1.div(currEffect.peu1).sub(1).mul(100), 2)}% more effective, +${format(nextEffect.free.sub(currEffect.free), 2)} Point Buyable 3 Free base.` 
                 },
                 scaleModifEffective(x) {
-                    if (x.gte(1e6)) {
-                        let pow = D(1)
-                        if (hasUpgrade('q', 21)) {
-                            pow = pow.mul(upgradeEffect('q', 21))
-                        }
-                        x = x.div(1e6).root(pow).sub(1).mul(pow).exp().mul(1e6)
-                    }
+
                     return x
                 },
                 scaleModifCost(x) {
                     return x
                 },
                 scaleModifTarEff(x) {
-                    if (x.gte(1e6)) {
-                        let pow = D(1)
-                        if (hasUpgrade('q', 21)) {
-                            pow = pow.mul(upgradeEffect('q', 21))
-                        }
-                        x = x.div(1e6).ln().div(pow).add(1).pow(pow).mul(1e6)
-                    }
+
                     return x
                 },
                 scaleModifTarCost(x) {
@@ -1577,6 +1558,10 @@ addLayer('p', {
                             i = i.mul(inChallenge('q', 13) ? 1.1 : 1.002)
                         }
                         i = i.mul(tmp.l.buyables[43].effect)
+
+                        if (hasUpgrade('q', 26)) {
+                            i = i.pow(1.1)
+                        }
                     }
 
                     i = {
@@ -1595,12 +1580,14 @@ addLayer('p', {
                     return `+${format(nextEffect.ppu1.sub(currEffect.ppu1), 3)} PP Buyable 1 base for Essence gain, Point slowdown after ${format(1e10)} is ${formatPerc(nextEffect.pts.div(currEffect.pts), 3)} slower.`
                 },
                 scaleModifEffective(x) {
+
                     return x
                 },
                 scaleModifCost(x) {
                     return x
                 },
                 scaleModifTarEff(x) {
+
                     return x
                 },
                 scaleModifTarCost(x) {
@@ -1925,6 +1912,7 @@ addLayer('p', {
                     if (challengeCompletions('p', 12).gte(12)) {
                         x = x.mul(0.95)
                     }
+                    x = x.div(tmp.q.buyables[22].effect)
                     return x
                 },
                 scaleModifCost(x) {
@@ -1934,6 +1922,7 @@ addLayer('p', {
                     return x
                 },
                 scaleModifTarEff(x) {
+                    x = x.mul(tmp.q.buyables[22].effect)
                     if (challengeCompletions('p', 12).gte(12)) {
                         x = x.div(0.95)
                     }
@@ -2384,8 +2373,8 @@ addLayer('p', {
                     }
 
                     i = {
-                        dimDilate: i.pow_base(1.025),
-                        enhancerDilate: i.pow_base(1.1)
+                        dimDilate: i.pow_base(1.05),
+                        enhancerDilate: i.pow_base(1.5)
                     }
                     return i
                 },
@@ -2712,11 +2701,11 @@ addLayer('p', {
                         }
                         txt += `<br>Scales exponentially after ${format(1e6)} purchases.`
                     }
-                    if (upgrade.type === 3 && upgrade.num === 10) {
+                    if (upgrade.type === 1 && upgrade.num === 5) {
                         if (!hasExtra) {
                             txt += `<br>`
                         }
-                        txt += `<br>Scales exponentially after ${format(10)} purchases.`
+                        txt += `<br>Scales exponentially after ${format(1e6)} purchases.`
                     }
                 } else {
                     txt += `Effect: `
@@ -3096,7 +3085,7 @@ addLayer('p', {
                 }
                 return [
                     D(1e6), D(1e8), D(1e10), D(1e12), D(1e14), D(1e14), D(1e16), D(1e13), D(1e18), D(1e18),
-                    D('ee12'), D('ee14'), D('e4e14'), D('e2e15'), D('ee18'), D('ee22'), D('ee24'), D('e5e25'), D('ee27'), D('ee14')
+                    D('ee11'), D('e2e12'), D('e8e12'), D('e2e14'), D('e2e16'), D('ee19'), D('e2e20'), D('e4e21'), D('e2e23'), D('ee12')
                 ][challengeCompletions('p', 12).min(lim).toNumber()]
             },
             goalDescription() {
@@ -4186,7 +4175,7 @@ addLayer('p', {
         253: {
             title: "(u6-3) Prestige Boost",
             description() {
-                return `Needs u5-c & BC1x1 completion<br>${!hasUpgrade('p', 421) ? '<b>Disables u6-1 and u6-2</b><br>' : ''}<br>Quaternion Buyables are 10% more effective.`
+                return `Needs u5-c & BC1x1 completion<br>${!hasUpgrade('p', 421) ? '<b>Disables u6-1 and u6-2</b><br>' : ''}<br>Quaternion Buyables are 5% more effective.`
             },
             cost: new Decimal(1),
             unlocked() { return inChallenge('q', 13) || challengeCompletions('q', 14).gte(1) },
@@ -4320,6 +4309,9 @@ addLayer('p', {
             },
             effect() { 
                 let ret = challengeCompletions('p', 14).max(1).log10().mul(0.01).add(1)
+                if (hasUpgrade('q', 24)) {
+                    ret = ret.pow(2)
+                }
                 return ret;
             },
             effectDisplay() { return `^${format(this.effect(), 3)}` },

@@ -219,13 +219,13 @@ addLayer('l', {
             player.l.totalEnergy = player.l.totalEnergy.add(tmp.l.energyPS.mul(diff))
         }
 
-        let gen = player.l.rollPointGen.mul(player.globalTS)
-        player.l.rollPoints = player.l.rollPoints.add(gen.mul(diff))
-
         if (hasUpgrade('l', 16)) {
             let gen2 = tmp.l.rollPointGain.mul(player.globalTS)
-            player.l.rollPointGain = player.l.rollPointGain.add(gen2.mul(diff))
+            player.l.rollPointGen = player.l.rollPointGen.add(gen2.mul(diff))
         }
+
+        let gen = player.l.rollPointGen.mul(player.globalTS)
+        player.l.rollPoints = player.l.rollPoints.add(gen.mul(diff))
 
         if (hasUpgrade('q', 14)) {
             for (let i = 0; i < 8; i++) {
@@ -318,6 +318,9 @@ addLayer('l', {
         if (challengeCompletions('p', 12).gte(20)) {
             i = i.mul(1.1)
         }
+        if (hasUpgrade('q', 25)) {
+            i = i.mul(1.1)
+        }
         return i
     },
     rollLol() {
@@ -347,7 +350,7 @@ addLayer('l', {
     energyEff() {
         let i = player.l.totalEnergy
         i = {
-            normal: i.max(1).log10().div(10).add(1).pow(2).pow(tmp.l.buyables[33].effect).add(i.div(1e24).max(1).pow(0.2).sub(1).min(1e7).mul(i.max(1e59).log10().div(59))),
+            normal: i.max(1).log10().div(10).add(1).pow(2.2).pow(tmp.l.buyables[33].effect).add(i.div(1e24).max(1).pow(0.2).sub(1).min(1e7).mul(i.max(1e59).log10().div(59).pow(4))),
             prest: i.max(1).log2().add(1).add(i.pow(0.1))
         }
         if (hasUpgrade('q', 14)) {
@@ -447,33 +450,6 @@ addLayer('l', {
         }
         return i
     },
-    clickables: {
-        11: {
-            title: "Test your luck.",
-            display() {
-                return `${player.l.cooldownRand.gt(0) ? ('You are on cooldown for ' + format(player.l.cooldownRand, 1) + 's!<br>') : ''}Your last roll is ${format(player.l.lastRand, 1)}. (1/${format(player.l.lastRand.root(tmp.l.luckPow).div(tmp.l.luckMult), 1)})<br>Your best roll is ${format(player.l.maxRand, 1)}. (1/${format(player.l.maxRand.root(tmp.l.luckPow).div(tmp.l.luckMult), 1)})<br>You have rolled ${format(player.l.totalRolls)} times.`
-            },
-            canClick() {
-                return player.l.cooldownRand.lte(0) && player.l.best.gt(0)
-            },
-            onClick() {
-                player.l.cooldownRand = D(1)
-                player.l.lastRand = tmp.l.rollLol()
-                player.l.rollPointGen = player.l.rollPointGen.add(tmp.l.rollPointGain)
-                player.l.totalRolls = player.l.totalRolls.add(1)
-
-                if (hasUpgrade('l', 13)) {
-                    let loss = player.p.buyable5Clicks.mul(0.1)
-                    player.p.buyable5Clicks = player.p.buyable5Clicks.sub(loss).max(0)
-                }
-            },
-            style: {
-                "min-width": "225px",
-                "min-height": "150px",
-                "margin": "5px",
-            }
-        },
-    },
     upgrades: {
         11: {
             title: "Yay, gambling!",
@@ -520,7 +496,7 @@ addLayer('l', {
             effect() { 
                 let ret = {
                     luck: player.p.buyable5Clicks.div(1e12).max(1).log(1.1).max(0).floor().mul(0.005).add(1),
-                    clicks: player.l.maxRand.max(10).log10()
+                    clicks: player.l.maxRand.max(10).log10().pow(1.667)
                 }
                 return ret;
             },
@@ -737,6 +713,9 @@ addLayer('l', {
                     }
 
                     let j = D(2)
+                    if (hasUpgrade('q', 12)) {
+                        j = j.add(0.2)
+                    }
                     
                     eff = Decimal.pow(j, eff)
                     return eff;
@@ -779,6 +758,9 @@ addLayer('l', {
                     }
 
                     let j = D(1.5)
+                    if (hasUpgrade('q', 12)) {
+                        j = j.add(0.1)
+                    }
                     
                     eff = Decimal.pow(j, eff)
                     return eff;
@@ -808,7 +790,14 @@ addLayer('l', {
             23: {
                 type: 1,
                 num: 3,
-                costD: {type: 0, exp: 1, main: [D(50), D(1.04), D(1.001)]},
+                get costD() {
+                    const obj = {type: 0, exp: 1, main: [D(50), D(1.04), D(1.001)]}
+                    // stupid bullshit
+                    if (player.q.upgrades.includes(27)) {
+                        obj.main[2] = D(1)
+                    }
+                    return obj
+                },
                 unlocked() { return challengeCompletions('p', 12).gte(11) },
                 unavail() {
                     let x = false
@@ -821,6 +810,9 @@ addLayer('l', {
                     }
 
                     let j = D(1.6)
+                    if (hasUpgrade('q', 12)) {
+                        j = j.add(0.05)
+                    }
                     
                     eff = Decimal.pow(j, eff)
                     return eff;
@@ -907,6 +899,9 @@ addLayer('l', {
                     let j = D(1)
                     
                     eff = Decimal.mul(j, eff)
+                    if (hasUpgrade('q', 26)) {
+                        eff = eff.pow(1.1)
+                    }
                     return eff;
                 },
                 dispEffect() {
@@ -951,8 +946,8 @@ addLayer('l', {
                 },
                 dispEffect() {
                     const currEffect = this.effect(player.l.buyables[33])
-                    let withEffTotal = player.l.totalEnergy.max(1).log10().div(10).add(1).pow(2).pow(currEffect).add(player.l.totalEnergy.div(1e24).max(1).pow(0.2).sub(1).min(1e7).mul(player.l.totalEnergy.max(1e59).log10().div(59)))
-                    let withoutEffTotal = player.l.totalEnergy.max(1).log10().div(10).add(1).pow(2).add(player.l.totalEnergy.div(1e24).max(1).pow(0.2).sub(1).min(1e7).mul(player.l.totalEnergy.max(1e59).log10().div(59)))
+                    let withEffTotal = player.l.totalEnergy.max(1).log10().div(10).add(1).pow(2.2).pow(currEffect).add(player.l.totalEnergy.div(1e24).max(1).pow(0.2).sub(1).min(1e7).mul(player.l.totalEnergy.max(1e59).log10().div(59).pow(4)))
+                    let withoutEffTotal = player.l.totalEnergy.max(1).log10().div(10).add(1).pow(2.2).add(player.l.totalEnergy.div(1e24).max(1).pow(0.2).sub(1).min(1e7).mul(player.l.totalEnergy.max(1e59).log10().div(59).pow(4)))
 
                     if (hasUpgrade('q', 14)) {
                         withEffTotal = withEffTotal.max(1).log10().pow(1.1).pow10()
@@ -963,8 +958,8 @@ addLayer('l', {
                 dispEffBase() {
                     const currEffect = this.effect(player.l.buyables[33])
                     const nextEffect = this.effect(player.l.buyables[33].add(1))
-                    let currEffTotal = player.l.totalEnergy.max(1).log10().div(10).add(1).pow(2).pow(currEffect).add(player.l.totalEnergy.div(1e24).max(1).pow(0.2).sub(1).min(1e7).mul(player.l.totalEnergy.max(1e59).log10().div(59)))
-                    let nextEffTotal = player.l.totalEnergy.max(1).log10().div(10).add(1).pow(2).pow(nextEffect).add(player.l.totalEnergy.div(1e24).max(1).pow(0.2).sub(1).min(1e7).mul(player.l.totalEnergy.max(1e59).log10().div(59)))
+                    let currEffTotal = player.l.totalEnergy.max(1).log10().div(10).add(1).pow(2.2).pow(currEffect).add(player.l.totalEnergy.div(1e24).max(1).pow(0.2).sub(1).min(1e7).mul(player.l.totalEnergy.max(1e59).log10().div(59).pow(4)))
+                    let nextEffTotal = player.l.totalEnergy.max(1).log10().div(10).add(1).pow(2.2).pow(nextEffect).add(player.l.totalEnergy.div(1e24).max(1).pow(0.2).sub(1).min(1e7).mul(player.l.totalEnergy.max(1e59).log10().div(59).pow(4)))
 
                     if (hasUpgrade('q', 14)) {
                         currEffTotal = currEffTotal.max(1).log10().pow(1.1).pow10()
@@ -1397,6 +1392,7 @@ addLayer('l', {
                     if (tmp.l.petUnlocked[pet] && petLuck < Decimal.div(PET_DATA[pet].chance, tmp.l.petLuckPow).pow10().recip()) {
                         let gain = D(1)
                         gain = gain.mul(tmp.l.buyables[41].effect)
+                        gain = gain.mul(tmp.q.buyables[21].effect)
                         if (hasUpgrade('q', 13)) {
                             gain = gain.mul(upgradeEffect('q', 13))
                         }
