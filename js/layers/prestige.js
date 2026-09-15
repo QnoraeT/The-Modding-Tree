@@ -2689,24 +2689,6 @@ addLayer('p', {
                         }
                         txt += `<br>Scales exponentially after ${format(100)} purchases.`
                     }
-                    if (upgrade.type === 1 && upgrade.num === 2) {
-                        if (!hasExtra) {
-                            txt += `<br>`
-                        }
-                        txt += `<br>Scales exponentially after ${format(1e4)} purchases.`
-                    }
-                    if (upgrade.type === 1 && upgrade.num === 3) {
-                        if (!hasExtra) {
-                            txt += `<br>`
-                        }
-                        txt += `<br>Scales exponentially after ${format(1e6)} purchases.`
-                    }
-                    if (upgrade.type === 1 && upgrade.num === 5) {
-                        if (!hasExtra) {
-                            txt += `<br>`
-                        }
-                        txt += `<br>Scales exponentially after ${format(1e6)} purchases.`
-                    }
                 } else {
                     txt += `Effect: `
                     txt += upgrade.dispEffect() 

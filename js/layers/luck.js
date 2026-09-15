@@ -1130,12 +1130,18 @@ addLayer('l', {
                     return `Increase all point, prestige, and luck buyables' effectiveness (except for this) by +${format(nextEffect.sub(currEffect).mul(100), 2)}%.` 
                 },
                 scaleModifEffective(x) {
+                    if (hasUpgrade('q', 21)) {
+                        x = x.div(upgradeEffect('q', 21))
+                    }
                     return x
                 },
                 scaleModifCost(x) {
                     return x
                 },
                 scaleModifTarEff(x) {
+                    if (hasUpgrade('q', 21)) {
+                        x = x.mul(upgradeEffect('q', 21))
+                    }
                     return x
                 },
                 scaleModifTarCost(x) {

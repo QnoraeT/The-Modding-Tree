@@ -650,7 +650,7 @@ addLayer('q', {
                 type: 0,
                 num: 4,
                 get costD() {
-                    const obj = {type: 0, exp: 2, main: [D(20), D(1.03), D(1.0025)]}
+                    const obj = {type: 0, exp: 2, main: [D(22), D(1.03), D(1.0025)]}
 
                     return obj
                 },
@@ -699,7 +699,7 @@ addLayer('q', {
                 type: 0,
                 num: 5,
                 get costD() {
-                    const obj = {type: 0, exp: 2, main: [D(22), D(1.125), D(1.005)]}
+                    const obj = {type: 0, exp: 2, main: [D(25), D(1.125), D(1.005)]}
 
                     return obj
                 },
@@ -1008,19 +1008,19 @@ addLayer('q', {
         },
         17: {
             title: "... and no more of that.",
-            description: "PB5 clicks never reset. Quaternions are auto-generated at 100% rate and are auto-allocated. Charges increase multiplicatively instead of additively.",
+            description: "Point Buyable 5 clicks never reset. Quaternions are auto-generated at 100% rate and are auto-allocated. Charges increase multiplicatively instead of additively.",
             cost: new Decimal('e1.25e16'),
             unlocked() { return challengeCompletions('p', 12).gte(20) },
         },
         21: {
             title: "Chip it away",
-            description: "(TODO: EFFECT NEEDS TO BE REPLACED) PP Buyables 2, 3, and 5's exponential scaling is reduced by 25% per quaternion upgrade past the 1st row.",
+            description: "Luck Buyable 9's cost scales 10% slower per quaternion upgrade past the 1st row.",
             cost: new Decimal('e5e16'),
             unlocked() { return challengeCompletions('p', 12).gte(20) },
             effect() { 
                 // add 1 if the upg is id >21
                 let ret = player.q.upgrades.reduce((total, upg) => { return total + (upg >= 21 ? 1 : 0); }, 0)
-                ret = Decimal.pow(1.25, ret)
+                ret = Decimal.pow(1.10, ret)
                 return ret;
             },
             effectDisplay() { return `-${formatPerc(this.effect(), 2)}` }, 
@@ -1076,7 +1076,7 @@ addLayer('q', {
         27: {
             title: "Luck Buyable 3 didn't need to have this scaling",
             description: "Remove Luck Buyable 3's *quadratic* scaling. Add 3 more quaternion buyables.",
-            cost: new Decimal('e5e19'),
+            cost: new Decimal('e3.5e20'),
             unlocked() { return challengeCompletions('p', 12).gte(20) },
         },
     },
