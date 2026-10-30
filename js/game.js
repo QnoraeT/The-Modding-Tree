@@ -281,7 +281,7 @@ function startChallenge(layer, x) {
 	else {
 		enter = true
 	}
-	if(enter || canExitChallenge(layer, x)) doReset(layer, true)
+	if((enter || canExitChallenge(layer, x)) && !layers[layer].challenges[x].overrideOnEnter) doReset(layer, true)
 	if(enter) {
 		Vue.set(player[layer], "activeChallenge", x)
 		run(layers[layer].challenges[x].onEnter, layers[layer].challenges[x])
@@ -442,6 +442,10 @@ function gameLoop(diff) {
 		tmp.reductionFactors.dilate.exp = tmp.reductionFactors.dilate.exp.mul(Decimal.pow(25/24, tmp.p.challenges[11].getDepths));
     }
 
+    if (inChallenge('a', 11)) {
+		tmp.reductionFactors.dilate.exp = tmp.reductionFactors.dilate.exp.mul(Decimal.pow(2.5, tmp.a.challenges[11].getDepths));
+    }
+
 	if (hasMilestone('p', 0)) {
 		tmp.reductionFactors.dilate.exp = tmp.reductionFactors.dilate.exp.div(
 			1.25/(
@@ -452,11 +456,16 @@ function gameLoop(diff) {
 	}
 	
 	if (hasMilestone('p', 100)) {
-		tmp.reductionFactors.dilate.exp = tmp.reductionFactors.dilate.exp.div(1.25/(
-			inChallenge('q', 11)
-				? 1.225
-				: 1.245
+		tmp.reductionFactors.dilate.exp = tmp.reductionFactors.dilate.exp.div(
+			1.25/(
+				inChallenge('q', 11)
+					? 1.225
+					: 1.245
 		))
+	}
+
+	if (hasMilestone('p', 200)) {
+		tmp.reductionFactors.dilate.exp = tmp.reductionFactors.dilate.exp.div(1.23504/1.22)
 	}
 	
 	if (challengeCompletions('p', 14).gte(1) && !(inChallenge('p', 11) || inChallenge('p', 12) || inChallenge('p', 14))) {
@@ -494,7 +503,15 @@ function gameLoop(diff) {
 	}
 
 	tmp.reductionFactors.sc3.start = D(inChallenge('q', 13) ? 'ee6' : 'e1.797693e308')
-	tmp.reductionFactors.sc3.exp = D(inChallenge('q', 13) ? 2.5 : 1.0001)
+	tmp.reductionFactors.sc3.exp = D(inChallenge('q', 13) 
+	? hasMilestone('r', 0)
+		? 2.25
+		: 2.5 
+	: 2.333)
+
+	if (hasUpgrade('q', 46)) {
+		tmp.reductionFactors.sc3.exp = tmp.reductionFactors.sc3.exp.root(upgradeEffect('q', 46))
+	}
 
 	// cap lesser tier softcaps before higher tier softcaps
 	tmp.reductionFactors.sc2.start = tmp.reductionFactors.sc2.start.min(tmp.reductionFactors.sc3.start)

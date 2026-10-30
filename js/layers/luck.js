@@ -7,15 +7,24 @@ const PET_FORMULAE = {
                 (PET_DATA[pet] ?? { baseXP: D(10) }).baseXP
             ).add(1)
         }
+
         xp = xp.div(
             (PET_DATA[pet] ?? { baseXP: D(10) }).baseXP
-        ).add(1).log(
+        ).log(
             (PET_DATA[pet] ?? { baseSpd: D(2) }).baseSpd
         ).mul(
             (PET_DATA[pet] ?? { baseScale: D(1.01) }).baseScale.sub(1)
         ).add(1).log(
             (PET_DATA[pet] ?? { baseScale: D(1.01) }).baseScale
-        ).add(1)
+        )
+
+        xp = xp.mul(tmp.r.challenges[15].rewardEffect.curr)
+        if (hasUpgrade('q', 45)) {
+            xp = xp.div(0.98)
+        }
+
+        xp = xp.add(2)
+
         return xp
     },
     level_to_xp(pet, lv) {
@@ -24,13 +33,21 @@ const PET_FORMULAE = {
                 (PET_DATA[pet] ?? { baseXP: D(10) }).baseXP
             )
         }
-        lv = lv.sub(1).pow_base(
+
+        lv = lv.sub(2)
+
+        if (hasUpgrade('q', 45)) {
+            lv = lv.mul(0.98)
+        }
+        lv = lv.div(tmp.r.challenges[15].rewardEffect.curr)
+
+        lv = lv.pow_base(
             (PET_DATA[pet] ?? { baseScale: D(1.01) }).baseScale
         ).sub(1).div(
             (PET_DATA[pet] ?? { baseScale: D(1.01) }).baseScale.sub(1)
         ).pow_base(
             (PET_DATA[pet] ?? { baseSpd: D(2) }).baseSpd
-        ).sub(1).mul(
+        ).mul(
             (PET_DATA[pet] ?? { baseXP: D(10) }).baseXP
         )
         return lv
@@ -66,6 +83,126 @@ const PET_DATA = {
         },
         activeEffsDesc(eff) {
             return `Raise luck by ^${format(eff, 2)}`
+        }
+    },
+    sphere: {
+        number: 2,
+        name: "Sphere",
+        chance: D(24),
+        colors: {
+            fill: gRC(2.0, 0.85, 0.5),
+            cannotEquip: gRC(2.0, 0.2, 0.2),
+            base: gRC(2.0, 0.2, 0.5),
+            text: gRC(2.0, 1.0, 0.1),
+        },
+        baseXP: D(1e30),
+        baseSpd: D(1e5),
+        baseScale: D(1.01),
+        passiveEffs(lv) {
+            let eff = D(lv).sub(1)
+            eff = eff.mul(2)
+            return eff
+        },
+        passiveEffsDesc(eff) {
+            return `Add ${format(eff, 2)} free levels to the Circle pet.`
+        },
+        activeEffs(lv) {
+            let eff = D(lv).sub(1)
+            eff = eff.mul(0.01).add(1)
+            return eff
+        },
+        activeEffsDesc(eff) {
+            return `Raise Point Buyable 5 clicks by ^${format(eff, 2)}`
+        }
+    },
+    pyramid: {
+        number: 3,
+        name: "Pyramid",
+        chance: D(32),
+        colors: {
+            fill: gRC(1.0, 0.85, 0.5),
+            cannotEquip: gRC(1.0, 0.2, 0.2),
+            base: gRC(1.0, 0.2, 0.5),
+            text: gRC(1.0, 1.0, 0.1),
+        },
+        baseXP: D(1e63),
+        baseSpd: D(1e9),
+        baseScale: D(1.01),
+        passiveEffs(lv) {
+            let eff = D(lv).sub(1)
+            eff = eff.mul(4)
+            return eff
+        },
+        passiveEffsDesc(eff) {
+            return `Add ${format(eff, 2)} free levels to the Triangle pet.`
+        },
+        activeEffs(lv) {
+            let eff = D(lv).sub(1)
+            eff = eff.mul(0.005).add(1)
+            return eff
+        },
+        activeEffsDesc(eff) {
+            return `HS Buyables' cost scalings are -${formatPerc(eff, 2)} slower.`
+        }
+    },
+    cube: {
+        number: 4,
+        name: "Cube",
+        chance: D(750),
+        colors: {
+            fill: gRC(5.8, 0.85, 0.5),
+            cannotEquip: gRC(5.8, 0.2, 0.2),
+            base: gRC(5.8, 0.2, 0.5),
+            text: gRC(5.8, 1.0, 0.1),
+        },
+        baseXP: D(1e308),
+        baseSpd: D(1e63),
+        baseScale: D(1.01),
+        passiveEffs(lv) {
+            let eff = D(lv).sub(1)
+            eff = eff.mul(1)
+            return eff
+        },
+        passiveEffsDesc(eff) {
+            return `Add ${format(eff, 2)} free levels to the Square pet.`
+        },
+        activeEffs(lv) {
+            let eff = D(lv).sub(1)
+            eff = eff.mul(0.015).add(1)
+            return eff
+        },
+        activeEffsDesc(eff) {
+            return `Point Buyable 6 scales -${formatPerc(eff, 2)} slower.`
+        }
+    },
+    dodecahedron: {
+        number: 5,
+        name: "Dodecahedron",
+        chance: D(2000),
+        colors: {
+            fill: gRC(0.5, 0.85, 0.5),
+            cannotEquip: gRC(0.5, 0.2, 0.2),
+            base: gRC(0.5, 0.2, 0.5),
+            text: gRC(0.5, 1.0, 0.1),
+        },
+        baseXP: D('e750'),
+        baseSpd: D('e250'),
+        baseScale: D(1.01),
+        passiveEffs(lv) {
+            let eff = D(lv).sub(1)
+            eff = eff.mul(12)
+            return eff
+        },
+        passiveEffsDesc(eff) {
+            return `Add ${format(eff, 2)} free levels to the Pentagon pet.`
+        },
+        activeEffs(lv) {
+            let eff = D(lv).sub(1)
+            eff = player.l.timeDodecahedronEquipped.max(0).div(20).add(1).ln().add(1).pow(eff.add(0.01).div(10).add(1).ln().mul(100))
+            return eff
+        },
+        activeEffsDesc(eff) {
+            return `Time this pet has been equipped boosts pets by &times;${format(eff, 2)}.`
         }
     },
     line: {
@@ -115,6 +252,7 @@ const PET_DATA = {
         baseScale: D(1.01),
         passiveEffs(lv) {
             let eff = D(lv).sub(1)
+            eff = eff.add(tmp.l.petPassiveEffs.sphere)
             eff = eff.pow_base(1.1)
             return eff
         },
@@ -123,6 +261,7 @@ const PET_DATA = {
         },
         activeEffs(lv) {
             let eff = D(lv).sub(1)
+            eff = eff.add(tmp.l.petPassiveEffs.sphere)
             eff = eff.pow_base(2.5)
             return eff
         },
@@ -145,7 +284,11 @@ const PET_DATA = {
         baseScale: D(1.01),
         passiveEffs(lv) {
             let eff = D(lv).sub(1)
+            eff = eff.add(tmp.l.petPassiveEffs.pyramid)
             eff = eff.pow_base(1.1)
+            if (eff.gte(1e100)) {
+                eff = eff.log10().div(100).ln().add(1).mul(100).pow10()
+            }
             return eff
         },
         passiveEffsDesc(eff) {
@@ -153,6 +296,7 @@ const PET_DATA = {
         },
         activeEffs(lv) {
             let eff = D(lv).sub(1)
+            eff = eff.add(tmp.l.petPassiveEffs.pyramid)
             eff = eff.mul(0.025).add(1)
             return eff
         },
@@ -175,7 +319,11 @@ const PET_DATA = {
         baseScale: D(1.01),
         passiveEffs(lv) {
             let eff = D(lv).sub(1)
+            eff = eff.add(tmp.l.petPassiveEffs.cube)
             eff = eff.pow_base(1.01)
+            if (eff.gte(100)) {
+                eff = eff.div(100).ln().add(1).mul(100)
+            }
             return eff
         },
         passiveEffsDesc(eff) {
@@ -183,7 +331,11 @@ const PET_DATA = {
         },
         activeEffs(lv) {
             let eff = D(lv).sub(1)
+            eff = eff.add(tmp.l.petPassiveEffs.cube)
             eff = eff.pow_base(1.02)
+            if (eff.gte(10000)) {
+                eff = eff.div(10000).ln().add(1).mul(10000)
+            }
             return eff
         },
         activeEffsDesc(eff) {
@@ -205,6 +357,7 @@ const PET_DATA = {
         baseScale: D(1.01),
         passiveEffs(lv) {
             let eff = D(lv).sub(1)
+            eff = eff.add(tmp.l.petPassiveEffs.dodecahedron)
             eff = eff.pow_base(1.05)
             return eff
         },
@@ -213,11 +366,14 @@ const PET_DATA = {
         },
         activeEffs(lv) {
             let eff = D(lv).sub(1)
+            eff = eff.add(tmp.l.petPassiveEffs.dodecahedron)
             eff = eff.pow_base(4/3).pow(player.p.timeInP.div(20).min(1))
             return eff
         },
         activeEffsDesc(eff) {
-            return `In Super/Hyper Scaling, point gain ^${format(eff, 3)} (Caps at 20s)`
+            return hasUpgrade('q', 31)
+                ? `Point gain ^${format(eff, 3)}. (Caps at 20s)`
+                : `In Super/Hyper Scaling, point gain ^${format(eff, 3)}. (Caps at 20s)`
         }
     },
     hexagon: {
@@ -247,7 +403,9 @@ const PET_DATA = {
             return eff
         },
         activeEffsDesc(eff) {
-            return `Disable Tier automation but decrease Tier scaling by -${formatPerc(eff, 2)}`
+            return hasMilestone('r', 4)
+                ? `Decrease Tier scaling by -${formatPerc(eff, 2)}`
+                : `Disable Tier automation but decrease Tier scaling by -${formatPerc(eff, 2)}`
         }
     },
 }
@@ -267,10 +425,24 @@ addLayer('l', {
         points: D(0),
         bestPointsInL: D(0),
         timeInL: D(0),
+
         totalRolls: D(0),
         cooldownRand: D(1),
         lastRand: D(1),
         maxRand: D(1),
+
+        totalRolls2: D(0),
+        cooldownRand2: D(1),
+        lastRand2: D(1),
+        maxRand2: D(1),
+        totalScore2: D(1),
+
+        totalRolls3: D(0),
+        cooldownRand3: D(1),
+        lastRand3: D(1),
+        maxRand3: D(1),
+        totalScore3: D(1),
+
         rollPoints: D(0),
         rollPointGen: D(0),
         energy: D(0),
@@ -292,7 +464,34 @@ addLayer('l', {
             dodecahedron: D(0)
         },
         petEquipped: [],
-        petsGained: []
+        petsGained: [],
+        timeDodecahedronEquipped: D(0),
+        bonuses: {
+            // machines 1 and 2 can gain bonuses, machine 3 is unlocked, where every roll, score is:
+            //     score = log2(2^score + YourRoll.ln().pow(3).div(100))
+            // score multiplies chance of bonus gain by exactly score
+            lucky: D(0), // chance: 5%, luck essence gain multiplied by x, m1 and m2 luck raised by log10(x)
+            alternative: D(0), // chance: 2%, alt. prestige is raised by x, all alt. dims. are multiplied by x
+            goldpet: D(0), // chance: 1%, pet gain is raised log10(x)/10, all equipped pets gain effectiveness over time
+                // equipped = +goldpet time per second, time.div(10).add(1).log2().mul(0.01).mul(goldpet.add(1).log2()).add(1) times effectiveness
+            rollBoost: D(0), // chance: 0.5%, M1 and M2's roll count is multiplied by x^2, M1 and M2's cooldown are decreased by /1+log10(x) (max /10)
+            replication: D(0) // chance: 0.1%, Pets grow exponentially at x% rate, Roll points grow exponentially at x% rate 
+        },
+        goldpetEff: {
+            // 2d
+            line: D(0),
+            circle: D(0),
+            triangle: D(0),
+            square: D(0),
+            pentagon: D(0),
+            hexagon: D(0),
+            // 3d
+            beam: D(0),
+            sphere: D(0),
+            pyramid: D(0),
+            cube: D(0),
+            dodecahedron: D(0)
+        }
     }},
     color: "#ffff00",
     requires: D('e9e15'), // Can be a function that takes requirement increases into account
@@ -301,9 +500,42 @@ addLayer('l', {
     baseAmount() { return player.points }, // Get the current amount of baseResource
     type: "custom", // normal: cost to gain currency depends on amount gained. static: cost depends on how much you already have
     update(diff) {
+        if (player.l.petEquipped.length > 0) {
+            player.r.valid[4] = false
+        }
+        if (player.l.total.gt(hasMilestone('r', 3) ? 10 : 0)) {
+            player.r.valid[5] = false
+        }
+
+        if (challengeCompletions('a', 13).gte(1)) {
+            if (!player.r.safeguards[5]) {
+                let gen = tmp.l.getResetGain
+
+                player.l.points = player.l.points.add(gen.mul(diff).mul(player.globalTS))
+                player.l.total = player.l.total.add(gen.mul(diff).mul(player.globalTS))
+                player.l.best = player.l.best.max(player.l.points)
+            }
+        }
+
+        if (hasUpgrade('l', 31)) {
+            clickClickable('l', 11)
+        }
+
+        if (hasMilestone('r', 8)) {
+            clickClickable('l', 12)
+        }
+
+        if (player.l.petEquipped.includes('dodecahedron')) {
+            player.l.timeDodecahedronEquipped = player.l.timeDodecahedronEquipped.add(player.globalTS.mul(diff))
+        }
+
         player.l.timeInL = player.l.timeInL.add(player.globalTS.mul(diff))
+
         player.l.cooldownRand = player.l.cooldownRand.sub(player.globalTS.mul(diff)).max(0)
         player.l.maxRand = Decimal.max(player.l.maxRand, player.l.lastRand)
+
+        player.l.cooldownRand2 = player.l.cooldownRand2.sub(player.globalTS.mul(diff)).max(0)
+        player.l.maxRand2 = Decimal.max(player.l.maxRand2, player.l.lastRand2)
 
         if (hasUpgrade('l', 15)) {
             // goes backwards because higher dims need to be prioritized
@@ -332,7 +564,7 @@ addLayer('l', {
             }
         }
 
-        if (hasUpgrade('q', 15)) {
+        if (hasUpgrade('q', 15) || hasUpgrade('l', 32)) {
             tmp.l.buyables[21].buyMax()
             tmp.l.buyables[22].buyMax()
             tmp.l.buyables[23].buyMax()
@@ -341,6 +573,9 @@ addLayer('l', {
             tmp.l.buyables[33].buyMax()
             tmp.l.buyables[41].buyMax()
             tmp.l.buyables[42].buyMax()
+            if (hasUpgrade('l', 32)) {
+                tmp.l.buyables[43].buyMax()
+            }
         }
     },
     effect(){
@@ -355,6 +590,9 @@ addLayer('l', {
         return i
     },
     canReset() {
+        if (player.r.safeguards[5]) {
+            return false
+        }
         return tmp.l.getResetGain.gte(1)
     },
     getResetGain() {
@@ -362,13 +600,17 @@ addLayer('l', {
             ? D(0) 
             : player.points.log10().div(9e15).log(1000).add(1).pow(2)
 
-        i = i.sub(player.l.total)
+        if (!challengeCompletions('a', 13).gte(1)) {
+            i = i.sub(player.l.total)
+        }
         i = i.floor().max(0)
         return i
     },
     getNextAt() {
         let i = tmp.l.getResetGain
-        i = i.add(player.l.total)
+        if (!challengeCompletions('a', 13).gte(1)) {
+            i = i.add(player.l.total)
+        }
 
         i = i.add(1).root(2).sub(1).pow_base(1000).mul(9e15).pow10()
         return i
@@ -387,15 +629,40 @@ addLayer('l', {
         tmp.q.doReset(true)
     },
     luckMult() {
+        const arr = []
+
+        // roll point roll for index 0
         let i = D(1)
         i = i.mul(tmp.l.energyEff.normal)
         i = i.mul(tmp.l.buyables[23].effect)
         if (player.l.petEquipped.includes('line')) {
             i = i.mul(tmp.l.petActiveEffs.line)
         }
-        return i
+        i = i.mul(player.l.totalScore2)
+        if (hasUpgrade('l', 35)) {
+            i = i.mul(upgradeEffect('l', 35).m1)
+        }
+        if (hasUpgrade('l', 44)) {
+            i = i.mul(upgradeEffect('l', 44).m1)
+        }
+        arr.push(i)
+        
+        // booster roll for index 1
+        i = D(1)
+        if (hasUpgrade('l', 35)) {
+            i = i.mul(upgradeEffect('l', 35).m2)
+        }
+        if (hasUpgrade('l', 44)) {
+            i = i.mul(upgradeEffect('l', 44).m2)
+        }
+        arr.push(i)
+
+        return arr
     },
     luckPow() {
+        const arr = []
+
+        // roll point roll for index 0
         let i = D(1)
         i = i.mul(tmp.l.effect)
         if (hasUpgrade('l', 13)) {
@@ -423,15 +690,35 @@ addLayer('l', {
         if (player.l.petEquipped.includes('beam')) {
             i = i.mul(tmp.l.petActiveEffs.beam)
         }
-        return i
+        i = i.mul(tmp.r.challenges[16].rewardEffect.curr)
+        if (hasUpgrade('l', 43)) {
+            i = i.mul(upgradeEffect('l', 43).luck)
+        }
+        if (challengeCompletions('a', 14).gte(1)) {
+            i = i.mul(tmp.a.challenges[14].rewardEffect)
+        }
+        arr.push(i)
+        
+        // booster roll for index 1
+        i = D(1)
+        if (hasUpgrade('l', 36)) {
+            i = i.mul(upgradeEffect('l', 36))
+        }
+        i = i.mul(tmp.r.challenges[16].rewardEffect.curr)
+        if (hasUpgrade('l', 45)) {
+            i = i.mul(upgradeEffect('l', 45))
+        }
+        arr.push(i)
+
+        return arr
     },
-    rollLol() {
+    rollLol(index) {
         let i = new Decimal(Math.random())
         i = i.max(1e-6) // too lucky to get NaNs, 1/1,000,000 chance (go to sols rng for that lmao)
         i = i.recip()
 
-        i = i.mul(tmp.l.luckMult)
-        i = i.pow(tmp.l.luckPow)
+        i = i.mul(tmp.l.luckMult[index])
+        i = i.pow(tmp.l.luckPow[index])
         return i
     },
     rollPointGain() {
@@ -490,6 +777,14 @@ addLayer('l', {
                 case "beam":
                 case "hexagon":
                     obj[pet] = hasUpgrade('q', 31)
+                    break;
+                case "sphere":
+                case "pyramid":
+                    obj[pet] = hasMilestone('r', 3)
+                    break;
+                case "cube":
+                case "dodecahedron":
+                    obj[pet] = hasUpgrade('q', 45)
                     break;
             }
         }
@@ -554,6 +849,12 @@ addLayer('l', {
         if (hasUpgrade('q', 33)) {
             i += 2
         }
+        if (hasMilestone('r', 3)) {
+            i += 1
+        }
+        if (hasUpgrade('q', 45)) {
+            i += 1
+        }
         return i
     },
     petLuckPow() {
@@ -562,7 +863,16 @@ addLayer('l', {
         if (hasUpgrade('q', 14)) {
             i = i.mul(upgradeEffect('q', 14))
         }
+        i = i.mul(tmp.r.challenges[16].rewardEffect.curr)
         return i
+    },
+    bonusScore() {
+        let score = Object.values(player.l.bonuses).reduce((total, item) => { return total.log2().mul(item.add(1).log2().add(1)).pow_base(2) }, D(2)).log2()
+        return score
+    },
+    bonusPtsGain() {
+        let gain = tmp.l.bonusScore.sub(1)
+        return gain
     },
     upgrades: {
         11: {
@@ -742,6 +1052,172 @@ addLayer('l', {
                 return player.l
             },
         },
+        31: {
+            title: "Gambling Addiction",
+            description: "Automatically roll and gain B5 clicks every second.",
+            cost: new Decimal(1e6),
+            unlocked() { return hasMilestone('r', 0) },
+            currencyInternalName: 'rollPoints',
+            currencyDisplayName: 'Roll Points',
+            currencyLocation() {
+                return player.l
+            },
+        },
+        32: {
+            title: "True Gambler",
+            description: "Automate all Luck Buyables.",
+            cost: new Decimal(1e100),
+            unlocked() { return hasMilestone('r', 0) },
+            currencyInternalName: 'rollPoints',
+            currencyDisplayName: 'Roll Points',
+            currencyLocation() {
+                return player.l
+            },
+        },
+        33: {
+            title: "Multi-Machine Gamble",
+            description: "Add an extra clickable that determines your luck increase and pet multiplier.<br>NOTE: All previous mentions of 'luck' affect Machine 1's luck!",
+            cost: new Decimal('e1000'),
+            unlocked() { return hasMilestone('r', 0) },
+            currencyInternalName: 'rollPoints',
+            currencyDisplayName: 'Roll Points',
+            currencyLocation() {
+                return player.l
+            },
+        },
+        34: {
+            title: "Take the Wheel",
+            description: "Weaken the Luck Buyable #1 cost scaling in general.",
+            cost: new Decimal('e10000'),
+            unlocked() { return hasMilestone('r', 0) },
+            currencyInternalName: 'rollPoints',
+            currencyDisplayName: 'Roll Points',
+            currencyLocation() {
+                return player.l
+            },
+        },
+        35: {
+            title: "Rigged in Your Favor",
+            description: "For both machines, your luck is multiplied based on your best roll.",
+            cost: new Decimal('e100000'),
+            unlocked() { return hasMilestone('r', 0) },
+            currencyInternalName: 'rollPoints',
+            currencyDisplayName: 'Roll Points',
+            currencyLocation() {
+                return player.l
+            },
+            effect() { 
+                let ret = {
+                    m1: player.l.maxRand.max(1e10).log10().log(5).add(1).pow(2).pow10(),
+                    m2: player.l.maxRand2.max(1).log10().add(1).pow(2)
+                }
+                return ret;
+            },
+            effectDisplay() { return `&times;${format(this.effect().m1)} to M1, &times;${format(this.effect().m2, 2)} to M2` }, 
+        },
+        36: {
+            title: "You Are The House",
+            description: "Luck Essence boosts Machine 2's luck at a reduced rate.",
+            cost: new Decimal('e1000000'),
+            unlocked() { return hasMilestone('r', 0) },
+            currencyInternalName: 'rollPoints',
+            currencyDisplayName: 'Roll Points',
+            currencyLocation() {
+                return player.l
+            },
+            effect() { 
+                let ret = tmp.l.effect.root(2)
+                return ret;
+            },
+            effectDisplay() { return `^${format(this.effect(), 2)}` }, 
+        },
+        41: {
+            title: "Kept with the Times",
+            description: "Luck Buyable 7's effect is improved.",
+            cost: new Decimal('ee7'),
+            unlocked() { return hasMilestone('r', 4) },
+            currencyInternalName: 'rollPoints',
+            currencyDisplayName: 'Roll Points',
+            currencyLocation() {
+                return player.l
+            },
+        },
+        42: {
+            title: "Manipulate the Wheel",
+            description: "Luck Buyable 1's cost is heavily weakened.",
+            cost: new Decimal('ee8'),
+            unlocked() { return hasMilestone('r', 4) },
+            currencyInternalName: 'rollPoints',
+            currencyDisplayName: 'Roll Points',
+            currencyLocation() {
+                return player.l
+            },
+        },
+        43: {
+            title: "Casino Bonuses",
+            description: "Machine 1's luck and pet gain are increased the more times you roll Machine 1.",
+            cost: new Decimal('ee9'),
+            unlocked() { return hasMilestone('r', 4) },
+            currencyInternalName: 'rollPoints',
+            currencyDisplayName: 'Roll Points',
+            currencyLocation() {
+                return player.l
+            },
+            effect() { 
+                let ret = {
+                    luck: player.l.totalRolls.div(1000).add(1).ln().div(10).add(1),
+                    pet: player.l.totalRolls.root(4).pow10().add(player.l.totalRolls),
+                }
+                return ret;
+            },
+            effectDisplay() { return `^${format(this.effect().luck, 3)} M1 luck, &times;${format(this.effect().pet, 2)} pet gain` }, 
+        },
+        44: {
+            title: "Extended Bonuses",
+            description: "Machine 1 and Machine 2's best rolls boost each others' luck.",
+            cost: new Decimal('ee10'),
+            unlocked() { return hasMilestone('r', 4) },
+            currencyInternalName: 'rollPoints',
+            currencyDisplayName: 'Roll Points',
+            currencyLocation() {
+                return player.l
+            },
+            effect() { 
+                let ret = {
+                    m1: player.l.maxRand2.max(1).log10().pow(1.25).pow10(),
+                    m2: player.l.maxRand.max(10).log10().log10().pow(1.5),
+                }
+                return ret;
+            },
+            effectDisplay() { return `&times;${format(this.effect().m1, 3)} M1 luck, &times;${format(this.effect().m2, 2)} M2 luck` }, 
+        },
+        45: {
+            title: "Super VIP",
+            description: "Machine 2's luck is increased the more times you roll Machine 2.",
+            cost: new Decimal('ee12'),
+            unlocked() { return hasMilestone('r', 4) },
+            currencyInternalName: 'rollPoints',
+            currencyDisplayName: 'Roll Points',
+            currencyLocation() {
+                return player.l
+            },
+            effect() { 
+                let ret = player.l.totalRolls2.div(20).add(1).ln().div(10).add(1)
+                return ret;
+            },
+            effectDisplay() { return `^${format(this.effect(), 3)}` }, 
+        },
+        46: {
+            title: "Machine Improvements",
+            description: "[unimp.] Both Machines now give a chance for bonuses, which can increase best roll, alt. dimensions, etc.",
+            cost: new Decimal('ee24'),
+            unlocked() { return hasMilestone('r', 4) },
+            currencyInternalName: 'rollPoints',
+            currencyDisplayName: 'Roll Points',
+            currencyLocation() {
+                return player.l
+            },
+        },
     },
     buyables: (() => {
         const upgrades = {
@@ -793,7 +1269,11 @@ addLayer('l', {
                         dispEffBase() {
                             const currEffect = this.effect(player.l.buyables[11 + i])
                             const nextEffect = this.effect(player.l.buyables[11 + i].add(1))
-                            return `This dimension's multiplier is increased by &times;${format(nextEffect.div(currEffect), 1)}.` 
+                            if (player.l.buyables[11 + i].gte(1e12)) {
+                                return `This dimension's multiplier is increased by &times;${format(nextEffect.root(player.l.buyables[11 + i]), 1)}.` 
+                            } else {
+                                return `This dimension's multiplier is increased by &times;${format(nextEffect.div(currEffect), 1)}.` 
+                            }
                         },
                         scaleModifEffective(x) {
                             return x
@@ -814,7 +1294,17 @@ addLayer('l', {
             21: {
                 type: 1,
                 num: 1,
-                costD: {type: 0, exp: 0, main: [D(1e40), D(5), D(1.01)]},
+                get costD() {
+                    const obj = {type: 0, exp: 0, main: [D(1e40), D(5), D(1.01)]}
+                    if (hasUpgrade('l', 34)) {
+                        obj.type = 1
+                        obj.main[2] = D(1.2)
+                        if (hasUpgrade('l', 42)) {
+                            obj.main[2] = D(1.05)
+                        }
+                    }
+                    return obj
+                },
                 unlocked() { return challengeCompletions('p', 12).gte(11) },
                 unavail() {
                     let x = false
@@ -841,7 +1331,11 @@ addLayer('l', {
                 dispEffBase() {
                     const currEffect = this.effect(player.l.buyables[21])
                     const nextEffect = this.effect(player.l.buyables[21].add(1))
-                    return `Roll Points are increased by &times;${format(nextEffect.div(currEffect), 1)}.` 
+                    if (player.l.buyables[21].gte(1e12)) {
+                        return `Roll Points are increased by &times;${format(nextEffect.root(player.l.buyables[21]), 1)}.` 
+                    } else {
+                        return `Roll Points are increased by &times;${format(nextEffect.div(currEffect), 1)}.` 
+                    }
                 },
                 scaleModifEffective(x) {
                     return x
@@ -886,7 +1380,11 @@ addLayer('l', {
                 dispEffBase() {
                     const currEffect = this.effect(player.l.buyables[22])
                     const nextEffect = this.effect(player.l.buyables[22].add(1))
-                    return `Point Buyable 5 clicks are increased by &times;${format(nextEffect.div(currEffect), 1)}.` 
+                    if (player.l.buyables[22].gte(1e12)) {
+                        return `Point Buyable 5 clicks are increased by &times;${format(nextEffect.root(player.l.buyables[22]), 1)}.` 
+                    } else {
+                        return `Point Buyable 5 clicks are increased by &times;${format(nextEffect.div(currEffect), 1)}.` 
+                    }
                 },
                 scaleModifEffective(x) {
                     return x
@@ -938,7 +1436,11 @@ addLayer('l', {
                 dispEffBase() {
                     const currEffect = this.effect(player.l.buyables[23])
                     const nextEffect = this.effect(player.l.buyables[23].add(1))
-                    return `Luck is increased by &times;${format(nextEffect.div(currEffect), 1)}.` 
+                    if (player.l.buyables[23].gte(1e12)) {
+                        return `Luck is increased by &times;${format(nextEffect.root(player.l.buyables[23]), 1)}.` 
+                    } else {
+                        return `Luck is increased by &times;${format(nextEffect.div(currEffect), 1)}.` 
+                    }
                 },
                 scaleModifEffective(x) {
                     return x
@@ -980,7 +1482,11 @@ addLayer('l', {
                 dispEffBase() {
                     const currEffect = this.effect(player.l.buyables[31])
                     const nextEffect = this.effect(player.l.buyables[31].add(1))
-                    return `Add +${format(nextEffect.sub(currEffect), 2)} to Self-Synergy's effect.` 
+                    if (player.l.buyables[31].gte(1e12)) {
+                        return `Add +${format(nextEffect.div(player.l.buyables[31]), 2)} to Self-Synergy's effect.` 
+                    } else {
+                        return `Add +${format(nextEffect.sub(currEffect), 2)} to Self-Synergy's effect.` 
+                    }
                 },
                 scaleModifEffective(x) {
                     return x
@@ -1025,7 +1531,11 @@ addLayer('l', {
                 dispEffBase() {
                     const currEffect = this.effect(player.l.buyables[32])
                     const nextEffect = this.effect(player.l.buyables[32].add(1))
-                    return `Add +${format(nextEffect.sub(currEffect), 1)} to Cross Contamination's effect.` 
+                    if (player.l.buyables[32].gte(1e12)) {
+                        return `Add +${format(nextEffect.div(player.l.buyables[32]), 1)} to Cross Contamination's effect.` 
+                    } else {
+                        return `Add +${format(nextEffect.sub(currEffect), 1)} to Cross Contamination's effect.` 
+                    }
                 },
                 scaleModifEffective(x) {
                     return x
@@ -1079,7 +1589,11 @@ addLayer('l', {
                         currEffTotal = currEffTotal.max(1).log10().pow(1.1).pow10()
                         nextEffTotal = nextEffTotal.max(1).log10().pow(1.1).pow10()
                     }
-                    return `Raise Luck Energy's luck and RP effect base by +^${format(nextEffect.sub(currEffect), 2)}. This multiplies luck and Roll Points by &times;${format(nextEffTotal.div(currEffTotal), 2)}.`
+                    if (player.l.buyables[33].gte(1e12)) {
+                        return `Raise Luck Energy's luck and RP effect base by +^${format(nextEffect.div(player.l.buyables[33]), 2)}. This multiplies luck and Roll Points by &times;${format(nextEffTotal.div(currEffTotal), 2)}.`
+                    } else {
+                        return `Raise Luck Energy's luck and RP effect base by +^${format(nextEffect.sub(currEffect), 2)}. This multiplies luck and Roll Points by &times;${format(nextEffTotal.div(currEffTotal), 2)}.`
+                    }
                 },
                 scaleModifEffective(x) {
                     return x
@@ -1111,15 +1625,12 @@ addLayer('l', {
 
                     let j = D(0.5)
                     
-                    if (hasUpgrade('q', 37)) {
-                        eff = Decimal.mul(j, eff).mul(
-                            eff.lt(10050)
-                                ? Decimal.pow(4, eff.sub(1750).max(0).div(50))
-                                : eff.div(10000).sqrt().sub(1).mul(2).add(1).pow_base(1e100)
-                        )
+                    if (hasUpgrade('l', 41)) {
+                        eff = Decimal.mul(j, eff).mul(Decimal.pow(j.exp(), eff.div(100).max(1).ln().div(100).add(1).pow(50).sub(1)))
                     } else {
                         eff = Decimal.mul(j, eff)
                     }
+
                     eff = eff.add(1)
                     return eff;
                 },
@@ -1130,7 +1641,19 @@ addLayer('l', {
                 dispEffBase() {
                     const currEffect = this.effect(player.l.buyables[41])
                     const nextEffect = this.effect(player.l.buyables[41].add(1))
-                    return `Gain +&times;${format(nextEffect.sub(currEffect), 2)} more pets.` 
+                    if (hasUpgrade('l', 41)) {
+                        if (player.l.buyables[41].gte(1e12)) {
+                            return `Gain &times;${format(nextEffect.root(player.l.buyables[41]), 2)} more pets.` 
+                        } else {
+                            return `Gain &times;${format(nextEffect.div(currEffect), 2)} more pets.` 
+                        }
+                    } else {
+                        if (player.l.buyables[41].gte(1e12)) {
+                            return `Gain +&times;${format(nextEffect.div(player.l.buyables[41]), 2)} more pets.` 
+                        } else {
+                            return `Gain +&times;${format(nextEffect.sub(currEffect), 2)} more pets.` 
+                        }
+                    }
                 },
                 scaleModifEffective(x) {
                     return x
@@ -1173,7 +1696,11 @@ addLayer('l', {
                 dispEffBase() {
                     const currEffect = this.effect(player.l.buyables[42])
                     const nextEffect = this.effect(player.l.buyables[42].add(1))
-                    return `Increase pet luck by +^${format(nextEffect.sub(currEffect), 2)}.` 
+                    if (player.l.buyables[42].gte(1e12)) {
+                        return `Increase pet luck by +^${format(nextEffect.div(player.l.buyables[42]), 2)}.` 
+                    } else {
+                        return `Increase pet luck by +^${format(nextEffect.sub(currEffect), 2)}.` 
+                    }
                 },
                 scaleModifEffective(x) {
                     return x
@@ -1214,7 +1741,11 @@ addLayer('l', {
                 dispEffBase() {
                     const currEffect = this.effect(player.l.buyables[43])
                     const nextEffect = this.effect(player.l.buyables[43].add(1))
-                    return `Increase all point, prestige, and luck buyables' effectiveness (except for this) by +${format(nextEffect.sub(currEffect).mul(100), 2)}%.` 
+                    if (player.l.buyables[43].gte(1e12)) {
+                        return `Increase all point, prestige, and luck buyables' effectiveness (except for this) by +${format(nextEffect.div(player.l.buyables[43]).mul(100), 2)}%.` 
+                    } else {
+                        return `Increase all point, prestige, and luck buyables' effectiveness (except for this) by +${format(nextEffect.sub(currEffect).mul(100), 2)}%.` 
+                    }
                 },
                 scaleModifEffective(x) {
                     if (hasUpgrade('q', 21)) {
@@ -1260,6 +1791,12 @@ addLayer('l', {
                 let i, j, k;
                 j = x
                 k = upgrade.costD.main
+
+                if (upgrade.type === 0 || upgrade.type === 1) {
+                    if (inChallenge('a', 14)) {
+                        j = j.div(1).pow(tmp.a.challenges[14].getDepths).sub(1).div(tmp.a.challenges[14].getDepths).exp().mul(1)
+                    }
+                }
 
                 j = upgrade.scaleModifEffective(j)
 
@@ -1341,6 +1878,12 @@ addLayer('l', {
                 }
 
                 i = upgrade.scaleModifTarEff(i)
+
+                if (upgrade.type === 0 || upgrade.type === 1) {
+                    if (inChallenge('a', 14)) {
+                        i = i.max(1).div(1).ln().mul(tmp.a.challenges[14].getDepths).add(1).root(tmp.a.challenges[14].getDepths).mul(1)
+                    }
+                }
 
                 if (Decimal.isNaN(i)) {
                     console.warn(`[Layer: l, Type: buyable, ID: ${upgrade.id}] NaN detected (set to 0) after layeradd10 in target of id${upgrade.id} after scaleModifTarEff! (scaleModifTarEff causing NaN?)`)
@@ -1495,7 +2038,14 @@ addLayer('l', {
         11: {
             title: "Test your luck.",
             display() {
-                let txt = `${player.l.cooldownRand.gt(0) ? ('You are on cooldown for ' + format(player.l.cooldownRand, 1) + 's!<br>') : ''}You have rolled ${format(player.l.totalRolls)} times.<br>Your last roll is ${format(player.l.lastRand, 1)}. (1/${format(player.l.lastRand.root(tmp.l.luckPow).div(tmp.l.luckMult), 1)})<br>Your best roll is ${format(player.l.maxRand, 1)}. (1/${format(player.l.maxRand.root(tmp.l.luckPow).div(tmp.l.luckMult), 1)})`
+                let txt = ""
+                if (player.l.cooldownRand.gt(0)) {
+                    txt += `You are on cooldown for ${format(player.l.cooldownRand, 1)}s!<br>`
+                }
+                txt += `You have rolled ${format(player.l.totalRolls)} times.<br>`
+                txt += `Your last roll is ${format(player.l.lastRand, 1)}. (1/${format(player.l.lastRand.root(tmp.l.luckPow[0]).div(tmp.l.luckMult[0]), 1)})<br>`
+                txt += `Your best roll is ${format(player.l.maxRand, 1)}. (1/${format(player.l.maxRand.root(tmp.l.luckPow[0]).div(tmp.l.luckMult[0]), 1)})`
+
                 if (player.l.petsGained.length > 0) {
                     txt += `<br>`
                 }
@@ -1508,8 +2058,13 @@ addLayer('l', {
                 return player.l.cooldownRand.lte(0) && player.l.best.gt(0)
             },
             onClick() {
+                if (player.r.safeguards[5]) {
+                    return
+                }
+                player.r.valid[5] = false
+
                 player.l.cooldownRand = D(1)
-                player.l.lastRand = tmp.l.rollLol()
+                player.l.lastRand = tmp.l.rollLol(0)
                 player.l.rollPointGen = player.l.rollPointGen.add(tmp.l.rollPointGain)
                 player.l.totalRolls = player.l.totalRolls.add(1)
 
@@ -1519,43 +2074,56 @@ addLayer('l', {
                 }
 
                 player.l.petsGained = []
-                for (let pet in PET_DATA) {
-                    let petLuck = Math.random()
-                    if (tmp.l.petUnlocked[pet] && petLuck < Decimal.div(PET_DATA[pet].chance, tmp.l.petLuckPow).pow10().recip()) {
-                        let gain = D(1)
-                        gain = gain.mul(tmp.l.buyables[41].effect)
-                        gain = gain.mul(tmp.q.buyables[21].effect)
-                        if (hasUpgrade('q', 13)) {
-                            gain = gain.mul(upgradeEffect('q', 13))
-                        }
+                if (!inChallenge('a', 16)) {
+                    for (let pet in PET_DATA) {
+                        let petLuck = Math.random()
+                        if (tmp.l.petUnlocked[pet] && petLuck < Decimal.div(PET_DATA[pet].chance, tmp.l.petLuckPow).pow10().recip()) {
+                            let gain = D(1)
+                            gain = gain.mul(tmp.l.buyables[41].effect)
+                            gain = gain.mul(tmp.q.buyables[21].effect)
+                            if (hasUpgrade('q', 13)) {
+                                gain = gain.mul(upgradeEffect('q', 13))
+                            }
+                            gain = gain.mul(player.l.totalScore2)
+                            if (hasUpgrade('l', 43)) {
+                                gain = gain.mul(upgradeEffect('l', 43).pet)
+                            }
+                            if (player.l.petEquipped.includes('dodecahedron')) {
+                                gain = gain.mul(tmp.l.petActiveEffs.dodecahedron)
+                            }
+    
+                            // petLuck multiplier 
+                            // 0.5 for 0.5 chance = 1, 
+                            // 0.25 for 0.5 chance = 2, 
+                            // 0.125 for 0.5 chance = 3, 
+                            // chance of getting how many
+    
+                            gain = gain.mul(Decimal.log10(petLuck).neg().div(PET_DATA[pet].chance).mul(tmp.l.petLuckPow).add(1e-7).floor())
 
-                        // petLuck multiplier 
-                        // 0.5 for 0.5 chance = 1, 
-                        // 0.25 for 0.5 chance = 2, 
-                        // 0.125 for 0.5 chance = 3, 
-                        // chance of getting how many
-
-                        gain = gain.mul(Decimal.log10(petLuck).neg().div(PET_DATA[pet].chance).mul(tmp.l.petLuckPow).add(1e-7).floor())
-                        
-                        // console.log(`pet: ${pet} - petLuck: ${format(petLuck, 4)} - base chance: ${format(PET_DATA[pet].chance, 4)} - gain: ${format(Decimal.log(petLuck, PET_DATA[pet].chance).floor(), 2)}`)
-                        let currXP = player.l.pets[pet].add(gain);
-                        if (tmp.l.petLevels[pet].gte(2)) {
-                            currXP = currXP.sub(PET_FORMULAE.level_to_xp(pet, tmp.l.petLevels[pet].floor()));
+                            if (challengeCompletions('a', 16).gte(1)) {
+                                gain = gain.pow(tmp.a.challenges[16].rewardEffect.pet)
+                            }
+                            
+                            // console.log(`pet: ${pet} - petLuck: ${format(petLuck, 4)} - base chance: ${format(PET_DATA[pet].chance, 4)} - gain: ${format(Decimal.log(petLuck, PET_DATA[pet].chance).floor(), 2)}`)
+                            let currXP = player.l.pets[pet].add(gain);
+                            if (tmp.l.petLevels[pet].gte(2)) {
+                                currXP = currXP.sub(PET_FORMULAE.level_to_xp(pet, tmp.l.petLevels[pet].floor()));
+                            }
+                            
+                            let nextXP = PET_FORMULAE.level_to_xp(pet, tmp.l.petLevels[pet].floor().add(1))
+                            if (tmp.l.petLevels[pet].gte(2)) {
+                                nextXP = nextXP.sub(PET_FORMULAE.level_to_xp(pet, tmp.l.petLevels[pet].floor()));
+                            }
+                            
+                            if (currXP.gte(nextXP)) {
+                                let lv = PET_FORMULAE.xp_to_level(pet, player.l.pets[pet].add(gain))
+                                player.l.petsGained.push({ petType: pet, pet: `${PET_DATA[pet].name}${gain.gt(1) ? 's' : ''}. (Gained ${format(lv.floor().sub(tmp.l.petLevels[pet].floor()))} level${lv.floor().sub(tmp.l.petLevels[pet].floor()).eq(1) ? '' : 's'}!)`, gain: gain })
+                            } else {
+                                player.l.petsGained.push({ petType: pet, pet: `${PET_DATA[pet].name}${gain.gt(1) ? 's' : ''}. (${format(currXP.div(nextXP).mul(100).mul(10).round().div(10), 1)}%, +${format(gain.div(nextXP).mul(100).mul(10).round().div(10), 1)}%)`, gain: gain })
+                            }
+    
+                            player.l.pets[pet] = Decimal.add(player.l.pets[pet], gain)
                         }
-                        
-                        let nextXP = PET_FORMULAE.level_to_xp(pet, tmp.l.petLevels[pet].floor().add(1))
-                        if (tmp.l.petLevels[pet].gte(2)) {
-                            nextXP = nextXP.sub(PET_FORMULAE.level_to_xp(pet, tmp.l.petLevels[pet].floor()));
-                        }
-                        
-                        if (currXP.gte(nextXP)) {
-                            let lv = PET_FORMULAE.xp_to_level(pet, player.l.pets[pet].add(gain))
-                            player.l.petsGained.push({ petType: pet, pet: `${PET_DATA[pet].name}${gain.gt(1) ? 's' : ''}. (Gained ${format(lv.floor().sub(tmp.l.petLevels[pet].floor()))} level${lv.floor().sub(tmp.l.petLevels[pet].floor()).eq(1) ? '' : 's'}!)`, gain: gain })
-                        } else {
-                            player.l.petsGained.push({ petType: pet, pet: `${PET_DATA[pet].name}${gain.gt(1) ? 's' : ''}. (${format(currXP.div(nextXP).mul(100), 1)}%, +${format(gain.div(nextXP).mul(100), 1)}%)`, gain: gain })
-                        }
-
-                        player.l.pets[pet] = Decimal.add(player.l.pets[pet], gain)
                     }
                 }
             },
@@ -1563,6 +2131,42 @@ addLayer('l', {
                 "min-width": "225px",
                 "min-height": "150px",
                 "margin": "5px",
+            }
+        },
+        12: {
+            title: "Test your luck again.",
+            display() {
+                let txt = ""
+                if (player.l.cooldownRand2.gt(0)) {
+                    txt += `You are on cooldown for ${format(player.l.cooldownRand2, 1)}s!<br>`
+                }
+                txt += `You have rolled ${format(player.l.totalRolls2)} times.<br>`
+                txt += `Your last roll is ${format(player.l.lastRand2, 1)}. (1/${format(player.l.lastRand2.root(tmp.l.luckPow[1]).div(tmp.l.luckMult[1]), 1)})<br>`
+                txt += `Your best roll is ${format(player.l.maxRand2, 1)}. (1/${format(player.l.maxRand2.root(tmp.l.luckPow[1]).div(tmp.l.luckMult[1]), 1)})<br><br>`
+                txt += `Your total score is boosting Luck and Pet gain by &times;${format(player.l.totalScore2, 1)}.`
+                return txt
+            },
+            canClick() {
+                return player.l.cooldownRand2.lte(0) && player.l.best.gt(0)
+            },
+            onClick() {
+                if (player.r.safeguards[5]) {
+                    return
+                }
+                player.r.valid[5] = false
+
+                player.l.cooldownRand2 = D(1)
+                player.l.lastRand2 = tmp.l.rollLol(1)
+                player.l.totalScore2 = player.l.totalScore2.add(player.l.lastRand2)
+                player.l.totalRolls2 = player.l.totalRolls2.add(1)
+            },
+            style: {
+                "min-width": "225px",
+                "min-height": "150px",
+                "margin": "5px",
+            },
+            unlocked() {
+                return hasUpgrade('l', 33)
             }
         },
         ...(() => {
@@ -1580,6 +2184,9 @@ addLayer('l', {
                         return player.l.petEquipped.includes(pet) || player.l.petEquipped.length < tmp.l.petEquipCap
                     },
                     onClick() {
+                        if (player.r.safeguards[4]) {
+                            return
+                        }
                         if (player.l.petEquipped.includes(pet)) {
                             player.l.petEquipped.splice(player.l.petEquipped.indexOf(pet), 1)
                         } else {
@@ -1614,7 +2221,7 @@ addLayer('l', {
                 function() { return `You have <h2 style="color: #FFFF00; font-size: 26px; text-shadow: #FFFF00 0px 0px 10px;">${format(player.l.rollPoints, 2)}</h2> Roll Points. (${format(player.l.rollPointGen, 1)}/s, +${format(tmp.l.rollPointGain, 1)}/roll)` }],
                 ["clickables", [1]],
                 "blank",
-                ["upgrades", [1, 2]],
+                ["upgrades", [1, 2, 3, 4]],
                 ["buyables", [2, 3, 4]]
             ],
             unlocked(){
@@ -1645,8 +2252,8 @@ addLayer('l', {
                 ["display-text",
                 function() { return `You can equip <h2 style="color: #FFFFFF; font-size: 26px; text-shadow: #FFFFFF 0px 0px 10px;">${format(player.l.petEquipped.length)} / ${format(tmp.l.petEquipCap)}</h2> pets.` }],
                 "blank",
-                ["display-text",
-                function() { return hasUpgrade('q', 33) ? `You have <h2 style="color: #383; text-shadow: #383 0px 0px 10px;">${format(player.q.waste)}</h2> waste.` : '' }],
+                // ["display-text",
+                // function() { return hasUpgrade('q', 33) ? `You have <h2 style="color: #383; text-shadow: #383 0px 0px 10px;">${format(player.q.waste)}</h2> waste.` : '' }],
                 ...(() => {
                     const arr = []
                     for (let pet in PET_DATA) {
@@ -1676,6 +2283,49 @@ addLayer('l', {
             unlocked(){
                 return challengeCompletions('p', 12).gte(14)
             },
-        }
+        },
+        "Bonuses": {
+            content: [
+                "main-display",
+                ["prestige-button", ""],
+                "blank",
+/*
+            lucky: D(0), // chance: 5%, luck essence gain multiplied by x, m1 and m2 luck raised by log10(x)
+            alternative: D(0), // chance: 2%, alt. prestige is raised by x, all alt. dims. are multiplied by x
+            goldpet: D(0), // chance: 1%, pet gain is raised log10(x)/10, all equipped pets gain effectiveness over time
+                // equipped = +goldpegoldpet time per second, time.div(10).add(1).log2().mul(0.01).mul(goldpet.add(1).log2()).add(1) times effectiveness
+            rollBoost: D(0), // chance: 0.5%, M1 and M2's roll count is multiplied by x^2, M1 and M2's cooldown are decreased by /1+log10(x) (max /10)
+            replication: D(0) // chance: 0.1%, Pets grow exponentially at x% rate, Roll points grow exponentially at x% rate 
+            */
+                ["display-text",
+                function() { return `Bonuses are gained at random from machines 1 and 2.` }],
+                "blank",
+                ["display-text",
+                function() { return `Lucky Bonus (${format(player.l.totalScore3.mul(0.05).min(1).mul(100), 1)}%) &times;<h2 style="color: #FFFF00; font-size: 26px; text-shadow: #FFFF00 0px 0px 10px;">${format(player.l.bonuses.lucky)}</h2>.
+                <br>Luck essence gain is multiplied by &times;${format(player.l.bonuses.lucky.add(1))}. M1-2 luck is raised by ^${format(player.l.bonuses.lucky.max(0).add(1).log10().add(1), 3)}.` }],
+                "blank",
+                ["display-text",
+                function() { return `Alternative Bonus (${format(player.l.totalScore3.mul(0.02).min(1).mul(100), 1)}%) &times;<h2 style="color: #FFFF00; font-size: 26px; text-shadow: #FFFF00 0px 0px 10px;">${format(player.l.bonuses.alternative)}</h2>.
+                <br>Alt. Prestige gain is raised by ^${format(player.l.bonuses.alternative.add(1))}. All Alt. Dimensions are multiplied by &times;${format(player.l.bonuses.alternative)}.` }],
+                "blank",
+                ["display-text",
+                function() { return `Golden Pet Bonus (${format(player.l.totalScore3.mul(0.01).min(1).mul(100), 1)}%) &times;<h2 style="color: #FFFF00; font-size: 26px; text-shadow: #FFFF00 0px 0px 10px;">${format(player.l.bonuses.goldpet)}</h2>.
+                <br>Pet gain is raised to the ^${format(player.l.bonuses.goldpet.max(0).add(1).log10().div(10).add(1), 3)}. All equipped pets gain effectivenss over time. (&times;${format(player.l.bonuses.goldpet)} time, double time = +${format(player.l.bonuses.goldpet.max(0).add(1).log2())}% effectiveness)` }],
+                "blank",
+                ["display-text",
+                function() { return `Roll Boost Bonus (${format(player.l.totalScore3.mul(0.005).min(1).mul(100), 1)}%) &times;<h2 style="color: #FFFF00; font-size: 26px; text-shadow: #FFFF00 0px 0px 10px;">${format(player.l.bonuses.rollBoost)}</h2>.
+                <br>M1-2's roll count is multiplied by &times;${format(player.l.bonuses.rollBoost.add(1).pow(2))}, M1-2's cooldown is decreased by /${format(player.l.bonuses.rollBoost.max(0).add(1).log10().add(1), 2)}.` }],
+                "blank",
+                ["display-text",
+                function() { return `Replication Bonus (${format(player.l.totalScore3.mul(0.001).min(1).mul(100), 1)}%) &times;<h2 style="color: #FFFF00; font-size: 26px; text-shadow: #FFFF00 0px 0px 10px;">${format(player.l.bonuses.replication)}</h2>.
+                <br>Pets grow exponentially at a ${format(player.l.bonuses.replication)}% rate. Roll Points grow exponentially at a ${format(player.l.bonuses.replication)}% rate.` }],
+                "blank",
+                ["display-text",
+                function() { return `Your total bonuses are giving you <h2 style="color: #FFFF00; font-size: 26px; text-shadow: #FFFF00 0px 0px 10px;">${format(tmp.l.bonusScore)}</h2> bonus score, generating ${format(tmp.l.bonusPtsGain)} bonus points per second.` }],
+            ],
+            unlocked(){
+                return hasUpgrade('l', 46)
+            },
+        },
     }
 })

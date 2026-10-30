@@ -114,6 +114,9 @@ function setupLayer(layer){
                 if (layers[layer].challenges[thing].ignoreHigherLayers === undefined) {
                     layers[layer].challenges[thing].ignoreHigherLayers = false
                 }
+                if (layers[layer].challenges[thing].overrideOnEnter === undefined) {
+                    layers[layer].challenges[thing].overrideOnEnter = false
+                }
             }
         }
     }
